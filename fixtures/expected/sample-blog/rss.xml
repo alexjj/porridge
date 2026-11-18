@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>My Daily</title>
+    <link>https://example.github.io/my-blog/</link>
+    <description>Notes, mostly daily.</description>
+    <language>en-gb</language>
+    <atom:link href="https://example.github.io/my-blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <generator>porridge</generator>
+    <lastBuildDate>Wed, 18 Nov 2026 17:40:10 GMT</lastBuildDate>
+    <item>
+      <title>Starting porridge</title>
+      <link>https://example.github.io/my-blog/2026/11/18/#a174010</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/18/#a174010</guid>
+      <pubDate>Wed, 18 Nov 2026 17:40:10 GMT</pubDate>
+      <description>&lt;p&gt;This entry has children, so its text is the &lt;strong&gt;title&lt;/strong&gt; and the children are the body. The title links to &lt;a href=&quot;https://example.github.io/my-blog/2026/11/18/#a174010&quot;&gt;the permalink&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://example.github.io/my-blog/images/2026/11/porridge.jpg&quot; alt=&quot;A bowl of porridge&quot;&gt;&lt;/p&gt;
+&lt;p&gt;A body node with children becomes a paragraph followed by a list:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Oats&lt;/li&gt;
+&lt;li&gt;Milk, or water if you're &lt;em&gt;brave&lt;/em&gt;
+&lt;ul&gt;
+&lt;li&gt;Lists nest as deep as the outline does&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Golden syrup&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;a href=&quot;https://example.com&quot;&gt;https://example.com&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2026/11/18/#a091203</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/18/#a091203</guid>
+      <pubDate>Wed, 18 Nov 2026 09:12:03 GMT</pubDate>
+      <description>&lt;p&gt;A one-paragraph post with no children, so no title. It still gets an anchor and a ¶ permalink.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2026/11/17/#a200000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/17/#a200000</guid>
+      <pubDate>Tue, 17 Nov 2026 20:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Two entries in a day, newest first. This one has &lt;code&gt;inline code&lt;/code&gt; and a &lt;a href=&quot;https://example.github.io/my-blog/2026/11/02/&quot;&gt;link to an earlier day&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Morning. An entry can have a title and just one body paragraph.</title>
+      <link>https://example.github.io/my-blog/2026/11/17/#a073000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/17/#a073000</guid>
+      <pubDate>Tue, 17 Nov 2026 07:30:00 GMT</pubDate>
+      <description>&lt;p&gt;Like this.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2026/11/02/#a120000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/02/#a120000</guid>
+      <pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+      <description>&lt;p&gt;The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>A titled entry whose only child is a comment</title>
+      <link>https://example.github.io/my-blog/2026/10/31/#a180000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/10/31/#a180000</guid>
+      <pubDate>Sat, 31 Oct 2026 18:00:00 GMT</pubDate>
+      <description></description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2026/07/16/#a002000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/07/16/#a002000</guid>
+      <pubDate>Wed, 15 Jul 2026 23:20:00 GMT</pubDate>
+      <description>&lt;p&gt;Created at 23:20 GMT on the 15th, which is 00:20 BST on the 16th in Europe/London. So it's filed under the 16th and its anchor is #a002000.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2026/07/15/#a233000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/07/15/#a233000</guid>
+      <pubDate>Wed, 15 Jul 2026 22:30:00 GMT</pubDate>
+      <description>&lt;p&gt;Created at 22:30 GMT, 23:30 BST: still the 15th, anchor #a233000.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/12/31/#n2</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/12/31/#n2</guid>
+      <pubDate>Wed, 31 Dec 2025 00:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Written by hand with no created attribute: anchor #n2, counted from the bottom.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/12/31/#n1</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/12/31/#n1</guid>
+      <pubDate>Wed, 31 Dec 2025 00:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Also hand-written: anchor #n1. Adding entries above these won't change their anchors.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/12/01/#a090000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/12/01/#a090000</guid>
+      <pubDate>Mon, 01 Dec 2025 09:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Older posts live in last year's file, pulled in by an include in blog.opml.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/12/01/#a080000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/12/01/#a080000</guid>
+      <pubDate>Mon, 01 Dec 2025 08:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Unknown attributes, like the one on the entry above, are kept when the editor saves.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/06/15/#a100000</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/06/15/#a100000</guid>
+      <pubDate>Sun, 15 Jun 2025 09:00:00 GMT</pubDate>
+      <description>&lt;p&gt;09:00 GMT is 10:00 BST, so this is #a100000. It's first in document order, so it keeps the plain anchor.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/06/15/#a100000-2</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/06/15/#a100000-2</guid>
+      <pubDate>Sun, 15 Jun 2025 09:00:00 GMT</pubDate>
+      <description>&lt;p&gt;Same created time as the entry above: the builder warns and this one gets #a100000-2.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <link>https://example.github.io/my-blog/2025/06/15/#n1</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2025/06/15/#n1</guid>
+      <pubDate>Sat, 14 Jun 2025 23:00:00 GMT</pubDate>
+      <description>&lt;p&gt;An unparseable created value: warned about and treated as missing, so its anchor is #n1.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

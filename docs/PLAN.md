@@ -90,8 +90,10 @@ output can't drift apart.
 | `/2026/11/18/` | Day page — every entry with its anchor; this is the permalink target |
 | `/2026/11/` | Month archive — all days in the month, in full |
 | `/2026/` | Year index — list of months/days |
+| `/archive/` | Every year, month and day; linked from the navigation |
 | `/about/` etc. | One page per file in `pages/` |
 | `/rss.xml` | RSS 2.0 feed of the most recent entries, each linking to its anchor |
+| `/404.html` | Not-found page (GitHub Pages serves it automatically) |
 | `/images/…` | Copied verbatim |
 
 Theme: one plain HTML template + one CSS file, readable typography, light/dark.
@@ -204,16 +206,20 @@ Each milestone ends with something usable.
 - [x] `fixtures/errors/`: one small repo per build-failing error.
 - **Done when:** the sample files cover every rule in the spec.
 
-### M2 — Core library and builder
-- [ ] npm workspaces monorepo, TypeScript, Vitest.
-- [ ] OPML parse/serialize with round-trip tests.
-- [ ] Include resolution, calendar model, draft/comment filtering.
-- [ ] Renderers: home, day, month, year, page, RSS; base theme.
-- [ ] `porridge build` CLI and `action.yml`.
-- [ ] Golden-file tests: `fixtures/sample-blog` → expected HTML and warnings;
-      each `fixtures/errors/*` fails with the right error.
-- [ ] Round-trip test: every fixture file loads and saves with the same
-      elements, attributes and order (byte-identical once saved by porridge).
+### M2 — Core library and builder ✅
+- [x] npm workspaces monorepo, TypeScript, Vitest.
+- [x] OPML parse/serialize with round-trip tests.
+- [x] Include resolution, calendar model, draft/comment filtering.
+- [x] Renderers: home, day, month, year, archive, page, RSS, 404; base theme.
+- [x] `porridge build` CLI and `action.yml` (runs the committed bundle
+      `dist/porridge.mjs`, so blogs need no `npm install`).
+- [x] Golden-file tests: `fixtures/sample-blog` → `fixtures/expected/`, and
+      exact warnings; each `fixtures/errors/*` fails with the right error.
+- [x] Round-trip test: every fixture and template file comes back
+      byte-identical.
+- [x] CI: typecheck, tests, `dist/` freshness check, and a run of the action
+      itself against `template/`.
+- [ ] Tag `v1` so `uses: alexjj/porridge@v1` resolves (after merging to main).
 - **Done when:** a content repo built from `template/` publishes a working
   blog to GitHub Pages on push, from hand-edited OPML.
 

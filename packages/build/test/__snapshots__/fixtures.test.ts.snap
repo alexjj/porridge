@@ -1,0 +1,30 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sample blog > matches the expected output 1`] = `
+[
+  "2025/06/15/index.html",
+  "2025/06/index.html",
+  "2025/12/01/index.html",
+  "2025/12/31/index.html",
+  "2025/12/index.html",
+  "2025/index.html",
+  "2026/07/15/index.html",
+  "2026/07/16/index.html",
+  "2026/07/index.html",
+  "2026/10/31/index.html",
+  "2026/10/index.html",
+  "2026/11/02/index.html",
+  "2026/11/17/index.html",
+  "2026/11/18/index.html",
+  "2026/11/index.html",
+  "2026/index.html",
+  "404.html",
+  "about/index.html",
+  "archive/index.html",
+  "books/index.html",
+  "index.html",
+  "now/index.html",
+  "rss.xml",
+  "style.css",
+]
+`;

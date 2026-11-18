@@ -172,7 +172,9 @@ The body contains only `include` nodes, one per year, **newest first**. Their
 - **Fallback for hand-written entries with no `created`:** the anchor is `n`
   followed by the entry's 1-based position counting from the **oldest** (bottom)
   entry of the day, e.g. `#n1`. Counting from the bottom keeps existing anchors
-  stable when newer entries are added above. If two entries produce the same
+  stable when newer entries are added above.
+- Anchors are assigned over **all** entries of the day, drafts and comments
+  included, so publishing a draft never changes another entry's anchor. If two entries produce the same
   anchor, the builder appends `-2`, `-3`, … in document order and warns.
 
 ### RSS
@@ -220,7 +222,7 @@ Published at `/<slug>/`.
 - Lowercase letters, digits and hyphens, starting with a letter:
   `^[a-z][a-z0-9-]*$`. (Starting with a letter keeps pages clear of the
   `/2026/` year URLs.)
-- Reserved, can't be used: `images`, `rss`, `index`, `assets`.
+- Reserved, can't be used: `images`, `rss`, `index`, `assets`, `archive`.
 
 ### Rendering rules
 
@@ -238,8 +240,10 @@ Published at `/<slug>/`.
   browser first; long edge 2000px; JPEG, PNG, WebP or GIF).
 - Referenced with root-relative Markdown: `![alt](/images/2026/11/cat.jpg)`.
 - The builder rewrites root-relative URLs (those starting with a single `/`)
-  in links and images against `porridge:baseUrl`, so a site served from a
-  sub-path such as `https://example.github.io/my-blog/` works.
+  in Markdown links and images against `porridge:baseUrl`, so a site served
+  from a sub-path such as `https://example.github.io/my-blog/` works. Pages
+  use the base URL's path (`/my-blog/images/…`); RSS uses the full URL. URLs
+  in inline HTML are left as written.
 - Everything under `images/` is copied to the site verbatim.
 
 ## 7. Errors and warnings
