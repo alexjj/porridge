@@ -3,3 +3,4 @@ out/
 packages/editor/dist/
 packages/editor/test-results/
 packages/editor/playwright-report/
+packages/editor/dist-prod/

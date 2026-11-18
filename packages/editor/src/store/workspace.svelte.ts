@@ -24,7 +24,7 @@ import {
   type ENode,
 } from "../model/tree.js";
 import { kv } from "./persist.js";
-import { STARTER } from "./starter.js";
+import { STARTER, STARTER_IMAGES } from "./starter.js";
 import { prepareImage, toBase64 } from "./photos.js";
 import { download, zip } from "./zip.js";
 
@@ -67,7 +67,7 @@ export class Workspace {
   /** Called after any content change. */
   onChange: (() => void) | undefined;
   /** Images added in this browser (path → object URL), shown before and just after upload. */
-  localImages: Record<string, string> = $state({});
+  localImages: Record<string, string> = $state({ ...STARTER_IMAGES });
   /** Images not saved to GitHub yet. */
   pendingImages: string[] = $state([]);
   /** The node whose menu is open, and where it was opened. */
@@ -658,6 +658,21 @@ export class Workspace {
     this.version++;
     this.onChange?.();
     return path;
+  }
+
+  /**
+   * The starter blog's images that the blog still uses, base64 encoded: for
+   * uploading this browser's blog to a repository that has none.
+   */
+  async starterImageUploads(): Promise<Record<string, string>> {
+    const all = Object.values(this.texts()).join("\n");
+    const out: Record<string, string> = {};
+    for (const [path, url] of Object.entries(STARTER_IMAGES)) {
+      if (!all.includes(`/${path}`)) continue;
+      const res = await fetch(url);
+      if (res.ok) out[path] = await toBase64(await res.blob());
+    }
+    return out;
   }
 
   /** Pending images, base64 encoded, for uploading. */

@@ -20,8 +20,9 @@
     const file = ws.file;
     const node = ws.editingId ?? ws.zoom?.id ?? lastNode;
     const imageBase = ws.imageBase;
+    const localImages = { ...ws.localImages };
     const timer = setTimeout(async () => {
-      preview = await renderPreview(ws.texts(), file, node, imageBase);
+      preview = await renderPreview(ws.texts(), file, node, imageBase, localImages);
     }, 250);
     return () => clearTimeout(timer);
   });

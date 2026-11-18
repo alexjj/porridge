@@ -200,9 +200,16 @@ describe("buildToDirectory", () => {
   });
 
   it("builds the starter template cleanly", async () => {
-    const { warnings, site } = await buildSite(nodeSource(join(repo, "template")));
+    const { warnings, site, files } = await buildSite(nodeSource(join(repo, "template")));
     expect(warnings).toEqual([]);
-    expect(site.days).toHaveLength(1);
+    // Two months of example posts; the draft isn't published.
+    expect(site.days.map((d) => d.date)).toEqual(["2026-11-18", "2026-11-16", "2026-11-12", "2026-10-28", "2026-10-14", "2026-10-03"]);
+    expect(site.days.flatMap((d) => d.entries)).toHaveLength(9);
+    // Every image the starter uses is in the template.
+    const html = files.map((f) => f.content).join("\n");
+    for (const [, path] of html.matchAll(/src="\/(images\/[^"]+)"/g)) {
+      expect(existsSync(join(repo, "template", path!)), path).toBe(true);
+    }
   });
 });
 

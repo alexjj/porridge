@@ -3,7 +3,8 @@ import { join, relative } from "node:path";
 import { expect, type Page } from "@playwright/test";
 import { FakeGitHub } from "../test/fake-github.js";
 
-const TEMPLATE = join(import.meta.dirname, "../../../template");
+// The test blog the e2e build starts with (see src/store/starter.ts).
+const TEMPLATE = join(import.meta.dirname, "starter");
 
 export function templateFiles(): Record<string, string> {
   const out: Record<string, string> = {};
