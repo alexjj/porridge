@@ -24,7 +24,7 @@
           <outline text="Comments are notes to self and never appear on the site." isComment="true"/>
           <outline text="Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;https://example.com&gt;."/>
         </outline>
-        <outline text="A one-paragraph post with no children, so no title. It still gets an anchor and a ¶ permalink." created="Wed, 18 Nov 2026 09:12:03 GMT"/>
+        <outline text="A one-paragraph post with no children, so no title. It still gets an anchor and a # permalink." created="Wed, 18 Nov 2026 09:12:03 GMT"/>
       </outline>
       <outline text="17th November" type="calendarDay" date="2026-11-17">
         <outline text="Two entries in a day, newest first. This one has `inline code` and a [link to an earlier day](/2026/11/02/)." created="Tue, 17 Nov 2026 20:00:00 GMT"/>

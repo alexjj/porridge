@@ -203,17 +203,18 @@ function renderDay(ctx: Ctx, day: Day): string {
 }
 
 function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
-  const pilcrow = `<a class="permalink" href="${href}" title="Permalink">¶</a>`;
+  // Every entry gets a "#" link, hung in the left margin beside its first line.
+  const hash = `<a class="permalink" href="${href}" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
   const out = [`<article class="entry" id="${entry.anchor}">`];
   if (entry.body === null) {
-    out.push(`<p>${md.html(entry.text)} ${pilcrow}</p>`);
+    out.push(`<p>${hash}${md.html(entry.text)}</p>`);
   } else {
     const title = md.html(entry.text);
     // A title that already contains a link can't be wrapped in another one.
     out.push(
       title.includes("<a ")
-        ? `<h3 class="entry-title">${title} ${pilcrow}</h3>`
-        : `<h3 class="entry-title"><a href="${href}">${title}</a></h3>`,
+        ? `<h3 class="entry-title">${hash}${title}</h3>`
+        : `<h3 class="entry-title">${hash}<a href="${href}">${title}</a></h3>`,
     );
     out.push(...renderBlocks(md, entry.body));
   }

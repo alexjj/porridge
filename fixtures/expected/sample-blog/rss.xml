@@ -31,7 +31,7 @@
       <link>https://example.github.io/my-blog/2026/11/18/#a091203</link>
       <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/18/#a091203</guid>
       <pubDate>Wed, 18 Nov 2026 09:12:03 GMT</pubDate>
-      <description>&lt;p&gt;A one-paragraph post with no children, so no title. It still gets an anchor and a ¶ permalink.&lt;/p&gt;</description>
+      <description>&lt;p&gt;A one-paragraph post with no children, so no title. It still gets an anchor and a # permalink.&lt;/p&gt;</description>
     </item>
     <item>
       <link>https://example.github.io/my-blog/2026/11/17/#a200000</link>

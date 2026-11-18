@@ -150,9 +150,10 @@ The body contains only `include` nodes, one per year, **newest first**. Their
 ### Entries
 
 - **No children →** a single untitled paragraph. Rendered as a paragraph with a
-  small `¶` permalink.
+  `#` permalink in the left margin.
 - **Has children →** `text` is the entry's **title**, rendered as a heading
-  that links to the entry's permalink; the children are its body.
+  that links to the entry's permalink, with the same `#` in the margin; the
+  children are its body.
 - Body children render as paragraphs. A body node that itself has children
   renders as a paragraph followed by a nested list of its children,
   recursively.

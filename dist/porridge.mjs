@@ -7740,14 +7740,20 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .day-title a { color: var(--muted); text-decoration: none; }
 .day-title a:hover { color: var(--text); }
 
-.entry { margin: 0 0 1.5rem; scroll-margin-top: 1rem; }
+.entry { position: relative; margin: 0 0 1.5rem; scroll-margin-top: 1rem; }
 .entry:target { background: color-mix(in srgb, var(--link) 8%, transparent); border-radius: 4px; box-shadow: 0 0 0 0.5rem color-mix(in srgb, var(--link) 8%, transparent); }
 .entry p { margin: 0 0 0.85rem; }
 .entry-title { font-family: var(--sans); font-size: 1.2rem; line-height: 1.3; margin: 0 0 0.5rem; }
-.entry-title > a:first-child { color: var(--text); text-decoration: none; }
-.entry-title > a:first-child:hover { color: var(--link); }
-.permalink { color: var(--muted); text-decoration: none; font-family: var(--sans); font-size: 0.85em; }
+.entry-title > a:not(.permalink) { color: var(--text); text-decoration: none; }
+.entry-title > a:not(.permalink):hover { color: var(--link); }
+/* The "#" link: in the margin to the left of the entry, on its first line. */
+.permalink { position: absolute; left: -1.35rem; width: 1rem; text-align: center; color: var(--muted); opacity: 0.55; text-decoration: none; font-family: var(--sans); font-weight: 400; }
+.entry:hover .permalink, .entry:target .permalink, .permalink:focus-visible { opacity: 1; }
 .permalink:hover { color: var(--link); }
+/* Narrow screens: widen the left gutter so the "#" fits. */
+@media (max-width: 42rem) {
+  .site-header, main, .site-footer { padding-left: 1.85rem; }
+}
 
 ul { padding-left: 1.4rem; margin: 0 0 0.85rem; }
 li { margin: 0.15rem 0; }
@@ -7944,14 +7950,14 @@ function renderDay(ctx, day) {
   ].join("\n");
 }
 function renderEntry(md, entry, href) {
-  const pilcrow = `<a class="permalink" href="${href}" title="Permalink">\xB6</a>`;
+  const hash = `<a class="permalink" href="${href}" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
   const out = [`<article class="entry" id="${entry.anchor}">`];
   if (entry.body === null) {
-    out.push(`<p>${md.html(entry.text)} ${pilcrow}</p>`);
+    out.push(`<p>${hash}${md.html(entry.text)}</p>`);
   } else {
     const title = md.html(entry.text);
     out.push(
-      title.includes("<a ") ? `<h3 class="entry-title">${title} ${pilcrow}</h3>` : `<h3 class="entry-title"><a href="${href}">${title}</a></h3>`
+      title.includes("<a ") ? `<h3 class="entry-title">${hash}${title}</h3>` : `<h3 class="entry-title">${hash}<a href="${href}">${title}</a></h3>`
     );
     out.push(...renderBlocks(md, entry.body));
   }

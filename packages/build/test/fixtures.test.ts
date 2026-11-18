@@ -135,8 +135,10 @@ describe("rendered sample blog", async () => {
   it("links titles and pilcrows to the day page anchor", () => {
     const day = file("2026/11/18/index.html");
     expect(day).toContain(`<article class="entry" id="a174010">`);
-    expect(day).toContain(`<h3 class="entry-title"><a href="/my-blog/2026/11/18/#a174010">Starting porridge</a></h3>`);
-    expect(day).toContain(`<a class="permalink" href="/my-blog/2026/11/18/#a091203" title="Permalink">¶</a>`);
+    const hash = (anchor: string) =>
+      `<a class="permalink" href="/my-blog/2026/11/18/#${anchor}" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
+    expect(day).toContain(`<h3 class="entry-title">${hash("a174010")}<a href="/my-blog/2026/11/18/#a174010">Starting porridge</a></h3>`);
+    expect(day).toContain(`<p>${hash("a091203")}A one-paragraph post`);
   });
 
   it("rewrites root-relative URLs to the base path, and to absolute URLs in RSS", () => {
