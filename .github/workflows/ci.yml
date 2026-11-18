@@ -47,7 +47,11 @@ jobs:
         with:
           content: template
           output: _site
+          # The template sets no site address; blogs pass their Pages address.
+          fallback-base-url: https://example.github.io/my-blog/
       - run: test -f _site/index.html && test -f _site/rss.xml && test -f _site/about/index.html
+      - name: Links use the fallback address
+        run: grep -q 'href="/my-blog/style.css"' _site/index.html
       - name: Search index was built
         run: test -f _site/search/index.html && test -f _site/pagefind/pagefind-ui.js && test -f _site/pagefind/pagefind-entry.json
       - name: Build errors fail the step

@@ -82,6 +82,9 @@ Before pushing, run **typecheck, test, e2e and bundle**. CI fails if
   `createInlineRenderer`: site base path in HTML, full URL in RSS, the repo's
   raw URL for images in the editor.
 - Reserved page names: see `RESERVED_SLUGS` in `core/src/site.ts`.
+- The site address (`porridge:baseUrl`) is optional: the Action passes the
+  repo's Pages address as `fallback-base-url`, and the template's placeholder
+  counts as unset. The editor does the same with `pagesUrl(conn)`.
 
 **Editor (Svelte 5)**
 - State lives in classes with runes (`$state`, `$derived`) in `*.svelte.ts`.

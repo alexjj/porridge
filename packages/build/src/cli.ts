@@ -2,13 +2,16 @@ import { posix } from "node:path";
 import { PorridgeError } from "@porridge/core";
 import { buildToDirectory } from "./index.js";
 
-const USAGE = `Usage: porridge build [content-dir] [output-dir] [--base-url URL]
+const USAGE = `Usage: porridge build [content-dir] [output-dir] [--base-url URL] [--fallback-base-url URL]
 
 Builds a porridge blog into a static site.
 
   content-dir      folder containing blog.opml (default: .)
   output-dir       where to write the site; replaced on each build (default: _site)
   --base-url URL   use this instead of porridge:baseUrl, e.g. for a local preview
+  --fallback-base-url URL
+                   use this when blog.opml has no porridge:baseUrl (or the template's
+                   placeholder); the GitHub Action passes the Pages address
 `;
 
 const inActions = process.env.GITHUB_ACTIONS === "true";
@@ -29,6 +32,7 @@ function report(level: "warning" | "error", message: string, file?: string) {
 async function main(argv: string[]): Promise<number> {
   const positional: string[] = [];
   let baseUrl: string | undefined;
+  let fallbackBaseUrl: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (arg === "-h" || arg === "--help") {
@@ -42,6 +46,14 @@ async function main(argv: string[]): Promise<number> {
       }
     } else if (arg.startsWith("--base-url=")) {
       baseUrl = arg.slice("--base-url=".length);
+    } else if (arg === "--fallback-base-url") {
+      fallbackBaseUrl = argv[++i];
+      if (!fallbackBaseUrl) {
+        console.error("--fallback-base-url needs a value.\n\n" + USAGE);
+        return 2;
+      }
+    } else if (arg.startsWith("--fallback-base-url=")) {
+      fallbackBaseUrl = arg.slice("--fallback-base-url=".length);
     } else if (arg.startsWith("-")) {
       console.error(`Unknown option ${arg}.\n\n${USAGE}`);
       return 2;
@@ -60,7 +72,7 @@ async function main(argv: string[]): Promise<number> {
   const repoPath = (file: string) => posix.normalize(posix.join(contentDir.replace(/\\/g, "/"), file));
 
   try {
-    const { site, warnings } = await buildToDirectory(contentDir, outDir, { baseUrl });
+    const { site, warnings } = await buildToDirectory(contentDir, outDir, { baseUrl, fallbackBaseUrl: fallbackBaseUrl || undefined });
     for (const w of warnings) report("warning", w.message, repoPath(w.file));
     const entries = site.days.reduce((n, d) => n + d.entries.length, 0);
     console.log(

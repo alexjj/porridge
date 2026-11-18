@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GitHub, GitHubError, parseRepo, type Connection } from "../src/github/api.js";
+import { GitHub, GitHubError, pagesUrl, parseRepo, type Connection } from "../src/github/api.js";
 import { ConflictError, localChanges, pull, push, watchBuild, type Base, type BuildState } from "../src/github/sync.js";
 import { FakeGitHub } from "./fake-github.js";
 
@@ -35,6 +35,11 @@ describe("connecting", () => {
     expect(parseRepo("me/blog")).toEqual({ owner: "me", repo: "blog" });
     expect(parseRepo("https://github.com/me/my.blog.git")).toEqual({ owner: "me", repo: "my.blog" });
     expect(parseRepo("not a repo")).toBeUndefined();
+  });
+
+  it("knows a repository's GitHub Pages address", () => {
+    expect(pagesUrl({ owner: "AlexJJ", repo: "my-blog" })).toBe("https://alexjj.github.io/my-blog/");
+    expect(pagesUrl({ owner: "alexjj", repo: "AlexJJ.github.io" })).toBe("https://alexjj.github.io/");
   });
 
   it("explains auth and not-found errors", async () => {

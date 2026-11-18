@@ -7504,13 +7504,16 @@ var PorridgeError = class extends Error {
 };
 var RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive", "search", "pagefind"];
 var SLUG = /^[a-z][a-z0-9-]*$/;
+function isPlaceholderUrl(url) {
+  return /YOUR-USERNAME|YOUR-REPO/.test(url);
+}
 async function loadSite(source, options = {}) {
   const warnings = [];
   const warn = (file, message) => warnings.push({ file, message });
   const blogFile = "blog.opml";
   const blog = await readOpml(source, blogFile);
   if (!blog) throw new PorridgeError("blog.opml not found.", blogFile);
-  const settings = readSettings(blog, warn, options.baseUrl);
+  const settings = readSettings(blog, warn, options.baseUrl, options.fallbackBaseUrl);
   const daysByDate = /* @__PURE__ */ new Map();
   for (const node of blog.body) {
     if (attr(node, "type") !== "include") {
@@ -7556,12 +7559,20 @@ function resolvePath(from, url) {
   }
   return parts.join("/");
 }
-function readSettings(blog, warn, baseUrlOverride) {
+function readSettings(blog, warn, baseUrlOverride, fallbackBaseUrl) {
   const file = "blog.opml";
   const title = headValue(blog, "title");
-  const baseUrlRaw = baseUrlOverride || headValue(blog, "porridge:baseUrl");
+  const own = headValue(blog, "porridge:baseUrl");
+  const unset = !own || isPlaceholderUrl(own);
+  if (own && unset && !fallbackBaseUrl && !baseUrlOverride) {
+    warn(file, `porridge:baseUrl is still the template's placeholder (${own}); set your site's address in Blog settings.`);
+  }
+  const baseUrlRaw = baseUrlOverride || unset && fallbackBaseUrl || own;
   const missing = [!title && "title", !baseUrlRaw && "porridge:baseUrl"].filter(Boolean);
-  if (missing.length) throw new PorridgeError(`blog.opml is missing required settings: ${missing.join(", ")}.`, file);
+  if (missing.length) {
+    const hint = !baseUrlRaw ? " Set the site address in Blog settings, or build with a fallback address (the GitHub Action passes your Pages address)." : "";
+    throw new PorridgeError(`blog.opml is missing required settings: ${missing.join(", ")}.${hint}`, file);
+  }
   let url;
   try {
     url = new URL(baseUrlRaw);
@@ -8218,13 +8229,16 @@ async function exists(path) {
 }
 
 // packages/build/src/cli.ts
-var USAGE = `Usage: porridge build [content-dir] [output-dir] [--base-url URL]
+var USAGE = `Usage: porridge build [content-dir] [output-dir] [--base-url URL] [--fallback-base-url URL]
 
 Builds a porridge blog into a static site.
 
   content-dir      folder containing blog.opml (default: .)
   output-dir       where to write the site; replaced on each build (default: _site)
   --base-url URL   use this instead of porridge:baseUrl, e.g. for a local preview
+  --fallback-base-url URL
+                   use this when blog.opml has no porridge:baseUrl (or the template's
+                   placeholder); the GitHub Action passes the Pages address
 `;
 var inActions = process.env.GITHUB_ACTIONS === "true";
 var ghEscape = (s) => s.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
@@ -8240,6 +8254,7 @@ function report(level, message, file) {
 async function main(argv) {
   const positional = [];
   let baseUrl;
+  let fallbackBaseUrl;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "-h" || arg === "--help") {
@@ -8253,6 +8268,14 @@ async function main(argv) {
       }
     } else if (arg.startsWith("--base-url=")) {
       baseUrl = arg.slice("--base-url=".length);
+    } else if (arg === "--fallback-base-url") {
+      fallbackBaseUrl = argv[++i];
+      if (!fallbackBaseUrl) {
+        console.error("--fallback-base-url needs a value.\n\n" + USAGE);
+        return 2;
+      }
+    } else if (arg.startsWith("--fallback-base-url=")) {
+      fallbackBaseUrl = arg.slice("--fallback-base-url=".length);
     } else if (arg.startsWith("-")) {
       console.error(`Unknown option ${arg}.
 
@@ -8269,7 +8292,7 @@ ${USAGE}`);
   }
   const repoPath = (file) => posix.normalize(posix.join(contentDir.replace(/\\/g, "/"), file));
   try {
-    const { site, warnings } = await buildToDirectory(contentDir, outDir, { baseUrl });
+    const { site, warnings } = await buildToDirectory(contentDir, outDir, { baseUrl, fallbackBaseUrl: fallbackBaseUrl || void 0 });
     for (const w of warnings) report("warning", w.message, repoPath(w.file));
     const entries = site.days.reduce((n, d) => n + d.entries.length, 0);
     console.log(

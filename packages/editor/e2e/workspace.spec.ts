@@ -124,7 +124,7 @@ test("a week of posts exports as valid OPML", async ({ page }) => {
     read: async (p) => texts[p],
     list: async () => [],
   };
-  const site = await loadSite(source);
+  const site = await loadSite(source, { fallbackBaseUrl: "https://me.github.io/blog/" });
   expect(site.warnings).toEqual([]);
   expect(site.days.map((d) => d.date)).toEqual([
     "2027-01-03",

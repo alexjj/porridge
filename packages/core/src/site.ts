@@ -94,6 +94,11 @@ export interface Site {
 export const RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive", "search", "pagefind"];
 const SLUG = /^[a-z][a-z0-9-]*$/;
 
+/** The template's placeholder address, which means "not set yet". */
+export function isPlaceholderUrl(url: string): boolean {
+  return /YOUR-USERNAME|YOUR-REPO/.test(url);
+}
+
 /** Why `slug` can't be a page name, or undefined if it can. */
 export function slugProblem(slug: string): string | undefined {
   if (!SLUG.test(slug)) return "Use lowercase letters, digits and hyphens, starting with a letter.";
@@ -104,6 +109,11 @@ export function slugProblem(slug: string): string | undefined {
 export interface LoadOptions {
   /** Overrides porridge:baseUrl, e.g. for a local preview. */
   baseUrl?: string;
+  /**
+   * Used when blog.opml has no porridge:baseUrl, or still has the template's
+   * placeholder. The GitHub Action passes the repository's Pages address.
+   */
+  fallbackBaseUrl?: string;
 }
 
 export async function loadSite(source: ContentSource, options: LoadOptions = {}): Promise<Site> {
@@ -113,7 +123,7 @@ export async function loadSite(source: ContentSource, options: LoadOptions = {})
   const blogFile = "blog.opml";
   const blog = await readOpml(source, blogFile);
   if (!blog) throw new PorridgeError("blog.opml not found.", blogFile);
-  const settings = readSettings(blog, warn, options.baseUrl);
+  const settings = readSettings(blog, warn, options.baseUrl, options.fallbackBaseUrl);
 
   const daysByDate = new Map<string, Day>();
   for (const node of blog.body) {
@@ -172,12 +182,21 @@ function readSettings(
   blog: OpmlDoc,
   warn: (file: string, message: string) => void,
   baseUrlOverride: string | undefined,
+  fallbackBaseUrl: string | undefined,
 ): Settings {
   const file = "blog.opml";
   const title = headValue(blog, "title");
-  const baseUrlRaw = baseUrlOverride || headValue(blog, "porridge:baseUrl");
+  const own = headValue(blog, "porridge:baseUrl");
+  const unset = !own || isPlaceholderUrl(own);
+  if (own && unset && !fallbackBaseUrl && !baseUrlOverride) {
+    warn(file, `porridge:baseUrl is still the template's placeholder (${own}); set your site's address in Blog settings.`);
+  }
+  const baseUrlRaw = baseUrlOverride || (unset && fallbackBaseUrl) || own;
   const missing = [!title && "title", !baseUrlRaw && "porridge:baseUrl"].filter(Boolean);
-  if (missing.length) throw new PorridgeError(`blog.opml is missing required settings: ${missing.join(", ")}.`, file);
+  if (missing.length) {
+    const hint = !baseUrlRaw ? " Set the site address in Blog settings, or build with a fallback address (the GitHub Action passes your Pages address)." : "";
+    throw new PorridgeError(`blog.opml is missing required settings: ${missing.join(", ")}.${hint}`, file);
+  }
 
   let url: URL;
   try {

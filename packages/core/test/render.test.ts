@@ -73,6 +73,37 @@ describe("permalinks", () => {
   });
 });
 
+describe("site address", () => {
+  const withBase = (base: string | null) =>
+    blog(10).replace("<porridge:baseUrl>https://e.com/</porridge:baseUrl>", base === null ? "" : `<porridge:baseUrl>${base}</porridge:baseUrl>`);
+  const settings = async (base: string | null, fallbackBaseUrl?: string) =>
+    (await buildSite(memorySource({ "blog.opml": withBase(base), "blog/2026.opml": year }), { fallbackBaseUrl })).site;
+
+  it("uses the fallback (the Pages address) when blog.opml has none", async () => {
+    const site = await settings(null, "https://me.github.io/blog");
+    expect(site.settings.baseUrl).toBe("https://me.github.io/blog/");
+    expect(site.settings.basePath).toBe("/blog/");
+  });
+
+  it("treats the template's placeholder as not set", async () => {
+    const site = await settings("https://YOUR-USERNAME.github.io/YOUR-REPO/", "https://me.github.io/blog/");
+    expect(site.settings.baseUrl).toBe("https://me.github.io/blog/");
+    expect(site.warnings).toEqual([]);
+  });
+
+  it("prefers the blog's own address", async () => {
+    expect((await settings("https://blog.example/", "https://me.github.io/blog/")).settings.baseUrl).toBe("https://blog.example/");
+  });
+
+  it("warns about the placeholder, and needs an address, without a fallback", async () => {
+    const site = await settings("https://YOUR-USERNAME.github.io/YOUR-REPO/");
+    expect(site.warnings.map((w) => w.message)).toEqual([
+      "porridge:baseUrl is still the template's placeholder (https://YOUR-USERNAME.github.io/YOUR-REPO/); set your site's address in Blog settings.",
+    ]);
+    await expect(settings(null)).rejects.toThrow(/missing required settings: porridge:baseUrl/);
+  });
+});
+
 describe("settings", () => {
   it("warns about bad values and falls back to defaults", async () => {
     const bad = blog(0).replace("</head>", "<porridge:timezone>Mars/Olympus</porridge:timezone></head>");

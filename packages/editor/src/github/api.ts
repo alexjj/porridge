@@ -196,6 +196,12 @@ function describe(status: number, detail: string): string {
   }
 }
 
+/** The repository's default GitHub Pages address. */
+export function pagesUrl(conn: Pick<Connection, "owner" | "repo">): string {
+  const host = `${conn.owner.toLowerCase()}.github.io`;
+  return conn.repo.toLowerCase() === host ? `https://${host}/` : `https://${host}/${conn.repo}/`;
+}
+
 /** URL prefix for loading files in the repo directly (public repositories only). */
 export function rawBase(conn: Connection): string {
   return `https://raw.githubusercontent.com/${conn.owner}/${conn.repo}/${seg(conn.branch)}/`;

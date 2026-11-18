@@ -1,7 +1,7 @@
 // The editor's connection to a GitHub repository: loading from it, saving to
 // it, publishing, and what's different between the two.
 
-import { GitHub, GitHubError, rawBase, type Connection } from "../github/api.js";
+import { GitHub, GitHubError, pagesUrl, rawBase, type Connection } from "../github/api.js";
 import { ConflictError, localChanges, pull, push, watchBuild, type Base, type BuildState } from "../github/sync.js";
 import { fileFromOpml, fileToOpml } from "../model/tree.js";
 import { kv } from "./persist.js";
@@ -65,6 +65,7 @@ export class Remote {
 
   private applyImageBase() {
     this.ws.imageBase = this.conn && !this.isPrivate ? rawBase(this.conn) : "/";
+    this.ws.defaultSiteBase = this.conn ? pagesUrl(this.conn) : "/";
   }
 
   private scheduleRefresh() {

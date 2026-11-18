@@ -51,8 +51,8 @@ test("Publish commits and follows the build", async ({ page }) => {
   await page.keyboard.type("Going live");
   await page.getByRole("button", { name: "Publish" }).click();
   await expect(status(page)).toHaveText("Published");
-  // The link goes to the site (the template's placeholder address here).
-  await expect(status(page).getByRole("link")).toHaveAttribute("href", "https://YOUR-USERNAME.github.io/YOUR-REPO/");
+  // The link goes to the site: with no address in Blog settings, the repo's Pages address.
+  await expect(status(page).getByRole("link")).toHaveAttribute("href", "https://me.github.io/blog/");
   expect(fake.lastMessage()).toBe("Publish: blog/2026");
   expect(fake.runs.map((r) => [r.event, r.head_sha === fake.head(), r.conclusion])).toEqual([["push", true, "success"]]);
 });

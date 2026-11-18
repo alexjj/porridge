@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { editing, newEntry, openEditor, outline } from "./helpers.js";
+import { editing, menu, newEntry, openEditor, outline } from "./helpers.js";
 
 const PHOTO = join(import.meta.dirname, "photo.jpg");
 
@@ -60,16 +60,18 @@ test("a link added from the menu goes at the end of the line", async ({ page }) 
 
 test("Copy link copies the entry's permalink", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  // Links need the site's address (no repo is connected here).
+  await menu(page, "Blog settings…");
+  await page.getByRole("dialog", { name: "Settings" }).getByLabel("Site address").fill("https://blog.example/");
+  await page.getByRole("dialog", { name: "Settings" }).getByRole("button", { name: "Close" }).click();
   await newEntry(page);
   await page.keyboard.type("Link to me");
   await page.keyboard.press("Escape");
   await openMenu(page, "Link to me");
   await lineMenu(page).getByRole("menuitem", { name: "Copy link" }).click();
   await expect(page.locator(".toast")).toHaveText("Link copied");
-  // The template's (placeholder) site address, the day page, and the time in Europe/London.
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    "https://YOUR-USERNAME.github.io/YOUR-REPO/2026/11/18/#a193000",
-  );
+  // The site address, the day page, and the time in Europe/London.
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://blog.example/2026/11/18/#a193000");
 });
 
 test("days and months can be deleted from their menu", async ({ page }) => {

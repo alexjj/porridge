@@ -1,6 +1,6 @@
 <script lang="ts">
   import Modal from "./Modal.svelte";
-  import { parseRepo, type Connection } from "../github/api.js";
+  import { pagesUrl, parseRepo, type Connection } from "../github/api.js";
   import { fileHead } from "../model/tree.js";
   import type { Remote } from "../store/remote.svelte.js";
   import type { Workspace } from "../store/workspace.svelte.js";
@@ -28,7 +28,7 @@
 
   const baseUrlProblem = $derived.by(() => {
     const v = value("porridge:baseUrl");
-    if (!v) return "Required: the address your blog is published at.";
+    if (!v) return "";
     if (!/^https?:\/\/[^/]+/.test(v)) return "Start with https://";
     if (v.includes("YOUR-USERNAME") || v.includes("YOUR-REPO")) return "Replace the placeholder with your blog's GitHub Pages address.";
     return "";
@@ -95,7 +95,17 @@
         <label>Your name <input value={value("ownerName")} oninput={set("ownerName")} /></label>
         <div class="field">
           <label for="set-baseurl">Site address</label>
-          <input id="set-baseurl" type="url" value={value("porridge:baseUrl")} oninput={set("porridge:baseUrl")} placeholder="https://you.github.io/blog/" aria-describedby="set-baseurl-problem" />
+          <input
+            id="set-baseurl"
+            type="url"
+            value={value("porridge:baseUrl")}
+            oninput={set("porridge:baseUrl")}
+            placeholder={remote.conn ? pagesUrl(remote.conn) : "https://you.github.io/blog/"}
+            aria-describedby="set-baseurl-hint set-baseurl-problem"
+          />
+          <span id="set-baseurl-hint" class="field-hint">
+            Leave empty to use {remote.conn ? "the repository's GitHub Pages address" : "your GitHub Pages address"}. Only needed for your own domain.
+          </span>
           <span id="set-baseurl-problem" class="field-problem">{baseUrlProblem}</span>
         </div>
         <div class="field">

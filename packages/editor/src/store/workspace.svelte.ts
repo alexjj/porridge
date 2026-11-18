@@ -3,7 +3,7 @@
 
 import { flushSync } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
-import { createInlineRenderer, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
+import { createInlineRenderer, isPlaceholderUrl, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
 import { imagePath } from "../model/images.js";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
 import { ancestors, block, locate, neighbour, type Block, type Focus, type Tree } from "../model/ops.js";
@@ -61,6 +61,8 @@ export class Workspace {
   error = $state("");
   /** Bumped on every content change (drives the preview). */
   version = $state(0);
+  /** The site's address when Blog settings leave it empty: the repo's Pages address, once connected. */
+  defaultSiteBase = $state("/");
   /** Where `/images/…` loads from in the editor (the repo, once connected). */
   imageBase = $state("/");
   md = $derived(createInlineRenderer(this.siteBase, this.imageBase));
@@ -123,7 +125,7 @@ export class Workspace {
   get siteBase(): string {
     const blog = this.files["blog.opml"];
     const url = blog && fileHead(blog, "porridge:baseUrl");
-    if (!url || !/^https?:\/\//.test(url)) return "/";
+    if (!url || !/^https?:\/\//.test(url) || isPlaceholderUrl(url)) return this.defaultSiteBase;
     return url.endsWith("/") ? url : `${url}/`;
   }
 

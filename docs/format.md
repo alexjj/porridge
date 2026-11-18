@@ -97,7 +97,7 @@ any other value means false.
 | `title` | *(required)* | Site title |
 | `description` | empty | Site tagline, RSS description |
 | `ownerName` | empty | Author name |
-| `porridge:baseUrl` | *(required)* | Absolute URL of the published site, ending in `/` |
+| `porridge:baseUrl` | the build's fallback | Absolute URL of the published site, ending in `/`. Optional when built by the GitHub Action, which passes the repository's Pages address as a fallback; the template's placeholder (`YOUR-USERNAME`/`YOUR-REPO`) counts as not set. Only needed for a custom domain |
 | `porridge:timezone` | `UTC` | IANA timezone; decides what "today" is and anchor times |
 | `porridge:homeDays` | `10` | Number of days shown in full on the home page |
 | `porridge:rssItems` | `25` | Number of entries in the feed |
@@ -262,7 +262,8 @@ The builder is forgiving: it publishes what it can and reports problems.
 |---|---|
 | File isn't well-formed XML | **Error**, build fails |
 | `include` target missing | **Error**, build fails |
-| Missing `title` or `porridge:baseUrl` in `blog.opml` | **Error**, build fails |
+| Missing `title`, or no `porridge:baseUrl` and no fallback address | **Error**, build fails |
+| `porridge:baseUrl` is the template's placeholder and there's no fallback | Warning |
 | Calendar node missing or malformed `date` | Warning, node skipped |
 | Wrong node type at month/day level | Warning, node skipped |
 | Invalid or reserved page slug | Warning, page skipped |

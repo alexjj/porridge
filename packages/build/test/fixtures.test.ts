@@ -200,7 +200,11 @@ describe("buildToDirectory", () => {
   });
 
   it("builds the starter template cleanly", async () => {
-    const { warnings, site, files } = await buildSite(nodeSource(join(repo, "template")));
+    // The template sets no site address; the Action passes the Pages address.
+    const { warnings, site, files } = await buildSite(nodeSource(join(repo, "template")), {
+      fallbackBaseUrl: "https://me.github.io/blog/",
+    });
+    expect(site.settings.baseUrl).toBe("https://me.github.io/blog/");
     expect(warnings).toEqual([]);
     // Two months of example posts; the draft isn't published.
     expect(site.days.map((d) => d.date)).toEqual(["2026-11-18", "2026-11-16", "2026-11-12", "2026-10-28", "2026-10-14", "2026-10-03"]);

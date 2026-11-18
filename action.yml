@@ -14,6 +14,9 @@ inputs:
   base-url:
     description: Use this instead of porridge:baseUrl from blog.opml (e.g. for preview deployments).
     default: ""
+  fallback-base-url:
+    description: The site's address if blog.opml doesn't set one (pass the Pages address from actions/configure-pages).
+    default: ""
   search:
     description: Build the search index with Pagefind ("true" or "false").
     default: "true"
@@ -30,9 +33,11 @@ runs:
         CONTENT: ${{ inputs.content }}
         OUTPUT: ${{ inputs.output }}
         BASE_URL: ${{ inputs.base-url }}
+        FALLBACK_BASE_URL: ${{ inputs.fallback-base-url }}
       run: |
         args=(build "$CONTENT" "$OUTPUT")
         if [ -n "$BASE_URL" ]; then args+=(--base-url "$BASE_URL"); fi
+        if [ -n "$FALLBACK_BASE_URL" ]; then args+=(--fallback-base-url "$FALLBACK_BASE_URL"); fi
         node "$GITHUB_ACTION_PATH/dist/porridge.mjs" "${args[@]}"
     - name: Build search index
       if: inputs.search == 'true'
