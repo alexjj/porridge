@@ -16,7 +16,7 @@ function crc32(data: Uint8Array): number {
   return (c ^ 0xffffffff) >>> 0;
 }
 
-export function zip(files: { path: string; text: string }[]): Blob {
+export function zip(files: { path: string; data: string | Uint8Array }[]): Blob {
   const enc = new TextEncoder();
   const parts: Uint8Array[] = [];
   const central: Uint8Array[] = [];
@@ -24,7 +24,7 @@ export function zip(files: { path: string; text: string }[]): Blob {
 
   for (const f of files) {
     const name = enc.encode(f.path);
-    const data = enc.encode(f.text);
+    const data = typeof f.data === "string" ? enc.encode(f.data) : f.data;
     const crc = crc32(data);
     // DOS date 1980-01-01 00:00; bit 11 marks UTF-8 names.
     const local = new DataView(new ArrayBuffer(30));

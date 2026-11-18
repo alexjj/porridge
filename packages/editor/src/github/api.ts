@@ -33,11 +33,17 @@ export interface RemoteTree {
   files: Record<string, string>;
 }
 
-export interface Change {
-  path: string;
-  /** New contents, or null to delete. */
-  text: string | null;
-}
+export type Change =
+  | {
+      path: string;
+      /** New text contents, or null to delete. */
+      text: string | null;
+    }
+  | {
+      path: string;
+      /** Binary contents (an image), base64 encoded. */
+      base64: string;
+    };
 
 export interface Run {
   id: number;
@@ -119,16 +125,24 @@ export class GitHub {
 
   /** Create a commit on top of `parent` (whose tree is `baseTree`). Doesn't move the branch. */
   async commit(parent: string, baseTree: string, changes: Change[], message: string): Promise<string> {
+    // Text goes inline in the tree; binary files have to be created as blobs first.
+    const entries = await Promise.all(
+      changes.map(async (c) => {
+        if ("base64" in c) {
+          const blob = await this.json<{ sha: string }>("/git/blobs", {
+            method: "POST",
+            body: JSON.stringify({ content: c.base64, encoding: "base64" }),
+          });
+          return { path: c.path, mode: "100644", type: "blob", sha: blob.sha };
+        }
+        return c.text === null
+          ? { path: c.path, mode: "100644", type: "blob", sha: null }
+          : { path: c.path, mode: "100644", type: "blob", content: c.text };
+      }),
+    );
     const tree = await this.json<{ sha: string }>("/git/trees", {
       method: "POST",
-      body: JSON.stringify({
-        base_tree: baseTree,
-        tree: changes.map((c) =>
-          c.text === null
-            ? { path: c.path, mode: "100644", type: "blob", sha: null }
-            : { path: c.path, mode: "100644", type: "blob", content: c.text },
-        ),
-      }),
+      body: JSON.stringify({ base_tree: baseTree, tree: entries }),
     });
     const commit = await this.json<{ sha: string }>("/git/commits", {
       method: "POST",

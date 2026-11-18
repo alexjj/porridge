@@ -41,6 +41,7 @@ export class FakeGitHub {
   failBuilds = false;
 
   blobs = new Map<string, string>();
+  private binary = new Map<string, boolean>();
   trees = new Map<string, Record<string, string>>();
   commits = new Map<string, Commit>();
   refs = new Map<string, string>();
@@ -78,6 +79,13 @@ export class FakeGitHub {
   read(path: string): string | undefined {
     const sha = this.trees.get(this.commits.get(this.head())!.tree)![path];
     return sha ? this.blobs.get(sha) : undefined;
+  }
+
+  /** Bytes of a file at the branch head. */
+  readBytes(path: string): Buffer | undefined {
+    const sha = this.trees.get(this.commits.get(this.head())!.tree)![path];
+    if (!sha) return undefined;
+    return Buffer.from(this.blobs.get(sha)!, this.binary.get(sha) ? "latin1" : "utf8");
   }
 
   paths(): string[] {
@@ -152,6 +160,10 @@ export class FakeGitHub {
       if (text === undefined) return fail(404, "Not Found");
       return { status: 200, body: text, headers: { "content-type": "application/vnd.github.raw", "access-control-allow-origin": "*" } };
     }
+    if (method === "POST" && path === "/git/blobs") {
+      if (body!.encoding !== "base64") return fail(422, "Only base64 blobs are faked");
+      return json(201, { sha: this.putBlob(Buffer.from(body!.content as string, "base64").toString("latin1"), "latin1") });
+    }
     if (method === "POST" && path === "/git/trees") {
       const base = body!.base_tree ? this.trees.get(body!.base_tree as string) : {};
       if (!base) return fail(422, "base_tree not found");
@@ -162,6 +174,9 @@ export class FakeGitHub {
           delete files[e.path];
         } else if (e.content !== undefined) {
           files[e.path] = this.putBlob(e.content);
+        } else if (e.sha) {
+          if (!this.blobs.has(e.sha)) return fail(422, `Blob ${e.sha} not found`);
+          files[e.path] = e.sha;
         }
       }
       return json(201, { sha: this.putTree(files) });
@@ -204,9 +219,12 @@ export class FakeGitHub {
 
   // ---- Internals -------------------------------------------------------------
 
-  private putBlob(text: string): string {
-    const sha = sha1(`blob ${Buffer.byteLength(text)}\0${text}`);
+  /** Stores text as UTF-8, or binary data held in a latin1 string. */
+  private putBlob(text: string, encoding: "utf8" | "latin1" = "utf8"): string {
+    const bytes = Buffer.from(text, encoding);
+    const sha = createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex");
     this.blobs.set(sha, text);
+    this.binary.set(sha, encoding === "latin1");
     return sha;
   }
 

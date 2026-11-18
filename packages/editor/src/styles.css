@@ -243,3 +243,43 @@ textarea.text { display: block; width: 100%; margin: 0; border: 0; outline: none
 }
 .field-problem:empty { display: none; }
 .form .field > label { font-weight: 500; }
+
+/* ---- Milestone 5: line menu, phone toolbar, images ---------------------- */
+
+.menu-scrim { position: fixed; inset: 0; z-index: 40; background: transparent; cursor: default; }
+.menu-scrim.sheet { background: rgb(0 0 0 / 0.3); }
+.node-menu { position: fixed; z-index: 41; min-width: 220px; padding: 6px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); box-shadow: 0 8px 30px rgb(0 0 0 / 0.18); }
+.node-menu button { display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; }
+.node-menu button:hover, .node-menu button:focus-visible { background: var(--hover); outline: none; }
+.node-menu hr { border: 0; border-top: 1px solid var(--rule); margin: 6px 0; }
+.node-menu .danger { color: var(--danger); }
+.node-menu.sheet { left: 0; right: 0; bottom: 0; top: auto; border-radius: 16px 16px 0 0; padding: 8px 8px calc(12px + env(safe-area-inset-bottom)); max-height: 80dvh; overflow: auto; }
+.node-menu.sheet button { padding: 13px 14px; font-size: 16px; }
+.sheet-title { padding: 6px 14px 10px; color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid var(--rule); margin-bottom: 6px; }
+
+.edit-toolbar { position: fixed; left: 0; right: 0; z-index: 30; display: flex; align-items: center; gap: 2px; padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); background: var(--side); border-top: 1px solid var(--rule); overflow-x: auto; }
+.edit-toolbar button { flex: none; width: 34px; height: 40px; display: grid; place-items: center; border-radius: 8px; color: var(--text); }
+.edit-toolbar button:active { background: var(--hover); }
+.edit-toolbar circle { fill: currentColor; stroke: none; }
+.edit-toolbar rect + circle { fill: none; stroke: currentColor; }
+.tb-sep { flex: none; width: 1px; height: 22px; background: var(--rule); margin: 0 2px; }
+.tb-spacer { flex: 1; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; padding: 8px 14px; border-radius: 20px; background: var(--text); color: var(--bg); font-size: 14px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.2); }
+
+.image-preview { display: block; max-width: 100%; max-height: 40dvh; margin: 0 auto; border-radius: 8px; object-fit: contain; background: var(--side); }
+
+/* Leave room for the toolbar when the caret is near the bottom. */
+textarea.text { scroll-margin-bottom: 80px; }
+
+@media (pointer: coarse) {
+  /* No hover on touch screens: keep the collapse arrows visible. */
+  .toggle { opacity: 0.55; }
+  .bullet { width: 30px; height: 30px; left: 1px; top: 0; }
+}
+
+@media (max-width: 760px) {
+  .children { margin-left: 10px; padding-left: 9px; }
+  .row { padding-left: 26px; }
+  .toggle { left: -14px; }
+}

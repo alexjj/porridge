@@ -279,13 +279,33 @@ Deviations from the plan:
   fine-grained token missing Contents write is reported when saving.
 - Images in private repositories don't display in the editor yet.
 
-### M5 — Mobile and element menus
-- [ ] Responsive layout, drawers, keyboard-pinned toolbar.
-- [ ] Bullet menu: link, image, permalink, draft, comment, delete.
-- [ ] Image upload: resize in the browser, stage in IndexedDB, commit under
-      `images/YYYY/MM/` on Save.
-- [ ] Touch testing on iOS Safari and Android Chrome.
+### M5 — Mobile and element menus ✅
+- [x] Responsive layout and drawers (from M3), tighter indentation and
+      bigger touch targets on phones.
+- [x] Editing toolbar pinned above the on-screen keyboard (follows the visual
+      viewport on iOS; `interactive-widget=resizes-content` on Android):
+      outdent, indent, move, undo, link, image, line menu, done. Fits a
+      360px-wide screen.
+- [x] Line menu from each bullet (a bottom sheet on phones): zoom, add link,
+      add image, copy link (the entry's permalink), draft, comment,
+      collapse, delete — including day and month headings. Ctrl/⌘-K adds a
+      link while typing.
+- [x] Images: picked from the camera or library, resized in the browser
+      (long edge 2000px, JPEG; small web images and GIFs kept as they are),
+      kept in IndexedDB and shown straight away, then uploaded in the same
+      commit as the text on Save or Publish. Included in "Download all".
+- [x] Tests: Playwright with phone emulation (touch, Pixel 7) for posting a
+      photo end to end against the fake GitHub, the bottom sheet, the
+      toolbar and sideways scrolling; desktop tests for the menu and images.
 - **Done when:** posting with a photo from a phone is comfortable.
+
+Still to check by hand: real iOS Safari and Android Chrome. The automated
+tests emulate a phone in Chromium; they can't show how the on-screen keyboard
+and the toolbar behave on real devices.
+
+Deferred:
+- The zoomed-in node's title is still display-only.
+- Images in private repositories still don't display in the editor.
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.

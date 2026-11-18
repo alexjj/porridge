@@ -102,6 +102,8 @@ export async function push(
   local: Record<string, string>,
   message: (paths: string[]) => string,
   overwrite = false,
+  /** New binary files (images) to add, base64 encoded, by path. */
+  uploads: Record<string, string> = {},
 ): Promise<PushResult> {
   for (let attempt = 0; ; attempt++) {
     const remote = await gh.tree(await gh.head());
@@ -111,12 +113,16 @@ export async function push(
 
     // Bring the base up to the remote head for everything not changed here.
     const pulled = await pull(gh, base, local, [], remote);
-    if (changed.length === 0) return { base: pulled.base, commit: null, updates: pulled.updates, saved: [] };
+    const uploadPaths = Object.keys(uploads).sort();
+    if (changed.length === 0 && uploadPaths.length === 0) {
+      return { base: pulled.base, commit: null, updates: pulled.updates, saved: [] };
+    }
 
-    const changes: Change[] = changed
-      .filter((p) => local[p] !== undefined || remote.files[p])
-      .map((p) => ({ path: p, text: local[p] ?? null }));
-    const commit = await gh.commit(remote.commit, remote.tree, changes, message(changed));
+    const changes: Change[] = [
+      ...changed.filter((p) => local[p] !== undefined || remote.files[p]).map((p) => ({ path: p, text: local[p] ?? null })),
+      ...uploadPaths.map((p) => ({ path: p, base64: uploads[p]! })),
+    ];
+    const commit = await gh.commit(remote.commit, remote.tree, changes, message([...changed, ...uploadPaths]));
     try {
       await gh.moveBranch(commit);
     } catch (err) {
@@ -132,7 +138,7 @@ export async function push(
       const text = mine.has(p) ? local[p] : p in pulled.updates ? pulled.updates[p] : pulled.base.files[p]?.text;
       if (text !== undefined && text !== null) files[p] = { sha, text };
     }
-    return { base: { commit, files }, commit, updates: pulled.updates, saved: changed };
+    return { base: { commit, files }, commit, updates: pulled.updates, saved: [...changed, ...uploadPaths] };
   }
 }
 

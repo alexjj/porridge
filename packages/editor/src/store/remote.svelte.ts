@@ -74,7 +74,7 @@ export class Remote {
 
   /** Recompute which files differ from GitHub. */
   refresh() {
-    this.unsynced = this.conn ? localChanges(this.base, this.ws.texts()) : [];
+    this.unsynced = this.conn ? [...localChanges(this.base, this.ws.texts()), ...this.ws.pendingImages] : [];
     this.conflicts = this.conflicts.filter((p) => this.unsynced.includes(p));
   }
 
@@ -128,8 +128,10 @@ export class Remote {
       this.base = r.base;
     } else {
       const head = await gh.head();
-      const r = await push(gh, { commit: head, files: {} }, this.ws.texts(), () => "Add blog from porridge [skip ci]");
+      const uploads = await this.ws.imageUploads();
+      const r = await push(gh, { commit: head, files: {} }, this.ws.texts(), () => "Add blog from porridge [skip ci]", false, uploads);
       this.base = r.base;
+      await this.ws.imagesSaved(Object.keys(uploads));
     }
     this.conn = conn;
     this.isPrivate = check.private;
@@ -185,10 +187,12 @@ export class Remote {
     try {
       await this.ws.flush();
       const message = (paths: string[]) => commitMessage(paths, publish);
-      const r = await push(this.gh(), this.base, this.ws.texts(), message, overwrite);
+      const uploads = await this.ws.imageUploads();
+      const r = await push(this.gh(), this.base, this.ws.texts(), message, overwrite, uploads);
       const updates = this.normalize(r.base, r.updates);
       this.ws.applyRemote(updates);
       this.base = r.base;
+      await this.ws.imagesSaved(Object.keys(uploads));
       this.conflicts = [];
       await this.persist();
       this.refresh();
@@ -247,6 +251,10 @@ export class Remote {
 }
 
 export function commitMessage(paths: string[], publish: boolean): string {
-  const names = paths.map((p) => p.replace(/^pages\/|\.opml$/g, "")).join(", ");
+  const images = paths.filter((p) => p.startsWith("images/")).length;
+  const names = [
+    ...paths.filter((p) => !p.startsWith("images/")).map((p) => p.replace(/^pages\/|\.opml$/g, "")),
+    ...(images ? [`${images} image${images === 1 ? "" : "s"}`] : []),
+  ].join(", ");
   return `${publish ? "Publish" : "Save"}: ${names}${publish ? "" : " [skip ci]"}`;
 }

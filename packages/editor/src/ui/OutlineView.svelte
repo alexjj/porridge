@@ -28,7 +28,7 @@
     </nav>
     <h1 class="doc-title">
       {#if zoom}
-        {#if isLocked(zoom)}{zoom.text}{:else}{@html ws.md.html(zoom.text) || "Untitled"}{/if}
+        {#if isLocked(zoom)}{zoom.text}{:else}{@html ws.renderText(zoom.text) || "Untitled"}{/if}
       {:else}
         {ws.title(file.path)}
         {#if file.path.startsWith("pages/")}

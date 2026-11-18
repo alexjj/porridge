@@ -79,9 +79,13 @@
     <button
       class="bullet"
       class:has-hidden={hasKids && isCollapsed}
-      aria-label="Zoom in"
+      aria-label="Line menu"
+      aria-haspopup="menu"
       tabindex="-1"
-      onclick={() => ws.zoomTo(node.id)}
+      onclick={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        ws.menu = { id: node.id, x: r.left, y: r.bottom + 4 };
+      }}
     ></button>
 
     {#if locked}
@@ -114,7 +118,7 @@
         onfocus={() => ws.focusNode(node.id, node.text.length)}
         onkeydown={() => {}}
       >
-        {@html ws.md.html(node.text)}
+        {@html ws.renderText(node.text)}
       </div>
     {/if}
     {#if isDraft}<span class="tag">Draft</span>{/if}

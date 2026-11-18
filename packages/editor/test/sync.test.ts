@@ -74,6 +74,24 @@ describe("saving", () => {
     expect(fake.runs).toEqual([]);
   });
 
+  it("uploads images in the same commit as text", async () => {
+    const { fake, gh, base, local } = await setup();
+    local["blog/2026.opml"] = "<y2026 with ![photo](/images/2026/11/photo.jpg)/>";
+    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0x00, 0x10, 0x80, 0xfe]);
+    const r = await push(gh, base, local, msg, false, { "images/2026/11/photo.jpg": bytes.toString("base64") });
+    expect(r.saved).toEqual(["blog/2026.opml", "images/2026/11/photo.jpg"]);
+    expect(fake.commitCount()).toBe(2);
+    expect(fake.readBytes("images/2026/11/photo.jpg")).toEqual(bytes);
+    expect(fake.read("blog/2026.opml")).toContain("photo.jpg");
+  });
+
+  it("uploads images on their own", async () => {
+    const { fake, gh, base, local } = await setup();
+    const r = await push(gh, base, local, msg, false, { "images/a.png": Buffer.from("png").toString("base64") });
+    expect(r.commit).not.toBeNull();
+    expect(fake.readBytes("images/a.png")?.toString()).toBe("png");
+  });
+
   it("does nothing when there's nothing to save", async () => {
     const { fake, gh, base, local } = await setup();
     const r = await push(gh, base, local, msg);

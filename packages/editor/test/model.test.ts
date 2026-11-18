@@ -307,3 +307,33 @@ describe("head settings", () => {
     expect(slugify("!!!")).toBe("page");
   });
 });
+
+describe("images", async () => {
+  const { imagePath, shouldReencode, suggestAlt, targetSize } = await import("../src/model/images.js");
+
+  it("scales the long edge down to 2000px, never up", () => {
+    expect(targetSize(4032, 3024)).toEqual({ width: 2000, height: 1500 });
+    expect(targetSize(3024, 4032)).toEqual({ width: 1500, height: 2000 });
+    expect(targetSize(800, 600)).toEqual({ width: 800, height: 600 });
+  });
+
+  it("re-encodes big photos and odd formats, keeps small web images and GIFs", () => {
+    expect(shouldReencode("image/jpeg", 3_000_000, 4032, 3024)).toBe(true);
+    expect(shouldReencode("image/jpeg", 200_000, 1200, 800)).toBe(false);
+    expect(shouldReencode("image/png", 2_000_000, 1200, 800)).toBe(true);
+    expect(shouldReencode("image/heic", 100_000, 800, 600)).toBe(true);
+    expect(shouldReencode("image/gif", 9_000_000, 4000, 4000)).toBe(false);
+  });
+
+  it("files images by month with collision-proof names", () => {
+    expect(imagePath("My Porridge Bowl.HEIC", "2026-11-18", "193005", "jpg")).toBe("images/2026/11/my-porridge-bowl-18193005.jpg");
+    expect(imagePath("IMG_2041.jpg", "2026-01-02", "080000", "jpg")).toBe("images/2026/01/img-2041-02080000.jpg");
+    expect(imagePath("😀.png", "2026-01-02", "080000", "png")).toBe("images/2026/01/photo-02080000.png");
+  });
+
+  it("suggests alt text only from meaningful file names", () => {
+    expect(suggestAlt("porridge-bowl.png")).toBe("porridge bowl");
+    expect(suggestAlt("IMG_2041.jpg")).toBe("");
+    expect(suggestAlt("PXL_20261118_193005.jpg")).toBe("");
+  });
+});

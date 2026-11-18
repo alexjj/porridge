@@ -150,8 +150,9 @@ test("collapse, expand and zoom", async ({ page }) => {
   await page.locator(".crumbs").getByRole("button", { name: "2026", exact: true }).click();
   await expect(page.locator(".doc-title")).toHaveText("2026");
 
-  // Clicking a bullet zooms too.
+  // A bullet's menu zooms too.
   await page.locator(".node.day > .row > .bullet").click();
+  await page.getByRole("menu", { name: "Line menu" }).getByRole("menuitem", { name: "Zoom in" }).click();
   await expect(page.locator(".doc-title")).toHaveText("18th November");
 });
 

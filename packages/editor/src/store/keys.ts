@@ -1,6 +1,7 @@
 // Keyboard shortcuts for a node being edited.
 
-import { indent, locate, mergeUp, move, neighbour, outdent, remove, split, visible } from "../model/ops.js";
+import { locate, mergeUp, neighbour, remove, split, visible } from "../model/ops.js";
+import { doIndent, doMove, doOutdent, rangeOf, startInsert } from "./commands.js";
 import { isLocked, type ENode } from "../model/tree.js";
 import type { Workspace } from "./workspace.svelte.js";
 
@@ -18,6 +19,7 @@ export const SHORTCUTS: [string, string][] = [
   [`${MOD}-Shift-Backspace`, "Delete line and its children"],
   [`${MOD}-Z / ${MOD}-Shift-Z`, "Undo / redo"],
   [`${MOD}-B / ${MOD}-I`, "Bold / italic"],
+  [`${MOD}-K`, "Add a link"],
   ["Esc", "Stop editing"],
 ];
 
@@ -86,8 +88,8 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
 
   if (key === "Tab") {
     stop();
-    if (e.shiftKey) ws.op("outdent", id, (t) => outdent(t, id), start);
-    else ws.op("indent", id, (t) => indent(t, id), start);
+    if (e.shiftKey) doOutdent(ws, { node, ta });
+    else doIndent(ws, { node, ta });
     return;
   }
 
@@ -95,7 +97,7 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
     const dir = key === "ArrowUp" ? -1 : 1;
     if (e.shiftKey && (e.altKey || mod)) {
       stop();
-      ws.op("move", id, (t) => move(t, id, dir), start);
+      doMove(ws, { node, ta }, dir);
       return;
     }
     if (mod) {
@@ -153,6 +155,12 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
       const zoom = ws.zoom;
       if (zoom) ws.zoomTo(locate(ws.file!.nodes, zoom.id)?.parent?.id ?? null);
     }
+    return;
+  }
+
+  if (mod && !e.shiftKey && !e.altKey && lower === "k") {
+    stop();
+    startInsert(ws, "link", node, rangeOf(ta));
     return;
   }
 

@@ -52,7 +52,7 @@
           <dt><kbd>{key}</kbd></dt><dd>{what}</dd>
         {/each}
       </dl>
-      <p class="hint">Click a bullet to zoom in. {MOD}-[ zooms back out.</p>
+      <p class="hint">Click a bullet for its menu: zoom in, add a link or image, copy its link, mark it as a draft, or delete it. {MOD}-[ zooms back out.</p>
     </div>
   {:else}
     <div class="preview">

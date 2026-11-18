@@ -3,7 +3,8 @@
 
 import { flushSync } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
-import { createInlineRenderer, slugProblem, zonedDate } from "@porridge/core";
+import { createInlineRenderer, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
+import { imagePath } from "../model/images.js";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
 import { ancestors, locate, type Focus, type Tree } from "../model/ops.js";
 import {
@@ -15,6 +16,7 @@ import {
   newFile,
   newNode,
   pagePath,
+  pageSlug,
   setHead,
   stableKey,
   walk,
@@ -23,6 +25,7 @@ import {
 } from "../model/tree.js";
 import { kv } from "./persist.js";
 import { STARTER } from "./starter.js";
+import { prepareImage, toBase64 } from "./photos.js";
 import { download, zip } from "./zip.js";
 
 type Snapshot = Record<string, EFile | null>;
@@ -43,6 +46,7 @@ interface Meta {
 }
 
 const FILE_PREFIX = "file:";
+const IMAGE_PREFIX = "image:";
 const UNDO_LIMIT = 200;
 /** Typing in the same node within this many ms is one undo step. */
 const TYPING_GAP = 1500;
@@ -62,6 +66,26 @@ export class Workspace {
   md = $derived(createInlineRenderer(this.siteBase, this.imageBase));
   /** Called after any content change. */
   onChange: (() => void) | undefined;
+  /** Images added in this browser (path → object URL), shown before and just after upload. */
+  localImages: Record<string, string> = $state({});
+  /** Images not saved to GitHub yet. */
+  pendingImages: string[] = $state([]);
+  /** The node whose menu is open, and where it was opened. */
+  menu: { id: string; x: number; y: number } | null = $state(null);
+  /** A link or image is being added to a node, replacing [start, end) of its text. */
+  inserting: { kind: "link" | "image"; id: string; start: number; end: number; selected: string; file?: File } | null =
+    $state(null);
+  /** A short message shown briefly at the bottom ("Link copied"). */
+  toast = $state("");
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Opens the photo picker for a node, to insert at a range; set up by the app. */
+  pickImage: ((node: ENode, range: { start: number; end: number } | null) => void) | undefined;
+
+  notify(message: string) {
+    this.toast = message;
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => (this.toast = ""), 2500);
+  }
 
   private undoStack: UndoEntry[] = [];
   private redoStack: UndoEntry[] = [];
@@ -132,6 +156,7 @@ export class Workspace {
       }
       this.files = files;
       this.applyMeta(await kv.get<Meta>("meta"));
+      await this.loadImages();
       this.status = "saved";
     } catch (err) {
       this.status = "error";
@@ -154,6 +179,8 @@ export class Workspace {
     if (!files["blog.opml"]) throw new Error("There's no blog.opml in those files.");
 
     for (const path of Object.keys(this.files)) if (!files[path]) this.deleted.add(path);
+    // Images waiting to upload belonged to the old blog.
+    void this.imagesSaved(this.pendingImages);
     this.files = files;
     this.undoStack = [];
     this.redoStack = [];
@@ -490,6 +517,118 @@ export class Workspace {
   }
 
   // -------------------------------------------------------------------------
+  // Node menu actions
+
+  /** Replace [start, end) of a node's text and continue editing after it. */
+  insertInto(id: string, start: number, end: number, snippet: string) {
+    const file = this.file;
+    const node = file && locate(file.nodes, id)?.node;
+    if (!file || !node) return;
+    this.record(this.snapshot([file.path]), "insert", id);
+    node.text = node.text.slice(0, start) + snippet + node.text.slice(end);
+    this.changed(file);
+    this.focusNode(id, start + snippet.length);
+  }
+
+  /** Turn a true/false attribute such as isDraft on or off. */
+  setFlag(id: string, name: "isDraft" | "isComment", on: boolean) {
+    const file = this.file;
+    const node = file && locate(file.nodes, id)?.node;
+    if (!file || !node) return;
+    this.record(this.snapshot([file.path]), "flag", id);
+    if (on) node.attrs[name] = "true";
+    else delete node.attrs[name];
+    this.changed(file);
+  }
+
+  /** Delete any node, calendar headings included, without moving focus. */
+  removeNode(id: string) {
+    const file = this.file;
+    const loc = file && locate(file.nodes, id);
+    if (!file || !loc) return;
+    this.record(this.snapshot([file.path]), "remove", id);
+    if (this.editingId && (this.editingId === id || ancestors(file.nodes, this.editingId).some((a) => a.id === id))) {
+      this.editingId = null;
+    }
+    if (this.zoomIds[file.path] && (this.zoomIds[file.path] === id || ancestors(file.nodes, this.zoomIds[file.path]!).some((a) => a.id === id))) {
+      this.zoomIds[file.path] = loc.parent?.id ?? null;
+    }
+    loc.siblings.splice(loc.index, 1);
+    this.changed(file);
+  }
+
+  /** The published address of a node: its entry's anchor on the day page, a day, a month or a page. */
+  permalink(id: string): string | null {
+    const base = this.siteBase;
+    const file = this.file;
+    if (base === "/" || !file) return null;
+    if (file.path.startsWith("pages/")) return `${base}${pageSlug(file.path)}/`;
+    if (!isYearFile(file.path)) return null;
+    const node = locate(file.nodes, id)?.node;
+    if (!node) return null;
+    const [month, day, entry] = [...ancestors(file.nodes, id), node];
+    if (!day) return month?.attrs.date ? `${base}${month.attrs.date.replace("-", "/")}/` : null;
+    const dayUrl = day.attrs.date ? `${base}${day.attrs.date.replace(/-/g, "/")}/` : null;
+    const created = entry?.attrs.created ? parseRfc822(entry.attrs.created) : undefined;
+    if (!dayUrl || !created) return dayUrl;
+    return `${dayUrl}#a${zonedTimeCode(created, this.timezone)}`;
+  }
+
+  // -------------------------------------------------------------------------
+  // Images
+
+  /** Node text as HTML, with images added in this browser shown from memory. */
+  renderText(text: string): string {
+    let html = this.md.html(text);
+    if (html.includes("<img")) {
+      for (const [path, url] of Object.entries(this.localImages)) {
+        html = html.replaceAll(`src="${this.imageBase}${path}"`, `src="${url}"`);
+      }
+    }
+    return html;
+  }
+
+  /** Resize a picked photo and keep it in the browser until the next save. Returns its path. */
+  async addImage(file: File): Promise<string> {
+    const prepared = await prepareImage(file);
+    const now = new Date();
+    let path = imagePath(file.name, zonedDate(now, this.timezone), zonedTimeCode(now, this.timezone), prepared.ext);
+    for (let n = 2; this.localImages[path]; n++) path = path.replace(/(-\d+)?(\.\w+)$/, `-${n}$2`);
+    await kv.setMany([[IMAGE_PREFIX + path, prepared.blob]]);
+    this.localImages[path] = URL.createObjectURL(prepared.blob);
+    this.pendingImages = [...this.pendingImages, path];
+    this.version++;
+    this.onChange?.();
+    return path;
+  }
+
+  /** Pending images, base64 encoded, for uploading. */
+  async imageUploads(): Promise<Record<string, string>> {
+    const out: Record<string, string> = {};
+    for (const p of this.pendingImages) {
+      const blob = await kv.get<Blob>(IMAGE_PREFIX + p);
+      if (blob) out[p] = await toBase64(blob);
+    }
+    return out;
+  }
+
+  /** These images are on GitHub now (or no longer wanted): stop keeping them. */
+  async imagesSaved(paths: string[]) {
+    if (!paths.length) return;
+    this.pendingImages = this.pendingImages.filter((p) => !paths.includes(p));
+    await kv.setMany(paths.map((p) => [IMAGE_PREFIX + p, undefined]));
+  }
+
+  private async loadImages() {
+    const keys = (await kv.keys()).map(String).filter((k) => k.startsWith(IMAGE_PREFIX));
+    for (const key of keys) {
+      const blob = await kv.get<Blob>(key);
+      if (blob) this.localImages[key.slice(IMAGE_PREFIX.length)] = URL.createObjectURL(blob);
+    }
+    this.pendingImages = keys.map((k) => k.slice(IMAGE_PREFIX.length));
+  }
+
+  // -------------------------------------------------------------------------
   // Import and export
 
   downloadCurrent() {
@@ -498,10 +637,17 @@ export class Workspace {
     download(file.path.split("/").pop()!, new Blob([fileToOpml(file)], { type: "text/x-opml" }));
   }
 
-  downloadAll() {
-    const files = Object.values(this.files)
-      .map((f) => ({ path: f.path, text: fileToOpml(f) }))
-      .sort((a, b) => a.path.localeCompare(b.path));
+  /** Everything in the browser: text files and images not uploaded yet. */
+  async downloadAll() {
+    const files: { path: string; data: string | Uint8Array }[] = Object.values(this.files).map((f) => ({
+      path: f.path,
+      data: fileToOpml(f),
+    }));
+    for (const p of this.pendingImages) {
+      const blob = await kv.get<Blob>(IMAGE_PREFIX + p);
+      if (blob) files.push({ path: p, data: new Uint8Array(await blob.arrayBuffer()) });
+    }
+    files.sort((a, b) => a.path.localeCompare(b.path));
     download("blog.zip", zip(files));
   }
 
