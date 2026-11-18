@@ -364,11 +364,13 @@ function layout(
 ${opts.head ? `${opts.head}\n` : ""}</head>
 <body>
 <header class="site-header">
+<div class="site-bar">
 <a class="site-title" href="${ctx.base}"${opts.current === "home" ? ` aria-current="page"` : ""}>${esc(s.title)}</a>
-${s.description ? `<p class="site-description">${esc(s.description)}</p>\n` : ""}<nav class="site-nav">
+<nav class="site-nav">
 ${nav}
 </nav>
-</header>
+</div>
+${s.description ? `<p class="site-description">${esc(s.description)}</p>\n` : ""}</header>
 <main${opts.indexed ? " data-pagefind-body" : ""}>
 ${opts.body}
 </main>

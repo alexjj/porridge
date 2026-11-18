@@ -7801,8 +7801,12 @@ img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px
 
 .site-header { padding-top: 2.5rem; padding-bottom: 1rem; font-family: var(--sans); }
 .site-title { font-size: 1.35rem; font-weight: 700; color: var(--text); text-decoration: none; }
+/* Title on the left, navigation on the right, on one line (wrapping under the
+   title when there isn't room). */
+.site-bar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem; }
 .site-description { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.95rem; }
-.site-nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin-top: 0.75rem; font-size: 0.95rem; }
+.site-nav { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; font-size: 0.95rem; }
+.site-nav .search-link { align-self: center; }
 .site-nav a { color: var(--muted); text-decoration: none; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--text); }
 
@@ -8145,12 +8149,14 @@ ${opts.head ? `${opts.head}
 ` : ""}</head>
 <body>
 <header class="site-header">
+<div class="site-bar">
 <a class="site-title" href="${ctx.base}"${opts.current === "home" ? ` aria-current="page"` : ""}>${esc(s.title)}</a>
-${s.description ? `<p class="site-description">${esc(s.description)}</p>
-` : ""}<nav class="site-nav">
+<nav class="site-nav">
 ${nav}
 </nav>
-</header>
+</div>
+${s.description ? `<p class="site-description">${esc(s.description)}</p>
+` : ""}</header>
 <main${opts.indexed ? " data-pagefind-body" : ""}>
 ${opts.body}
 </main>
