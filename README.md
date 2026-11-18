@@ -29,7 +29,7 @@ fixtures/        test content; fixtures/expected holds the golden output
 
 ## Development
 
-Needs Node 20 or later.
+Needs Node 20 or later. Contributing? Read [CLAUDE.md](CLAUDE.md) first: how the pieces fit together, the commands, and the rules that are easy to break.
 
 ```bash
 npm install
