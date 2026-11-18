@@ -1,0 +1,57 @@
+# Copies template/ to alexjj/porridge-blog-template whenever it changes, so
+# that repo's "Use this template" button always starts from the current
+# starter blog. The template repo ends up as an exact copy of template/.
+#
+# Needs a repository secret TEMPLATE_REPO_TOKEN: a fine-grained token for
+# porridge-blog-template only, with Contents and Workflows set to read and
+# write.
+name: Sync template repo
+
+on:
+  push:
+    branches: [main]
+    paths: ["template/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-template
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy template/ to porridge-blog-template
+        env:
+          TOKEN: ${{ secrets.TEMPLATE_REPO_TOKEN }}
+          TARGET: alexjj/porridge-blog-template
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Add the TEMPLATE_REPO_TOKEN secret (see the comment at the top of this workflow)."
+            exit 1
+          fi
+          git clone --quiet "https://x-access-token:${TOKEN}@github.com/${TARGET}.git" dest
+          cd dest
+          # Build on main if it exists; an empty repo starts a fresh main.
+          if git rev-parse --verify --quiet origin/main >/dev/null; then
+            git checkout --quiet -B main origin/main
+          else
+            git checkout --quiet --orphan main
+          fi
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a ../template/. .
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Template repo is already up to date."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898099+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet -m "Sync from alexjj/porridge@${GITHUB_SHA::7}"
+          git push --quiet origin main
+          echo "Pushed $(git rev-parse --short HEAD) to ${TARGET}."
