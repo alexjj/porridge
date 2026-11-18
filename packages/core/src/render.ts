@@ -5,7 +5,7 @@ import { formatRfc822, longDayLabel, monthLabel, zonedMidnight } from "./dates.j
 import { createInlineRenderer, type InlineRenderer } from "./markdown.js";
 import { attr, publishedChildren, type Outline } from "./opml.js";
 import type { Day, Entry, Page, Site } from "./site.js";
-import { STYLESHEET } from "./theme.js";
+import { SCRIPT, STYLESHEET } from "./theme.js";
 
 export interface OutputFile {
   /** Path within the output directory, using `/`. */
@@ -48,6 +48,7 @@ export function renderSite(site: Site): OutputFile[] {
   add("rss.xml", renderRss(ctx));
   add("404.html", render404(ctx));
   add("style.css", STYLESHEET);
+  add("porridge.js", SCRIPT);
   return files;
 }
 
@@ -348,6 +349,7 @@ function layout(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="stylesheet" href="${ctx.base}style.css">
+<script src="${ctx.base}porridge.js" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
 ${opts.head ? `${opts.head}\n` : ""}</head>

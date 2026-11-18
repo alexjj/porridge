@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ENode } from "../model/tree.js";
-  import { pasteAsLink } from "../store/commands.js";
+  import { pasteAsImage, pasteAsLink } from "../store/commands.js";
   import { handleKey } from "../store/keys.js";
   import type { Workspace } from "../store/workspace.svelte.js";
 
@@ -31,7 +31,7 @@
   // A title is one line: pasted line breaks become spaces.
   function onPaste(e: ClipboardEvent) {
     const text = e.clipboardData?.getData("text/plain") ?? "";
-    if (ta && pasteAsLink(e, ws, node, ta, text)) return;
+    if (ta && (pasteAsImage(e, ws, node, ta) || pasteAsLink(e, ws, node, ta, text))) return;
     if (!text.includes("\n") || !ta) return;
     e.preventDefault();
     const flat = text.replace(/\s*[\r\n]+\s*/g, " ").trim();

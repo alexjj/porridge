@@ -2,8 +2,10 @@
 
 /** Longest edge of an uploaded image, in pixels. */
 export const MAX_EDGE = 2000;
-/** Images larger than this are re-encoded even if they're small enough. */
+/** Originals larger than this are never kept as they are. */
 export const MAX_BYTES = 700_000;
+/** WebP quality: visually close to the original at a fraction of the size. */
+export const WEBP_QUALITY = 0.82;
 
 const KEEP_AS_IS = ["image/gif", "image/svg+xml"];
 const WEB_FORMATS = ["image/jpeg", "image/png", "image/webp"];
@@ -13,14 +15,15 @@ export function targetSize(width: number, height: number, max = MAX_EDGE): { wid
   return { width: Math.round(width * scale), height: Math.round(height * scale) };
 }
 
+/** GIFs (which may be animated) and SVGs are uploaded exactly as they are. */
+export const keepAsIs = (type: string): boolean => KEEP_AS_IS.includes(type);
+
 /**
- * Whether to resize and re-encode as JPEG. Animated GIFs and SVGs are kept;
- * web formats are kept if they're already small enough.
+ * Everything else is re-encoded as WebP. Keep the original instead only if
+ * it's already a web format, small enough, and no bigger than the WebP.
  */
-export function shouldReencode(type: string, bytes: number, width: number, height: number): boolean {
-  if (KEEP_AS_IS.includes(type)) return false;
-  if (!WEB_FORMATS.includes(type)) return true;
-  return Math.max(width, height) > MAX_EDGE || bytes > MAX_BYTES;
+export function preferOriginal(type: string, bytes: number, width: number, height: number, encodedBytes: number): boolean {
+  return WEB_FORMATS.includes(type) && Math.max(width, height) <= MAX_EDGE && bytes <= MAX_BYTES && bytes <= encodedBytes;
 }
 
 export function extensionFor(type: string): string {

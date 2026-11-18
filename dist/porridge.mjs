@@ -7696,6 +7696,43 @@ function describe(node) {
 }
 
 // packages/core/src/theme.ts
+var SCRIPT = `// Made by porridge: images open full size when clicked.
+(function () {
+  var box;
+  function open(img) {
+    if (!box) {
+      box = document.createElement("dialog");
+      box.className = "lightbox";
+      box.setAttribute("aria-label", "Image");
+      box.innerHTML = '<figure><img alt=""><figcaption></figcaption></figure>' +
+        '<button type="button" class="lightbox-close" aria-label="Close">\\u00d7</button>';
+      box.addEventListener("click", function () { box.close(); });
+      document.body.appendChild(box);
+    }
+    var big = box.querySelector("img");
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt;
+    var caption = box.querySelector("figcaption");
+    caption.textContent = img.alt;
+    caption.hidden = !img.alt;
+    box.showModal();
+  }
+  var images = document.querySelectorAll("main img");
+  for (var i = 0; i < images.length; i++) {
+    (function (img) {
+      if (img.closest("a")) return; // an image that's a link keeps its link
+      img.classList.add("zoomable");
+      img.tabIndex = 0;
+      img.setAttribute("role", "button");
+      img.setAttribute("aria-label", (img.alt ? img.alt + ": " : "") + "open full size");
+      img.addEventListener("click", function () { open(img); });
+      img.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(img); }
+      });
+    })(images[i]);
+  }
+})();
+`;
 var STYLESHEET = `:root {
   --bg: #fbfaf6;
   --text: #24221e;
@@ -7736,6 +7773,16 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .figure { display: block; margin: 0.5rem 0; text-align: center; }
 .figure img { display: block; margin: 0 auto; }
 .caption { display: block; margin-top: 0.4rem; color: var(--muted); font-size: 0.88em; line-height: 1.4; }
+
+/* Lightbox: an image opened full size. */
+img.zoomable { cursor: zoom-in; }
+img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+.lightbox { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; }
+.lightbox::backdrop { background: rgb(0 0 0 / 0.94); }
+.lightbox figure { box-sizing: border-box; height: 100%; margin: 0; padding: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; cursor: zoom-out; }
+.lightbox img { max-width: 100%; max-height: calc(100% - 3rem); object-fit: contain; border-radius: 4px; }
+.lightbox figcaption { color: #e9e5dc; font-family: var(--sans); font-size: 0.95rem; text-align: center; }
+.lightbox-close { position: fixed; top: 0.5rem; right: 0.75rem; padding: 0.25rem 0.5rem; border: 0; background: none; color: #fff; font-size: 2rem; line-height: 1; cursor: pointer; }
 
 .site-header { padding-top: 2.5rem; padding-bottom: 1rem; font-family: var(--sans); }
 .site-title { font-size: 1.35rem; font-weight: 700; color: var(--text); text-decoration: none; }
@@ -7834,6 +7881,7 @@ function renderSite(site) {
   add("rss.xml", renderRss(ctx));
   add("404.html", render404(ctx));
   add("style.css", STYLESHEET);
+  add("porridge.js", SCRIPT);
   return files;
 }
 var dayPath = (date) => `${date.replace(/-/g, "/")}/`;
@@ -8068,6 +8116,7 @@ function layout(ctx, opts) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <link rel="stylesheet" href="${ctx.base}style.css">
+<script src="${ctx.base}porridge.js" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
 ${opts.head ? `${opts.head}

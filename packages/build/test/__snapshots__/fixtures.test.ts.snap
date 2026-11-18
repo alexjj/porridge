@@ -24,6 +24,7 @@ exports[`sample blog > matches the expected output 1`] = `
   "books/index.html",
   "index.html",
   "now/index.html",
+  "porridge.js",
   "rss.xml",
   "search/index.html",
   "style.css",

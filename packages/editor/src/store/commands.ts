@@ -61,6 +61,23 @@ export function pastedLink(text: string): string | null {
 export const linkMarkdown = (selected: string, url: string): string =>
   `[${selected.replace(/([[\]])/g, "\\$1")}](${url.replace(/\)/g, "%29")})`;
 
+/** An image on the clipboard (a screenshot, or an image copied from a page). */
+export function pastedImage(e: ClipboardEvent): File | null {
+  for (const item of Array.from(e.clipboardData?.items ?? [])) {
+    if (item.kind === "file" && item.type.startsWith("image/")) return item.getAsFile();
+  }
+  return null;
+}
+
+/** Pasting an image opens the Add image dialog for it. Returns true if it did. */
+export function pasteAsImage(e: ClipboardEvent, ws: Workspace, node: ENode, ta: HTMLTextAreaElement): boolean {
+  const file = pastedImage(e);
+  if (!file) return false;
+  e.preventDefault();
+  startInsert(ws, "image", node, rangeOf(ta), file);
+  return true;
+}
+
 /**
  * Pasting a web address over selected text links the text to it. Returns true
  * if it did (one undo step, cursor after the link).

@@ -24,18 +24,14 @@ async function connectOnPhone(page: Page) {
   await expect(status(page)).toHaveText("Saved to GitHub");
 }
 
-/** Width and height from a JPEG's start-of-frame marker. */
-function jpegSize(b: Buffer): { width: number; height: number } {
-  let i = 2;
-  while (i < b.length) {
-    const marker = b[i + 1]!;
-    const length = b.readUInt16BE(i + 2);
-    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
-      return { height: b.readUInt16BE(i + 5), width: b.readUInt16BE(i + 7) };
-    }
-    i += 2 + length;
-  }
-  throw new Error("Not a JPEG");
+/** Width and height of an image, decoded by the browser. */
+async function imageSize(page: Page, bytes: Buffer): Promise<{ width: number; height: number; webp: boolean }> {
+  return page.evaluate(async (b64) => {
+    const raw = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const bmp = await createImageBitmap(new Blob([raw]));
+    const magic = String.fromCharCode(...raw.slice(0, 4)) + String.fromCharCode(...raw.slice(8, 12));
+    return { width: bmp.width, height: bmp.height, webp: magic === "RIFFWEBP" };
+  }, bytes.toString("base64"));
 }
 
 test("writing and publishing a post with a photo, by tapping", async ({ page }) => {
@@ -59,7 +55,7 @@ test("writing and publishing a post with a photo, by tapping", async ({ page }) 
   const dialog = page.getByRole("dialog", { name: "Add image" });
   await dialog.getByLabel("Description").fill("A bowl of porridge");
   await dialog.getByRole("button", { name: "Add image" }).tap();
-  await expect(editing(page)).toHaveValue("Cinnamon this time. ![A bowl of porridge](/images/2026/11/photo-18193000.jpg)");
+  await expect(editing(page)).toHaveValue("Cinnamon this time. ![A bowl of porridge](/images/2026/11/photo-18193000.webp)");
   await expect(toolbar(page)).toBeVisible();
 
   await toolbar(page).getByRole("button", { name: "Done" }).tap();
@@ -73,9 +69,10 @@ test("writing and publishing a post with a photo, by tapping", async ({ page }) 
   const year = fake.read("blog/2026.opml")!;
   expect(year).toContain(`<outline text="Porridge season" created="Wed, 18 Nov 2026 19:30:00 GMT">`);
   // (It was briefly an entry before being indented, so it kept a created time.)
-  expect(year).toMatch(/<outline text="Cinnamon this time\. !\[A bowl of porridge\]\(\/images\/2026\/11\/photo-18193000\.jpg\)"[^>]*\/>/);
-  const photo = fake.readBytes("images/2026/11/photo-18193000.jpg")!;
-  expect(jpegSize(photo)).toEqual({ width: 2000, height: 1500 });
+  expect(year).toMatch(/<outline text="Cinnamon this time\. !\[A bowl of porridge\]\(\/images\/2026\/11\/photo-18193000\.webp\)"[^>]*\/>/);
+  const photo = fake.readBytes("images/2026/11/photo-18193000.webp")!;
+  expect(await imageSize(page, photo)).toEqual({ width: 2000, height: 1500, webp: true });
+  expect(photo.length).toBeLessThan(150_000); // the 4032×3024 original, compressed
   expect(fake.runs.map((r) => r.conclusion)).toEqual(["success"]);
   // Uploaded, so no longer waiting in the browser.
   await expect(status(page)).toHaveText("Published");

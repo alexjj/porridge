@@ -238,8 +238,10 @@ Published at `/<slug>/`.
 
 ## 6. Images
 
-- Uploaded via the editor to `images/YYYY/MM/<name>.<ext>` (resized in the
-  browser first; long edge 2000px; JPEG, PNG, WebP or GIF).
+- Uploaded via the editor to `images/YYYY/MM/<name>.<ext>`: resized in the
+  browser to at most 2000px on the long side and encoded as WebP (JPEG in
+  browsers that can't make WebP). A small JPEG, PNG or WebP is kept as it is
+  when the WebP wouldn't be smaller; GIFs and SVGs are always kept as they are.
 - Referenced with root-relative Markdown: `![alt](/images/2026/11/cat.jpg)`.
 - The builder rewrites root-relative URLs (those starting with a single `/`)
   in Markdown links and images against `porridge:baseUrl`, so a site served
@@ -249,6 +251,8 @@ Published at `/<slug>/`.
 - Everything under `images/` is copied to the site verbatim.
 - An image's description (`![this text](…)`) is shown as a caption, centred
   underneath it. Images with no description have no caption.
+- On the site, clicking an image (or pressing Enter on it) opens it full size
+  in a lightbox, with its caption. Images that are links keep their link.
 
 ## 7. Errors and warnings
 

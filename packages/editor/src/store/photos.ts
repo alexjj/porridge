@@ -1,6 +1,6 @@
-// Turning a picked file into an image ready to upload, in the browser.
+// Turning a picked or pasted file into an image ready to upload, in the browser.
 
-import { extensionFor, shouldReencode, targetSize } from "../model/images.js";
+import { extensionFor, keepAsIs, preferOriginal, targetSize, WEBP_QUALITY } from "../model/images.js";
 
 export interface PreparedImage {
   blob: Blob;
@@ -9,8 +9,18 @@ export interface PreparedImage {
   height: number;
 }
 
+function toBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn't resize the image."))), type, quality),
+  );
+}
+
+/**
+ * Resize to at most 2000px on the long side and encode as WebP. Browsers that
+ * can't make WebP (older Safari hands back a PNG instead) get JPEG.
+ */
 export async function prepareImage(file: File): Promise<PreparedImage> {
-  if (file.type === "image/svg+xml" || file.type === "image/gif") {
+  if (keepAsIs(file.type)) {
     return { blob: file, ext: extensionFor(file.type), width: 0, height: 0 };
   }
   let bitmap: ImageBitmap;
@@ -20,23 +30,25 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
     throw new Error("This browser can't read that image. Try a JPEG or PNG.");
   }
   try {
-    if (!shouldReencode(file.type, file.size, bitmap.width, bitmap.height)) {
-      return { blob: file, ext: extensionFor(file.type), width: bitmap.width, height: bitmap.height };
-    }
     const size = targetSize(bitmap.width, bitmap.height);
     const canvas = document.createElement("canvas");
     canvas.width = size.width;
     canvas.height = size.height;
     const ctx = canvas.getContext("2d")!;
-    // JPEG has no transparency: put transparent images on white.
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, size.width, size.height);
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(bitmap, 0, 0, size.width, size.height);
-    const blob = await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn't resize the image."))), "image/jpeg", 0.85),
-    );
-    return { blob, ext: "jpg", ...size };
+    let blob = await toBlob(canvas, "image/webp", WEBP_QUALITY);
+    if (blob.type !== "image/webp") {
+      // JPEG has no transparency: put transparent images on white.
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, size.width, size.height);
+      blob = await toBlob(canvas, "image/jpeg", 0.85);
+    }
+    if (preferOriginal(file.type, file.size, bitmap.width, bitmap.height, blob.size)) {
+      return { blob: file, ext: extensionFor(file.type), width: bitmap.width, height: bitmap.height };
+    }
+    return { blob, ext: extensionFor(blob.type), ...size };
   } finally {
     bitmap.close();
   }

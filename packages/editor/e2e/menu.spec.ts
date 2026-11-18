@@ -108,19 +108,19 @@ test("an image is resized, kept in the browser and shown straight away", async (
   await dialog.getByLabel("Description").fill("A bowl of porridge");
   await dialog.getByRole("button", { name: "Add image" }).click();
 
-  await expect(editing(page)).toHaveValue("Breakfast ![A bowl of porridge](/images/2026/11/photo-18193000.jpg)");
+  await expect(editing(page)).toHaveValue("Breakfast ![A bowl of porridge](/images/2026/11/photo-18193000.webp)");
   await page.keyboard.press("Escape");
   const img = page.locator(".rendered img");
   await expect(img).toHaveAttribute("src", /^blob:/);
   await expect(img).toHaveAttribute("alt", "A bowl of porridge");
 
-  // Stored resized to 2000px wide, as a JPEG.
+  // Stored resized to 2000px wide, as WebP.
   const stored = await page.evaluate(
     () =>
       new Promise<{ width: number; height: number; type: string }>((resolve) => {
         const req = indexedDB.open("porridge");
         req.onsuccess = () => {
-          const get = req.result.transaction("kv").objectStore("kv").get("image:images/2026/11/photo-18193000.jpg");
+          const get = req.result.transaction("kv").objectStore("kv").get("image:images/2026/11/photo-18193000.webp");
           get.onsuccess = async () => {
             const blob = get.result as Blob;
             const bmp = await createImageBitmap(blob);
@@ -129,7 +129,7 @@ test("an image is resized, kept in the browser and shown straight away", async (
         };
       }),
   );
-  expect(stored).toEqual({ width: 2000, height: 1500, type: "image/jpeg" });
+  expect(stored).toEqual({ width: 2000, height: 1500, type: "image/webp" });
 
   // Still there after a reload.
   await page.reload();
@@ -177,4 +177,28 @@ test("an image's description shows as a caption in the editor", async ({ page })
   const caption = page.locator(".rendered .figure .caption");
   await expect(caption).toHaveText("A big stack of notebooks");
   await expect(caption).toHaveAttribute("aria-hidden", "true");
+});
+
+test("pasting an image opens the Add image dialog", async ({ page }) => {
+  await newEntry(page);
+  await page.keyboard.type("Screenshot: ");
+  await editing(page).evaluate(async (ta) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 300;
+    canvas.height = 200;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#b5622a";
+    ctx.fillRect(0, 0, 300, 200);
+    const blob = await new Promise<Blob>((r) => canvas.toBlob((b) => r(b!), "image/png"));
+    const data = new DataTransfer();
+    data.items.add(new File([blob], "image.png", { type: "image/png" }));
+    ta.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+  });
+  const dialog = page.getByRole("dialog", { name: "Add image" });
+  await expect(dialog.locator("img.image-preview")).toBeVisible();
+  await expect(dialog.getByLabel("Description")).toHaveValue("");
+  await dialog.getByLabel("Description").fill("An orange rectangle");
+  await dialog.getByRole("button", { name: "Add image" }).click();
+  // A small PNG the WebP doesn't beat is kept as it is; otherwise it's WebP.
+  await expect(editing(page)).toHaveValue(/^Screenshot: !\[An orange rectangle\]\(\/images\/2026\/11\/image-18193000\.(webp|png)\)$/);
 });

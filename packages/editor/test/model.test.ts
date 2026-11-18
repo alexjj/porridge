@@ -309,7 +309,7 @@ describe("head settings", () => {
 });
 
 describe("images", async () => {
-  const { imagePath, shouldReencode, suggestAlt, targetSize } = await import("../src/model/images.js");
+  const { imagePath, keepAsIs, preferOriginal, suggestAlt, targetSize } = await import("../src/model/images.js");
 
   it("scales the long edge down to 2000px, never up", () => {
     expect(targetSize(4032, 3024)).toEqual({ width: 2000, height: 1500 });
@@ -317,12 +317,24 @@ describe("images", async () => {
     expect(targetSize(800, 600)).toEqual({ width: 800, height: 600 });
   });
 
-  it("re-encodes big photos and odd formats, keeps small web images and GIFs", () => {
-    expect(shouldReencode("image/jpeg", 3_000_000, 4032, 3024)).toBe(true);
-    expect(shouldReencode("image/jpeg", 200_000, 1200, 800)).toBe(false);
-    expect(shouldReencode("image/png", 2_000_000, 1200, 800)).toBe(true);
-    expect(shouldReencode("image/heic", 100_000, 800, 600)).toBe(true);
-    expect(shouldReencode("image/gif", 9_000_000, 4000, 4000)).toBe(false);
+  it("keeps GIFs and SVGs exactly as they are", () => {
+    expect(keepAsIs("image/gif")).toBe(true);
+    expect(keepAsIs("image/svg+xml")).toBe(true);
+    expect(keepAsIs("image/jpeg")).toBe(false);
+  });
+
+  it("uses the WebP unless the original is a small web image that's no bigger", () => {
+    // A big phone photo: always the resized WebP.
+    expect(preferOriginal("image/jpeg", 3_000_000, 4032, 3024, 400_000)).toBe(false);
+    // A small JPEG the WebP doesn't improve on: keep it.
+    expect(preferOriginal("image/jpeg", 90_000, 1200, 800, 120_000)).toBe(true);
+    // …but if the WebP is smaller, use the WebP.
+    expect(preferOriginal("image/jpeg", 200_000, 1200, 800, 120_000)).toBe(false);
+    // Formats browsers can't show are always converted.
+    expect(preferOriginal("image/heic", 50_000, 800, 600, 90_000)).toBe(false);
+    // Too wide, or too heavy, even if the WebP is bigger.
+    expect(preferOriginal("image/png", 50_000, 2400, 800, 90_000)).toBe(false);
+    expect(preferOriginal("image/png", 900_000, 800, 600, 990_000)).toBe(false);
   });
 
   it("files images by month with collision-proof names", () => {

@@ -3,7 +3,7 @@ export * from "./dates.js";
 export * from "./markdown.js";
 export * from "./site.js";
 export * from "./render.js";
-export { STYLESHEET } from "./theme.js";
+export { SCRIPT, STYLESHEET } from "./theme.js";
 
 import { loadSite, type ContentSource, type LoadOptions, type Site, type Warning } from "./site.js";
 import { renderSite, type OutputFile } from "./render.js";
