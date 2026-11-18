@@ -7451,9 +7451,11 @@ _defineProperty(MarkdownIt, "StateInline", StateInline);
 var MarkdownItCallable = callable(MarkdownIt);
 
 // packages/core/src/markdown.ts
-function createInlineRenderer(urlPrefix) {
+function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix) {
   const md = new MarkdownItCallable({ html: true, linkify: false, typographer: false });
-  const rewrite = (url) => url.startsWith("/") && !url.startsWith("//") ? urlPrefix + url.slice(1) : url;
+  const rewriteWith = (prefix) => (url) => url.startsWith("/") && !url.startsWith("//") ? prefix + url.slice(1) : url;
+  const rewrite = rewriteWith(urlPrefix);
+  const rewriteImage = rewriteWith(imagePrefix);
   md.core.ruler.push("porridge_urls", (state) => {
     for (const token of state.tokens) {
       for (const child of token.children ?? []) {
@@ -7462,7 +7464,7 @@ function createInlineRenderer(urlPrefix) {
           if (href) child.attrSet("href", rewrite(String(href)));
         } else if (child.type === "image") {
           const src = child.attrGet("src");
-          if (src) child.attrSet("src", rewrite(String(src)));
+          if (src) child.attrSet("src", rewriteImage(String(src)));
         }
       }
     }

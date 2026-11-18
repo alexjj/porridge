@@ -1,2 +1,5 @@
 node_modules/
 out/
+packages/editor/dist/
+packages/editor/test-results/
+packages/editor/playwright-report/

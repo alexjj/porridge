@@ -26,6 +26,12 @@ describe("inline markdown", () => {
     );
   });
 
+  it("can use a separate prefix for images", () => {
+    expect(createInlineRenderer("https://blog.example/", "https://raw.example/main/").html("[a](/x/) ![i](/images/x.jpg)")).toBe(
+      `<a href="https://blog.example/x/">a</a> <img src="https://raw.example/main/images/x.jpg" alt="i">`,
+    );
+  });
+
   it("allows inline HTML and autolinks", () => {
     expect(md.html("<mark>hi</mark> <https://e.com>")).toBe(`<mark>hi</mark> <a href="https://e.com">https://e.com</a>`);
   });

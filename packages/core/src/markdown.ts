@@ -12,12 +12,15 @@ export interface InlineRenderer {
 /**
  * Root-relative URLs (`/images/x.jpg`) in links and images are rewritten to
  * start with `urlPrefix`: the site's base path for pages, its full base URL
- * for RSS.
+ * for RSS. Images can use a different prefix (the editor loads them from the
+ * repo).
  */
-export function createInlineRenderer(urlPrefix: string): InlineRenderer {
+export function createInlineRenderer(urlPrefix: string, imagePrefix = urlPrefix): InlineRenderer {
   const md = new MarkdownIt({ html: true, linkify: false, typographer: false });
-  const rewrite = (url: string) =>
-    url.startsWith("/") && !url.startsWith("//") ? urlPrefix + url.slice(1) : url;
+  const rewriteWith = (prefix: string) => (url: string) =>
+    url.startsWith("/") && !url.startsWith("//") ? prefix + url.slice(1) : url;
+  const rewrite = rewriteWith(urlPrefix);
+  const rewriteImage = rewriteWith(imagePrefix);
 
   md.core.ruler.push("porridge_urls", (state) => {
     for (const token of state.tokens) {
@@ -27,7 +30,7 @@ export function createInlineRenderer(urlPrefix: string): InlineRenderer {
           if (href) child.attrSet("href", rewrite(String(href)));
         } else if (child.type === "image") {
           const src = child.attrGet("src");
-          if (src) child.attrSet("src", rewrite(String(src)));
+          if (src) child.attrSet("src", rewriteImage(String(src)));
         }
       }
     }
