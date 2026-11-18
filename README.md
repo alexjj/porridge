@@ -11,6 +11,7 @@ An outliner-based daily blogging platform. Content is OPML in a git repo; the ed
 ```
 packages/core    OPML model, site loader and HTML/RSS renderers (shared with the editor)
 packages/build   the `porridge build` command line tool
+packages/editor  the outliner web app (Svelte + Vite)
 action.yml       GitHub Action that runs the bundled build (dist/porridge.mjs)
 template/        starter content repo for a new blog
 fixtures/        test content; fixtures/expected holds the golden output
@@ -30,6 +31,18 @@ npm test
 
 ```bash
 npm run typecheck
+```
+
+Run the editor at http://localhost:5173 (your work is kept in that browser):
+
+```bash
+npm run dev
+```
+
+Editor end-to-end tests (Playwright, Chromium):
+
+```bash
+npm run e2e
 ```
 
 Build the sample blog and preview it at http://localhost:8080:

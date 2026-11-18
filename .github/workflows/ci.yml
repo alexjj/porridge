@@ -19,10 +19,24 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build -w @porridge/editor
       - name: Check dist/ is up to date
         run: |
           npm run bundle
           git diff --exit-code dist/ || (echo "::error::dist/porridge.mjs is out of date. Run 'npm run bundle' and commit it." && exit 1)
+
+  e2e:
+    # Drives the editor in Chromium.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
 
   action:
     # Runs this repo's action the way a blog's workflow would.

@@ -101,8 +101,7 @@ Overridable themes come later.
 
 ### 3.3 `packages/editor`
 
-Static single-page app: TypeScript + Vite + a light framework (Svelte 5 or
-Solid; decide at the start of milestone 3). No backend.
+Static single-page app: TypeScript + Vite + Svelte 5. No backend.
 
 **Layout (desktop):**
 
@@ -223,16 +222,30 @@ Each milestone ends with something usable.
 - **Done when:** a content repo built from `template/` publishes a working
   blog to GitHub Pages on push, from hand-edited OPML.
 
-### M3 — Desktop outliner (local only)
-- [ ] Three-panel layout and top bar.
-- [ ] Outline editing: all keyboard operations, undo/redo, collapse, zoom.
-- [ ] Rendered/raw Markdown switching.
-- [ ] + button with calendar logic, including creating a new year file.
-- [ ] IndexedDB autosave; open/import local OPML files for testing.
-- [ ] Live preview of a day page using `core`.
-- [ ] Playwright tests for the keyboard operations.
+### M3 — Desktop outliner (local only) ✅
+- [x] Three-panel layout and top bar (Svelte 5 + Vite, `packages/editor`).
+- [x] Outline editing: Enter/split, Backspace/Delete join, Tab/Shift-Tab,
+      move up/down, delete, arrow navigation, collapse, zoom with breadcrumbs,
+      bold/italic, multi-line paste, undo/redo (snapshot based, typing
+      coalesced per line).
+- [x] Rendered/raw Markdown switching.
+- [x] New entry button: today in the blog's timezone, creating the day, month,
+      year file and include as needed; every entry gets a unique `created`.
+- [x] IndexedDB autosave (after a pause, at least every 2s while typing);
+      collapse state remembered per browser; open a blog folder; download a
+      file or everything as a zip; reset to the starter blog.
+- [x] Live preview of the day or page being edited, using `core`.
+- [x] Playwright tests for the keyboard operations, persistence, preview,
+      and a week of posts across a year boundary exported as valid OPML.
 - **Done when:** you can write a week of posts in the browser and export valid
   OPML.
+
+Deferred from M3:
+- The zoomed-in node's title is display-only; zoom out to edit it.
+- Calendar headings (months, days) can't be deleted or moved from the editor.
+- `blog.opml` itself isn't shown; its settings get a settings screen in M4.
+- Images referenced with `/images/…` don't display in the editor or preview
+  until the editor can read them from the repo (M4).
 
 ### M4 — GitHub connection
 - [ ] Settings: repo + token, connection check.

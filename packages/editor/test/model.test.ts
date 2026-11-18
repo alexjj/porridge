@@ -1,0 +1,277 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { addEntry, dayOf, ensureEntryTimes, uniqueCreated } from "../src/model/calendar.js";
+import { indent, mergeUp, move, neighbour, outdent, pasteLines, remove, split, visible, type Tree } from "../src/model/ops.js";
+import { fileFromOpml, fileToOpml, newNode, type EFile, type ENode } from "../src/model/tree.js";
+
+const repo = join(import.meta.dirname, "../../..");
+const read = (p: string) => readFileSync(join(repo, p), "utf8");
+
+/** Build a tree from an indented sketch: two spaces per level, `#` for a day, `_` for empty. */
+function sketch(text: string): ENode[] {
+  const roots: ENode[] = [];
+  const stack: { depth: number; node: ENode }[] = [];
+  for (const line of text.split("\n").filter((l) => l.trim())) {
+    const depth = line.search(/\S/) / 2;
+    const raw = line.trim();
+    const node = raw.startsWith("#")
+      ? newNode(raw.slice(1), { type: "calendarDay", date: "2026-11-18" })
+      : newNode(raw === "_" ? "" : raw);
+    while (stack.length && stack[stack.length - 1]!.depth >= depth) stack.pop();
+    (stack.length ? stack[stack.length - 1]!.node.children : roots).push(node);
+    stack.push({ depth, node });
+  }
+  return roots;
+}
+
+function draw(nodes: ENode[], depth = 0): string {
+  return nodes.map((n) => "  ".repeat(depth) + n.text + "\n" + draw(n.children, depth + 1)).join("");
+}
+
+const find = (nodes: ENode[], text: string): ENode => {
+  for (const n of nodes) {
+    if (n.text === text) return n;
+    const inner = n.children.length ? find(n.children, text) : undefined;
+    if (inner) return inner;
+  }
+  return undefined as unknown as ENode;
+};
+
+function setup(text: string, collapsed: string[] = []) {
+  const roots = sketch(text);
+  const tree: Tree = { roots, collapsed: new Set(collapsed.map((t) => find(roots, t).id)), zoom: null };
+  return { roots, tree, id: (t: string) => find(roots, t).id };
+}
+
+describe("round trip through the editor model", () => {
+  it.each(["fixtures/sample-blog/blog/2026.opml", "fixtures/sample-blog/blog/2025.opml", "fixtures/sample-blog/pages/about.opml", "template/blog.opml"])(
+    "%s is unchanged",
+    (p) => expect(fileToOpml(fileFromOpml(p, read(p)))).toBe(read(p)),
+  );
+
+  it("writes edited text into the text attribute in place", () => {
+    const f = fileFromOpml("x.opml", `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <body>\n    <outline created="c" text="old" z="1"/>\n  </body>\n</opml>\n`);
+    f.nodes[0]!.text = "new";
+    expect(fileToOpml(f)).toContain(`<outline created="c" text="new" z="1"/>`);
+  });
+});
+
+describe("split (Enter)", () => {
+  it("splits text at the caret into a new sibling", () => {
+    const { roots, tree, id } = setup("hello world\nnext");
+    const focus = split(tree, id("hello world"), 5)!;
+    expect(draw(roots)).toBe("hello\n world\nnext\n");
+    expect(focus).toEqual({ id: find(roots, " world").id, caret: 0 });
+  });
+
+  it("opens a line above when the caret is at the start", () => {
+    const { roots, tree, id } = setup("a\nb");
+    const b = id("b");
+    expect(split(tree, b, 0)).toEqual({ id: b, caret: 0 });
+    expect(draw(roots)).toBe("a\n\nb\n");
+  });
+
+  it("puts the new line first among visible children", () => {
+    const { roots, tree, id } = setup("parent\n  child");
+    split(tree, id("parent"), 6);
+    expect(draw(roots)).toBe("parent\n  \n  child\n");
+  });
+
+  it("puts the new line after a collapsed node", () => {
+    const { roots, tree, id } = setup("parent\n  child", ["parent"]);
+    split(tree, id("parent"), 6);
+    expect(draw(roots)).toBe("parent\n  child\n\n");
+  });
+
+  it("does nothing to calendar nodes", () => {
+    const { tree, id } = setup("#day\n  entry");
+    expect(split(tree, id("day"), 1)).toBeNull();
+  });
+});
+
+describe("mergeUp (Backspace at start)", () => {
+  it("joins onto the previous node and keeps the caret at the join", () => {
+    const { roots, tree, id } = setup("abc\ndef");
+    const abc = id("abc");
+    expect(mergeUp(tree, id("def"))).toEqual({ id: abc, caret: 3 });
+    expect(draw(roots)).toBe("abcdef\n");
+  });
+
+  it("moves children to the previous node", () => {
+    const { roots, tree, id } = setup("a\n  a1\nb\n  b1");
+    // a1 is the previous visible node, so b joins onto it and b1 follows.
+    mergeUp(tree, id("b"));
+    expect(draw(roots)).toBe("a\n  a1b\n    b1\n");
+  });
+
+  it("joins a first child into its parent, keeping its children in place", () => {
+    const { roots, tree, id } = setup("p\n  c\n    gc\n  d");
+    mergeUp(tree, id("c"));
+    expect(draw(roots)).toBe("pc\n  gc\n  d\n");
+  });
+
+  it("removes an empty first entry under a day and focuses the next one", () => {
+    const { roots, tree, id } = setup("#day\n  _\n  second");
+    const empty = roots[0]!.children[0]!.id;
+    expect(mergeUp(tree, empty)).toEqual({ id: id("second"), caret: 0 });
+    expect(draw(roots)).toBe("day\n  second\n");
+  });
+
+  it("won't merge into a calendar node", () => {
+    const { tree, id } = setup("#day\n  text");
+    expect(mergeUp(tree, id("text"))).toBeNull();
+  });
+});
+
+describe("indent, outdent and move", () => {
+  it("indents under the previous sibling, expanding it", () => {
+    const { roots, tree, id } = setup("a\n  a1\nb", ["a"]);
+    expect(indent(tree, id("b"))).toBe(true);
+    expect(draw(roots)).toBe("a\n  a1\n  b\n");
+    expect(tree.collapsed.has(id("a"))).toBe(false);
+  });
+
+  it("can't indent the first child", () => {
+    const { tree, id } = setup("a\n  a1");
+    expect(indent(tree, id("a1"))).toBe(false);
+  });
+
+  it("outdents to after the parent, leaving later siblings behind", () => {
+    const { roots, tree, id } = setup("p\n  x\n  y\nq");
+    expect(outdent(tree, id("x"))).toBe(true);
+    expect(draw(roots)).toBe("p\n  y\nx\nq\n");
+  });
+
+  it("won't outdent an entry out of its day, or out of the zoomed node", () => {
+    const day = setup("#day\n  entry");
+    expect(outdent(day.tree, day.id("entry"))).toBe(false);
+    const z = setup("p\n  c");
+    z.tree.zoom = find(z.roots, "p");
+    expect(outdent(z.tree, z.id("c"))).toBe(false);
+  });
+
+  it("moves among siblings only", () => {
+    const { roots, tree, id } = setup("a\nb\nc");
+    expect(move(tree, id("c"), -1)).toBe(true);
+    expect(draw(roots)).toBe("a\nc\nb\n");
+    expect(move(tree, id("a"), -1)).toBe(false);
+    expect(move(tree, id("b"), 1)).toBe(false);
+  });
+});
+
+describe("remove, navigation and paste", () => {
+  it("removes a subtree and focuses the previous node", () => {
+    const { roots, tree, id } = setup("a\nb\n  b1\nc");
+    expect(remove(tree, id("b"))).toEqual({ id: id("a"), caret: 1 });
+    expect(draw(roots)).toBe("a\nc\n");
+  });
+
+  it("focuses the next node outside the subtree when removing the first", () => {
+    const { tree, id } = setup("a\n  a1\nb");
+    expect(remove(tree, id("a"))).toEqual({ id: id("b"), caret: 0 });
+  });
+
+  it("skips collapsed and calendar nodes when navigating", () => {
+    const { tree, id } = setup("a\n  hidden\n#day\n  e1", ["a"]);
+    expect(visible(tree).map((n) => n.text)).toEqual(["a", "day", "e1"]);
+    expect(neighbour(tree, id("e1"), -1)?.text).toBe("a");
+  });
+
+  it("pastes several lines as siblings", () => {
+    const { roots, tree, id } = setup("startEND");
+    const focus = pasteLines(tree, id("startEND"), 5, 5, ["1", "2", "3"])!;
+    expect(draw(roots)).toBe("start1\n2\n3END\n");
+    expect(focus.caret).toBe(1);
+  });
+});
+
+describe("calendar", () => {
+  const files = (): Record<string, EFile> => ({
+    "blog.opml": fileFromOpml("blog.opml", read("fixtures/sample-blog/blog.opml")),
+    "blog/2026.opml": fileFromOpml("blog/2026.opml", read("fixtures/sample-blog/blog/2026.opml")),
+    "blog/2025.opml": fileFromOpml("blog/2025.opml", read("fixtures/sample-blog/blog/2025.opml")),
+  });
+
+  it("adds an entry at the top of an existing day", () => {
+    const fs = files();
+    const r = addEntry(fs, new Date("2026-11-18T22:00:00Z"));
+    expect(r.path).toBe("blog/2026.opml");
+    expect(r.changed).toEqual(["blog/2026.opml"]);
+    const day = fs["blog/2026.opml"]!.nodes[0]!.children[0]!;
+    expect(day.children[0]!.id).toBe(r.id);
+    expect(day.children[0]!.attrs.created).toBe("Wed, 18 Nov 2026 22:00:00 GMT");
+  });
+
+  it("reuses an empty entry already at the top", () => {
+    const fs = files();
+    const a = addEntry(fs, new Date("2026-11-18T22:00:00Z"));
+    const b = addEntry(fs, new Date("2026-11-18T22:05:00Z"));
+    expect(b.id).toBe(a.id);
+  });
+
+  it("creates the day and month in newest-first position", () => {
+    const fs = files();
+    addEntry(fs, new Date("2026-08-20T09:00:00Z"));
+    const months = fs["blog/2026.opml"]!.nodes.map((m) => m.attrs.date);
+    expect(months).toEqual(["2026-11", "2026-10", "2026-09", "2026-08", "2026-07"]);
+    const aug = fs["blog/2026.opml"]!.nodes[3]!;
+    expect(aug.text).toBe("August 2026");
+    expect(aug.children[0]!.text).toBe("20th August");
+
+    addEntry(fs, new Date("2026-11-03T09:00:00Z"));
+    expect(fs["blog/2026.opml"]!.nodes[0]!.children.map((d) => d.attrs.date)).toEqual([
+      "2026-11-18",
+      "2026-11-17",
+      "2026-11-03",
+      "2026-11-02",
+    ]);
+  });
+
+  it("uses the blog's timezone to pick the day", () => {
+    const fs = files();
+    // 23:30 GMT on 15 July is 00:30 BST on the 16th.
+    const r = addEntry(fs, new Date("2026-07-15T23:30:00Z"));
+    expect(dayOf(fs[r.path]!, r.id)).toBe("2026-07-16");
+  });
+
+  it("creates a new year file and include, newest first", () => {
+    const fs = files();
+    const r = addEntry(fs, new Date("2027-01-01T10:00:00Z"));
+    expect(r.path).toBe("blog/2027.opml");
+    expect(r.changed.sort()).toEqual(["blog.opml", "blog/2027.opml"]);
+    expect(fs["blog.opml"]!.nodes.map((n) => n.attrs.url)).toEqual(["blog/2027.opml", "blog/2026.opml", "blog/2025.opml"]);
+    expect(fileToOpml(fs["blog/2027.opml"]!)).toBe(`<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <title>2027</title>
+  </head>
+  <body>
+    <outline text="January 2027" type="calendarMonth" date="2027-01">
+      <outline text="1st January" type="calendarDay" date="2027-01-01">
+        <outline text="" created="Fri, 01 Jan 2027 10:00:00 GMT"/>
+      </outline>
+    </outline>
+  </body>
+</opml>
+`);
+  });
+
+  it("gives entries unique anchors within a day", () => {
+    const day = newNode("d", { type: "calendarDay", date: "2026-11-18" });
+    day.children.push(newNode("x", { created: "Wed, 18 Nov 2026 10:00:00 GMT" }));
+    day.children.push(newNode("y", { created: "Wed, 18 Nov 2026 10:00:01 GMT" }));
+    expect(uniqueCreated(day, new Date("2026-11-18T10:00:00.700Z"), "UTC")).toBe("Wed, 18 Nov 2026 10:00:02 GMT");
+  });
+
+  it("gives a created time to new entries made by Enter", () => {
+    const fs = files();
+    const file = fs["blog/2026.opml"]!;
+    const day = file.nodes[0]!.children[1]!; // 17th November
+    day.children.push(newNode("made by Enter"));
+    expect(ensureEntryTimes(file, new Date("2026-11-18T20:00:00Z"), "Europe/London")).toBe(true);
+    // 20:00:00 is taken by an entry on the 17th, so it moves on a second.
+    expect(day.children.at(-1)!.attrs.created).toBe("Wed, 18 Nov 2026 20:00:01 GMT");
+    expect(ensureEntryTimes(file, new Date(), "Europe/London")).toBe(false);
+  });
+});

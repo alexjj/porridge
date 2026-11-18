@@ -11,5 +11,5 @@
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["packages/*/src", "packages/*/test"]
+  "include": ["packages/core/src", "packages/core/test", "packages/build/src", "packages/build/test"]
 }
