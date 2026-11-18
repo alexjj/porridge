@@ -42,6 +42,39 @@ export function startInsert(ws: Workspace, kind: "link" | "image", node: ENode, 
   ws.inserting = { kind, id: node.id, start, end, selected: node.text.slice(start, end), file };
 }
 
+/**
+ * If pasted text is a single web address (or a Markdown link), the address to
+ * link selected text to. `www.` addresses get https:// so they aren't treated
+ * as pages on the blog itself.
+ */
+export function pastedLink(text: string): string | null {
+  const t = text.trim();
+  const md = /^\[[^\]]*\]\(([^)\s]+)\)$/.exec(t);
+  const url = md ? md[1]! : t;
+  if (/\s/.test(url)) return null;
+  if (/^(https?:\/\/|mailto:)\S+$/i.test(url)) return url;
+  if (/^www\.[^.\s]+\.\S+$/i.test(url)) return `https://${url}`;
+  return null;
+}
+
+/** `[selected](url)`, keeping square brackets in the text from ending the link early. */
+export const linkMarkdown = (selected: string, url: string): string =>
+  `[${selected.replace(/([[\]])/g, "\\$1")}](${url.replace(/\)/g, "%29")})`;
+
+/**
+ * Pasting a web address over selected text links the text to it. Returns true
+ * if it did (one undo step, cursor after the link).
+ */
+export function pasteAsLink(e: ClipboardEvent, ws: Workspace, node: ENode, ta: HTMLTextAreaElement, text: string): boolean {
+  const { selectionStart: start, selectionEnd: end } = ta;
+  const selected = ta.value.slice(start, end);
+  const url = start !== end && selected.trim() ? pastedLink(text) : null;
+  if (!url) return false;
+  e.preventDefault();
+  ws.insertInto(node.id, start, end, linkMarkdown(selected, url));
+  return true;
+}
+
 /** Markdown for a link or image, with a space before it if it follows other text. */
 export function snippet(before: string, markdown: string): string {
   return before && !/\s$/.test(before) ? ` ${markdown}` : markdown;

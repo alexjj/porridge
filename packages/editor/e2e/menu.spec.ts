@@ -135,3 +135,46 @@ test("an image is resized, kept in the browser and shown straight away", async (
   await page.reload();
   await expect(page.locator(".rendered img")).toHaveAttribute("src", /^blob:/);
 });
+
+/** Dispatch a paste of `text` into the focused textarea. */
+async function paste(page: Page, text: string) {
+  await editing(page).evaluate((ta, t) => {
+    const data = new DataTransfer();
+    data.setData("text/plain", t);
+    ta.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+  }, text);
+}
+
+test("pasting an address over selected text makes a link", async ({ page }) => {
+  await newEntry(page);
+  await page.keyboard.type("try a search engine today");
+  await editing(page).evaluate((ta: HTMLTextAreaElement) => ta.setSelectionRange(6, 19)); // "search engine"
+  await paste(page, "www.google.com");
+  await expect(editing(page)).toHaveValue("try a [search engine](https://www.google.com) today");
+  expect(await editing(page).evaluate((ta: HTMLTextAreaElement) => ta.selectionStart)).toBe(45); // just after the link
+
+  // A Markdown link on the clipboard works too, and it's one undo step.
+  await editing(page).evaluate((ta: HTMLTextAreaElement) => ta.setSelectionRange(0, 3)); // "try"
+  await paste(page, "[docs](https://example.com/docs)");
+  await expect(editing(page)).toHaveValue("[try](https://example.com/docs) a [search engine](https://www.google.com) today");
+  await page.keyboard.press("Control+z");
+  await expect(editing(page)).toHaveValue("try a [search engine](https://www.google.com) today");
+});
+
+test("pasting an address with nothing selected just pastes it", async ({ page }) => {
+  await newEntry(page);
+  await page.keyboard.type("see ");
+  await paste(page, "https://example.com");
+  // Not handled by the link paste, so the browser pastes as normal (a synthetic
+  // paste event inserts nothing; the line is unchanged and no link was made).
+  await expect(editing(page)).toHaveValue("see ");
+});
+
+test("an image's description shows as a caption in the editor", async ({ page }) => {
+  await newEntry(page);
+  await page.keyboard.type("![A big stack of notebooks](https://example.com/n.jpg)");
+  await page.keyboard.press("Escape");
+  const caption = page.locator(".rendered .figure .caption");
+  await expect(caption).toHaveText("A big stack of notebooks");
+  await expect(caption).toHaveAttribute("aria-hidden", "true");
+});

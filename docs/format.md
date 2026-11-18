@@ -247,6 +247,8 @@ Published at `/<slug>/`.
   use the base URL's path (`/my-blog/images/…`); RSS uses the full URL. URLs
   in inline HTML are left as written.
 - Everything under `images/` is copied to the site verbatim.
+- An image's description (`![this text](…)`) is shown as a caption, centred
+  underneath it. Images with no description have no caption.
 
 ## 7. Errors and warnings
 

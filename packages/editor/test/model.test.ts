@@ -406,3 +406,23 @@ describe("selecting several lines", async () => {
     expect(outdentBlock(t.tree, sel(t, "e1", "e2")!)).toBe(false);
   });
 });
+
+describe("pasting a link onto selected text", async () => {
+  const { pastedLink, linkMarkdown } = await import("../src/store/commands.js");
+  it("recognises addresses and Markdown links", () => {
+    expect(pastedLink("https://www.google.com")).toBe("https://www.google.com");
+    expect(pastedLink("  http://example.com/a?b=c  ")).toBe("http://example.com/a?b=c");
+    expect(pastedLink("www.google.com")).toBe("https://www.google.com");
+    expect(pastedLink("[www.google.com](https://www.google.com)")).toBe("https://www.google.com");
+    expect(pastedLink("mailto:me@example.com")).toBe("mailto:me@example.com");
+  });
+  it("ignores ordinary text", () => {
+    for (const t of ["search engine", "e.g.", "google.com", "https://a.com and more", "www.", "file.txt", ""]) {
+      expect(pastedLink(t)).toBeNull();
+    }
+  });
+  it("makes the link", () => {
+    expect(linkMarkdown("search engine", "https://www.google.com")).toBe("[search engine](https://www.google.com)");
+    expect(linkMarkdown("a [b]", "https://x.com/(y)")).toBe("[a \\[b\\]](https://x.com/(y%29)");
+  });
+});

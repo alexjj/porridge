@@ -22,6 +22,16 @@ export function createInlineRenderer(urlPrefix: string, imagePrefix = urlPrefix)
   const rewrite = rewriteWith(urlPrefix);
   const rewriteImage = rewriteWith(imagePrefix);
 
+  // An image's description is shown as a caption underneath it. The caption is
+  // hidden from screen readers, which already read the alt text.
+  const renderImage = md.renderer.rules.image!;
+  md.renderer.rules.image = (tokens, idx, options, env, self) => {
+    const img = renderImage(tokens, idx, options, env, self);
+    const alt = self.renderInlineAsText(tokens[idx]!.children ?? [], options, env).trim();
+    if (!alt) return img;
+    return `<span class="figure">${img}<span class="caption" aria-hidden="true">${md.utils.escapeHtml(alt)}</span></span>`;
+  };
+
   md.core.ruler.push("porridge_urls", (state) => {
     for (const token of state.tokens) {
       for (const child of token.children ?? []) {

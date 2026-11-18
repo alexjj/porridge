@@ -2,6 +2,7 @@
   import NodeView from "./NodeView.svelte";
   import { isLocked, kind, type ENode } from "../model/tree.js";
   import { pasteLines } from "../model/ops.js";
+  import { pasteAsLink } from "../store/commands.js";
   import { handleKey } from "../store/keys.js";
   import type { Workspace } from "../store/workspace.svelte.js";
 
@@ -73,6 +74,7 @@
 
   function onPaste(e: ClipboardEvent) {
     const text = e.clipboardData?.getData("text/plain") ?? "";
+    if (ta && pasteAsLink(e, ws, node, ta, text)) return;
     if (!text.includes("\n") || !ta) return;
     e.preventDefault();
     const lines = text.replace(/\r\n?/g, "\n").split("\n").map((l) => l.trim()).filter((l, i, all) => l || (i > 0 && i < all.length - 1));

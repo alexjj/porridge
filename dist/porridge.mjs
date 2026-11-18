@@ -7456,6 +7456,13 @@ function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix) {
   const rewriteWith = (prefix) => (url) => url.startsWith("/") && !url.startsWith("//") ? prefix + url.slice(1) : url;
   const rewrite = rewriteWith(urlPrefix);
   const rewriteImage = rewriteWith(imagePrefix);
+  const renderImage = md.renderer.rules.image;
+  md.renderer.rules.image = (tokens, idx, options, env, self) => {
+    const img = renderImage(tokens, idx, options, env, self);
+    const alt = self.renderInlineAsText(tokens[idx].children ?? [], options, env).trim();
+    if (!alt) return img;
+    return `<span class="figure">${img}<span class="caption" aria-hidden="true">${md.utils.escapeHtml(alt)}</span></span>`;
+  };
   md.core.ruler.push("porridge_urls", (state) => {
     for (const token of state.tokens) {
       for (const child of token.children ?? []) {
@@ -7725,6 +7732,10 @@ body {
 a { color: var(--link); text-underline-offset: 0.15em; }
 a:hover { color: var(--link-hover); }
 img { max-width: 100%; height: auto; border-radius: 4px; }
+/* An image with a description: the description is a caption underneath. */
+.figure { display: block; margin: 0.5rem 0; text-align: center; }
+.figure img { display: block; margin: 0 auto; }
+.caption { display: block; margin-top: 0.4rem; color: var(--muted); font-size: 0.88em; line-height: 1.4; }
 
 .site-header { padding-top: 2.5rem; padding-bottom: 1rem; font-family: var(--sans); }
 .site-title { font-size: 1.35rem; font-weight: 700; color: var(--text); text-decoration: none; }

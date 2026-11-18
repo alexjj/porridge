@@ -298,3 +298,9 @@ textarea.text { scroll-margin-bottom: 80px; }
 .title-text.empty { color: var(--muted); }
 .title-text code { font: 0.8em var(--mono); background: var(--hover); padding: 1px 4px; border-radius: 3px; }
 .title-input { flex: 1; min-width: 0; display: block; margin: 0; padding: 0 4px; border: 0; outline: none; resize: none; overflow: hidden; font: inherit; line-height: 1.25; color: var(--text); background: var(--hover); border-radius: 6px; }
+
+/* Image captions (the image's description), as on the published site. */
+/* The figure shrinks to the image, so the caption centres under it. */
+.rendered .figure { display: inline-block; vertical-align: top; max-width: 100%; margin: 4px 0; text-align: center; }
+.rendered .figure img { display: block; margin: 0 auto; }
+.rendered .caption { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--muted); }
