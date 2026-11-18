@@ -94,6 +94,13 @@ export interface Site {
 export const RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive"];
 const SLUG = /^[a-z][a-z0-9-]*$/;
 
+/** Why `slug` can't be a page name, or undefined if it can. */
+export function slugProblem(slug: string): string | undefined {
+  if (!SLUG.test(slug)) return "Use lowercase letters, digits and hyphens, starting with a letter.";
+  if (RESERVED_SLUGS.includes(slug)) return `"${slug}" is reserved.`;
+  return undefined;
+}
+
 export interface LoadOptions {
   /** Overrides porridge:baseUrl, e.g. for a local preview. */
   baseUrl?: string;

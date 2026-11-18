@@ -3,15 +3,19 @@
 
 import { flushSync } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
-import { createInlineRenderer, zonedDate } from "@porridge/core";
+import { createInlineRenderer, slugProblem, zonedDate } from "@porridge/core";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
 import { ancestors, locate, type Focus, type Tree } from "../model/ops.js";
 import {
+  slugify,
   fileFromOpml,
   fileHead,
   fileToOpml,
   isYearFile,
+  newFile,
   newNode,
+  pagePath,
+  setHead,
   stableKey,
   walk,
   type EFile,
@@ -53,7 +57,11 @@ export class Workspace {
   error = $state("");
   /** Bumped on every content change (drives the preview). */
   version = $state(0);
-  md = createInlineRenderer("/");
+  /** Where `/images/…` loads from in the editor (the repo, once connected). */
+  imageBase = $state("/");
+  md = $derived(createInlineRenderer(this.siteBase, this.imageBase));
+  /** Called after any content change. */
+  onChange: (() => void) | undefined;
 
   private undoStack: UndoEntry[] = [];
   private redoStack: UndoEntry[] = [];
@@ -71,6 +79,14 @@ export class Workspace {
     const id = this.zoomIds[this.current];
     const file = this.file;
     return (id && file && locate(file.nodes, id)?.node) || null;
+  }
+
+  /** The published site's address, so links in the editor open the live site. */
+  get siteBase(): string {
+    const blog = this.files["blog.opml"];
+    const url = blog && fileHead(blog, "porridge:baseUrl");
+    if (!url || !/^https?:\/\//.test(url)) return "/";
+    return url.endsWith("/") ? url : `${url}/`;
   }
 
   get timezone(): string {
@@ -188,6 +204,7 @@ export class Workspace {
     }
     this.version++;
     this.scheduleSave();
+    this.onChange?.();
   }
 
   /** Save after a pause in typing, and at least every couple of seconds while typing continues. */
@@ -340,6 +357,93 @@ export class Workspace {
     if (parent) this.collapsed.delete(parent.id);
     this.changed(file);
     this.focusNode(id, 0);
+  }
+
+  // -------------------------------------------------------------------------
+  // Settings and pages
+
+  /** Set a head setting (empty removes it). Not undoable. */
+  setHead(path: string, name: string, value: string) {
+    const file = this.files[path];
+    if (!file) return;
+    setHead(file, name, value.trim());
+    this.markDirty([path]);
+  }
+
+  /** Create a page and open it. Returns its path. */
+  newPage(title: string, inNav: boolean): string {
+    let base = slugify(title || "page");
+    if (slugProblem(base)) base = `page-${base}`;
+    let slug = base;
+    for (let n = 2; this.files[pagePath(slug)]; n++) slug = `${base}-${n}`;
+    const path = pagePath(slug);
+    const before = this.snapshot([path]);
+    const file = newFile(path, title.trim() || slug);
+    if (inNav) setHead(file, "porridge:inNav", "true");
+    file.nodes.push(newNode());
+    this.files[path] = file;
+    this.record(before, "page");
+    this.markDirty([path]);
+    this.open(path);
+    this.focusNode(this.files[path]!.nodes[0]!.id, 0);
+    return path;
+  }
+
+  /** Rename a page's file (its URL). Returns a problem, or undefined on success. */
+  renamePage(path: string, slug: string): string | undefined {
+    const problem = slugProblem(slug);
+    if (problem) return problem;
+    const to = pagePath(slug);
+    if (to === path) return undefined;
+    if (this.files[to]) return `There's already a page called "${slug}".`;
+    const file = this.files[path];
+    if (!file) return "That page doesn't exist.";
+    this.record(this.snapshot([path, to]), "rename");
+    this.files[to] = { ...file, path: to };
+    delete this.files[path];
+    this.zoomIds[to] = this.zoomIds[path] ?? null;
+    if (this.current === path) this.current = to;
+    this.markDirty([path, to]);
+    return undefined;
+  }
+
+  deletePage(path: string) {
+    if (!this.files[path]) return;
+    this.record(this.snapshot([path]), "delete page");
+    delete this.files[path];
+    if (this.current === path) this.current = this.defaultFile();
+    this.editingId = null;
+    this.markDirty([path]);
+  }
+
+  /**
+   * Replace files with versions from GitHub (null deletes). Collapse state is
+   * kept where nodes can be matched. Undo history is cleared, since it no
+   * longer applies.
+   */
+  applyRemote(updates: Record<string, string | null>) {
+    const paths = Object.keys(updates);
+    if (paths.length === 0) return;
+    const parsed: Record<string, EFile | null> = {};
+    for (const [p, text] of Object.entries(updates)) parsed[p] = text === null ? null : fileFromOpml(p, text);
+    const keep = this.meta().collapsed;
+    for (const [p, f] of Object.entries(parsed)) {
+      if (f === null) {
+        delete this.files[p];
+        continue;
+      }
+      const keys = new Set(keep[p] ?? []);
+      this.files[p] = f;
+      for (const n of walk(f.nodes)) {
+        const k = stableKey(n);
+        if (k && keys.has(k)) this.collapsed.add(n.id);
+      }
+    }
+    if (paths.includes(this.current)) this.editingId = null;
+    if (!this.files[this.current]) this.current = this.defaultFile();
+    this.undoStack = [];
+    this.redoStack = [];
+    this.markDirty(paths);
   }
 
   // -------------------------------------------------------------------------

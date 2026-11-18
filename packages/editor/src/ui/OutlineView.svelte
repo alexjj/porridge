@@ -4,7 +4,7 @@
   import { isLocked, isYearFile, kind } from "../model/tree.js";
   import type { Workspace } from "../store/workspace.svelte.js";
 
-  let { ws }: { ws: Workspace } = $props();
+  let { ws, onpagesettings }: { ws: Workspace; onpagesettings: (path: string) => void } = $props();
 
   const file = $derived(ws.file);
   const zoom = $derived(ws.zoom);
@@ -31,6 +31,14 @@
         {#if isLocked(zoom)}{zoom.text}{:else}{@html ws.md.html(zoom.text) || "Untitled"}{/if}
       {:else}
         {ws.title(file.path)}
+        {#if file.path.startsWith("pages/")}
+          <button class="icon title-action" aria-label="Page settings" title="Page settings" onclick={() => onpagesettings(file.path)}>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.5" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></svg>
+          </button>
+        {/if}
+        {#if file.path.startsWith("pages/") && file.head.some((h) => h.name.endsWith(":isDraft") && h.text === "true")}
+          <span class="tag">Draft</span>
+        {/if}
       {/if}
     </h1>
 

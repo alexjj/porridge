@@ -20,8 +20,16 @@ images/            uploaded images
    (`https://YOUR-USERNAME.github.io/YOUR-REPO/`).
 4. Push. The **Build blog** workflow publishes the site.
 
-After that, write with the porridge editor. Its **Save** button commits
-without rebuilding; **Save & Publish** commits and rebuilds the site.
+After that, write with the porridge editor:
+
+5. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new)
+   for just this repository, with **Contents** and **Actions** set to read
+   and write.
+6. Open the editor, choose **Connect GitHub**, and enter this repository and
+   the token.
+
+**Save** commits without rebuilding the site; **Publish** commits and
+rebuilds it.
 
 The file format is documented in
 [porridge's format.md](https://github.com/alexjj/porridge/blob/main/docs/format.md).

@@ -1,19 +1,45 @@
 <script lang="ts">
   import { STARTER } from "../store/starter.js";
+  import type { Remote } from "../store/remote.svelte.js";
   import type { Workspace } from "../store/workspace.svelte.js";
 
   let {
     ws,
+    remote,
     ontogglesidebar,
     ontogglepanel,
-  }: { ws: Workspace; ontogglesidebar: () => void; ontogglepanel: () => void } = $props();
+    onsettings,
+  }: {
+    ws: Workspace;
+    remote: Remote;
+    ontogglesidebar: () => void;
+    ontogglepanel: () => void;
+    onsettings: (tab: "blog" | "github") => void;
+  } = $props();
 
   let menuOpen = $state(false);
   let folderInput: HTMLInputElement | undefined = $state();
 
-  const statusText = $derived(
-    { loading: "Loading…", saving: "Saving…", saved: "Saved in this browser", error: "Not saved" }[ws.status],
-  );
+  const unsaved = $derived(remote.unsynced.length);
+
+  /** One line saying where the work stands. */
+  const status = $derived.by((): { text: string; tone?: "error" | "good"; href?: string } => {
+    if (ws.status === "error") return { text: "Not saved", tone: "error" };
+    if (ws.status === "loading") return { text: "Loading…" };
+    if (!remote.conn) return { text: ws.status === "saving" ? "Saving…" : "Saved in this browser" };
+    if (remote.busy === "checking") return { text: "Checking GitHub…" };
+    if (remote.busy === "saving") return { text: "Saving to GitHub…" };
+    const b = remote.build;
+    if (remote.busy === "publishing" && (!b || b.state !== "done")) {
+      return b?.state === "running" ? { text: "Building site…", href: b.url } : { text: "Publishing…" };
+    }
+    if (remote.error) return { text: "GitHub problem", tone: "error" };
+    if (unsaved) return { text: `${unsaved} unsaved ${unsaved === 1 ? "change" : "changes"}` };
+    if (b?.state === "done") {
+      return b.ok ? { text: "Published", tone: "good", href: ws.siteBase !== "/" ? ws.siteBase : b.url } : { text: "Build failed", tone: "error", href: b.url };
+    }
+    return { text: "Saved to GitHub" };
+  });
 
   async function importFolder(e: Event) {
     const input = e.currentTarget as HTMLInputElement;
@@ -33,7 +59,6 @@
   }
 
   function reset() {
-    menuOpen = false;
     if (!confirm("Replace everything in this browser with the starter blog? Your changes here will be lost.")) return;
     ws.replaceAll(STARTER);
   }
@@ -51,8 +76,39 @@
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
   </button>
   <span class="brand">porridge</span>
-  <span class="status" class:error={ws.status === "error"} title={ws.error}>{statusText}</span>
+  <span class="status" class:error={status.tone === "error"} class:good={status.tone === "good"} role="status" title={remote.error || ws.error}>
+    {#if status.href}<a href={status.href} target="_blank" rel="noopener">{status.text}</a>{:else}{status.text}{/if}
+  </span>
   <span class="spacer"></span>
+
+  {#if remote.conn}
+    <button
+      class="secondary"
+      aria-label="Save"
+      title={unsaved ? `Save ${remote.unsynced.join(", ")} to GitHub (${navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}-S)` : "Everything is saved to GitHub"}
+      disabled={!!remote.busy || !unsaved}
+      onclick={() => remote.save(false)}
+    >
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V4M6 8l4-4 4 4M4 16h12" /></svg>
+      <span>Save</span>
+    </button>
+    <button
+      class="secondary"
+      aria-label="Publish"
+      title="Save and rebuild the site"
+      disabled={!!remote.busy}
+      onclick={() => remote.save(true)}
+    >
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" /><path d="M3 10h14M10 3c2.5 2.5 2.5 11.5 0 14M10 3c-2.5 2.5-2.5 11.5 0 14" /></svg>
+      <span>Publish</span>
+    </button>
+  {:else if ws.status !== "loading"}
+    <button class="secondary" aria-label="Connect GitHub" onclick={() => onsettings("github")}>
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 12l4-4M7 9l-2 2a3 3 0 0 0 4 4l2-2M13 11l2-2a3 3 0 0 0-4-4L9 7" /></svg>
+      <span>Connect GitHub</span>
+    </button>
+  {/if}
+
   <button class="primary" aria-label="New entry" onclick={() => ws.newEntry()}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
     <span>New entry</span>
@@ -66,19 +122,31 @@
     </button>
     {#if menuOpen}
       <div class="menu-list" role="menu">
+        <button role="menuitem" onclick={() => choose(() => onsettings("blog"))}>Blog settings…</button>
+        <button role="menuitem" onclick={() => choose(() => onsettings("github"))}>GitHub…</button>
+        {#if remote.conn}
+          <button role="menuitem" onclick={() => choose(() => void remote.check())} disabled={!!remote.busy}>Check GitHub for changes</button>
+        {/if}
+        <hr />
         <button role="menuitem" onclick={() => choose(() => ws.downloadCurrent())}>Download this file</button>
         <button role="menuitem" onclick={() => choose(() => ws.downloadAll())}>Download all (.zip)</button>
-        <button role="menuitem" onclick={() => choose(() => folderInput?.click())}>Open a blog folder…</button>
-        <hr />
-        <button role="menuitem" class="danger" onclick={reset}>Reset to starter blog</button>
+        {#if !remote.conn}
+          <button role="menuitem" onclick={() => choose(() => folderInput?.click())}>Open a blog folder…</button>
+          <hr />
+          <button role="menuitem" class="danger" onclick={() => choose(reset)}>Reset to starter blog</button>
+        {/if}
       </div>
     {/if}
   </div>
   <input bind:this={folderInput} type="file" webkitdirectory hidden onchange={importFolder} />
 </header>
-{#if ws.error && ws.status !== "error"}
-  <div class="banner" role="alert">{ws.error} <button onclick={() => (ws.error = "")}>Dismiss</button></div>
+{#if remote.error}
+  <div class="banner" role="alert">{remote.error} <button onclick={() => (remote.error = "")}>Dismiss</button></div>
+{:else if remote.conflicts.length && !remote.conflictPrompt}
+  <div class="banner" role="alert">
+    Also changed on GitHub: {remote.conflicts.map((p) => ws.title(p)).join(", ")}. Saving will ask which version to keep.
+  </div>
 {/if}
-{#if ws.status === "error"}
-  <div class="banner" role="alert">{ws.error}</div>
+{#if ws.error}
+  <div class="banner" role="alert">{ws.error} {#if ws.status !== "error"}<button onclick={() => (ws.error = "")}>Dismiss</button>{/if}</div>
 {/if}

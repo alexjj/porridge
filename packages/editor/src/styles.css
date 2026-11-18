@@ -166,7 +166,8 @@ textarea.text { display: block; width: 100%; margin: 0; border: 0; outline: none
   .sidebar-open .scrim { display: block; }
   .main { padding: 12px 16px 50vh 6px; }
   .doc-title { font-size: 22px; }
-  .status { display: none; }
+  .status { margin-left: 0; font-size: 12px; min-width: 0; flex: 0 1 auto; }
+  .topbar { gap: 4px; padding: 0 8px; }
 }
 
 @media (max-width: 420px) {
@@ -175,3 +176,70 @@ textarea.text { display: block; width: 100%; margin: 0; border: 0; outline: none
 }
 
 .scrim { position: fixed; inset: 48px 0 0 0; z-index: 10; background: rgb(0 0 0 / 0.25); }
+
+/* ---- Milestone 4: GitHub, dialogs and forms --------------------------- */
+
+.secondary { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px 0 10px; border-radius: 8px; border: 1px solid var(--rule); background: var(--bg); font-weight: 500; }
+.secondary:hover:not(:disabled) { background: var(--hover); }
+.secondary:disabled, .primary:disabled { opacity: 0.5; cursor: default; }
+.status a { color: inherit; }
+.status.good { color: #2f7d4a; }
+@media (prefers-color-scheme: dark) { .status.good { color: #8fd3a3; } }
+.menu-list button:disabled { opacity: 0.5; }
+
+.side-head { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.side-head h2 { margin: 0 8px; }
+.icon.small { width: 26px; height: 26px; }
+.icon.small svg { width: 16px; height: 16px; }
+.sidebar li button { display: flex; align-items: center; gap: 8px; }
+.sidebar .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.unsaved { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.repo { margin: 20px 8px 0; font-size: 13px; }
+.repo a { color: var(--muted); }
+
+.doc-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.title-action { width: 30px; height: 30px; }
+.doc-title .tag { margin: 0; font-size: 12px; }
+
+.modal { border: 0; padding: 0; border-radius: 14px; background: var(--bg); color: var(--text); width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-shadow: 0 20px 60px rgb(0 0 0 / 0.25); }
+.modal.wide { width: min(560px, calc(100vw - 32px)); }
+.modal::backdrop { background: rgb(0 0 0 / 0.35); }
+.modal-body { padding: 16px 20px 20px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.modal-head h2 { font-size: 18px; margin: 0; }
+.modal-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.modal-foot .spacer { flex: 1; }
+.modal-tabs { padding: 0; margin-bottom: 14px; }
+.modal p { margin: 0 0 10px; }
+
+.form { display: flex; flex-direction: column; gap: 12px; }
+.form label, .form .field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 500; }
+.form input:not([type="checkbox"]) { font: 15px var(--sans); color: var(--text); background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; width: 100%; }
+.form input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.form input:disabled { color: var(--muted); background: var(--side); }
+.form label.check { flex-direction: row; align-items: center; gap: 8px; font-weight: 400; }
+.form label.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-hint { font-weight: 400; font-size: 13px; color: var(--muted); }
+.field-hint a { color: var(--accent); }
+.field-problem { font-weight: 400; font-size: 13px; color: var(--danger); white-space: pre-line; }
+.form p.field-hint, .form p.field-problem { margin: 0; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.actions.spread { justify-content: space-between; }
+.inline-field { display: flex; align-items: center; gap: 4px; }
+.inline-field .prefix { color: var(--muted); }
+.inline-field .secondary { margin-left: 6px; flex: none; }
+.danger-button { color: var(--danger); padding: 0 4px; height: 34px; }
+.danger-button:hover { text-decoration: underline; }
+.connected { padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); }
+.conflict-list { margin: 0 0 12px; padding-left: 20px; }
+.muted { color: var(--muted); font-size: 13px; }
+
+@media (max-width: 760px) {
+  .topbar .secondary span { display: none; }
+  .topbar .secondary { padding: 0 8px; }
+  .brand { display: none; }
+  .row-2 { grid-template-columns: 1fr; }
+}
+.field-problem:empty { display: none; }
+.form .field > label { font-weight: 500; }

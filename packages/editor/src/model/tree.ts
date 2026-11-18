@@ -111,3 +111,45 @@ export function* walk(nodes: ENode[]): Generator<ENode> {
     yield* walk(n.children);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Head settings
+
+/**
+ * Set a head element (`title`, or a Porridge setting like `porridge:inNav`).
+ * An empty value removes it. Declares the Porridge namespace if needed.
+ */
+export function setHead(file: EFile, name: string, value: string) {
+  let qname = name;
+  if (name.startsWith("porridge:")) {
+    const local = name.slice("porridge:".length);
+    let prefix = Object.entries(file.rootAttrs).find(([k, v]) => k.startsWith("xmlns:") && v === PORRIDGE_NS)?.[0].slice(6);
+    if (!prefix) {
+      prefix = file.rootAttrs["xmlns:porridge"] === undefined ? "porridge" : "porridgens";
+      file.rootAttrs[`xmlns:${prefix}`] = PORRIDGE_NS;
+    }
+    qname = `${prefix}:${local}`;
+  }
+  const i = file.head.findIndex((e) => e.name === qname);
+  if (value === "") {
+    if (i >= 0) file.head.splice(i, 1);
+  } else if (i >= 0) {
+    file.head[i]!.text = value;
+  } else {
+    file.head.push({ name: qname, attrs: new Map(), text: value, children: [] });
+  }
+}
+
+/** "My Book Notes!" → "my-book-notes" */
+export function slugify(title: string): string {
+  const s = title
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return /^[a-z]/.test(s) ? s : `page-${s}`.replace(/-$/, "");
+}
+
+export const pagePath = (slug: string): string => `pages/${slug}.opml`;
+export const pageSlug = (path: string): string => path.slice("pages/".length, -".opml".length);

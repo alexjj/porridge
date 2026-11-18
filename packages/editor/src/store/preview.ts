@@ -41,6 +41,7 @@ export async function renderPreview(
   texts: Record<string, string>,
   file: EFile | undefined,
   nodeId: string | null,
+  imageBase = "/",
 ): Promise<Preview> {
   try {
     // Root-relative links resolve against "/" in the preview.
@@ -53,7 +54,9 @@ export async function renderPreview(
     }
     const html = page.content
       .replace(/<link rel="stylesheet"[^>]*>/, `<style>${STYLESHEET}\na { pointer-events: none; }</style>`)
-      .replace(/<header class="site-header">[\s\S]*?<\/header>/, "");
+      .replace(/<header class="site-header">[\s\S]*?<\/header>/, "")
+      // Images live in the repo, not at the preview's address.
+      .replaceAll(`src="/images/`, `src="${imageBase}images/`);
     const label = /<title>([^<]*)<\/title>/.exec(page.content)?.[1]?.split(" – ")[0] ?? "";
     return { html, label: label || "Home page", warnings: site.warnings.map((w) => `${w.file}: ${w.message}`) };
   } catch (err) {

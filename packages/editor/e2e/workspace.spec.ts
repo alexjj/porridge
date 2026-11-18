@@ -92,8 +92,7 @@ test("a week of posts exports as valid OPML", async ({ page }) => {
   }
 
   // The new year has its own file, listed first.
-  const files = page.getByRole("navigation", { name: "Files" });
-  await expect(files.getByRole("button")).toHaveText(["2027", "2026", "About"]);
+  await expect(page.locator(".sidebar li .name")).toHaveText(["2027", "2026", "About"]);
 
   const texts: Record<string, string> = {};
   for (const [label, path] of [

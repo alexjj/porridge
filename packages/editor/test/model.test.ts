@@ -275,3 +275,35 @@ describe("calendar", () => {
     expect(ensureEntryTimes(file, new Date(), "Europe/London")).toBe(false);
   });
 });
+
+describe("head settings", () => {
+  it("sets, adds and removes settings, matching the namespace by URI", async () => {
+    const { setHead, fileHead } = await import("../src/model/tree.js");
+    const f = fileFromOpml(
+      "p.opml",
+      `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0" xmlns:pg="https://github.com/alexjj/porridge">\n  <head>\n    <title>Old</title>\n  </head>\n  <body/>\n</opml>\n`,
+    );
+    setHead(f, "title", "New");
+    setHead(f, "porridge:inNav", "true");
+    expect(fileHead(f, "porridge:inNav")).toBe("true");
+    expect(fileToOpml(f)).toContain(`<title>New</title>\n    <pg:inNav>true</pg:inNav>`);
+    setHead(f, "porridge:inNav", "");
+    expect(fileToOpml(f)).not.toContain("inNav");
+  });
+
+  it("declares the namespace when a file has none", async () => {
+    const { setHead } = await import("../src/model/tree.js");
+    const f = fileFromOpml("p.opml", `<opml version="2.0"><head/><body/></opml>`);
+    setHead(f, "porridge:navOrder", "2");
+    expect(fileToOpml(f)).toContain(`<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">`);
+    expect(fileToOpml(f)).toContain(`<porridge:navOrder>2</porridge:navOrder>`);
+  });
+
+  it("makes page names from titles", async () => {
+    const { slugify } = await import("../src/model/tree.js");
+    expect(slugify("My Book Notes!")).toBe("my-book-notes");
+    expect(slugify("Café & Crêpes")).toBe("cafe-crepes");
+    expect(slugify("2026 reading")).toBe("page-2026-reading");
+    expect(slugify("!!!")).toBe("page");
+  });
+});

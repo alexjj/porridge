@@ -6,6 +6,16 @@ An outliner-based daily blogging platform. Content is OPML in a git repo; the ed
 - [File format](docs/format.md)
 - [Starter blog repo](template/)
 
+## Using the editor
+
+The editor is a static web app, published to this repository's GitHub Pages by `.github/workflows/editor.yml` (turn on Pages once under **Settings → Pages → Source: GitHub Actions**). It talks to GitHub straight from your browser; there's no server.
+
+1. Create your blog repo from [`template/`](template/) and set it up as its README says.
+2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new) for just that repo, with **Contents** and **Actions** set to read and write.
+3. Open the editor, choose **Connect GitHub**, and enter the repo and token. The token is kept only in that browser.
+
+**Save** commits your changes without rebuilding the site; **Publish** commits and rebuilds, and shows when the site is live.
+
 ## Layout
 
 ```

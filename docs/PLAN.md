@@ -156,8 +156,8 @@ nav, nav order).
   their blog repo with permissions **Contents: read/write**, **Actions:
   read/write** (to trigger and watch builds), **Metadata: read**. Pasted into
   settings, stored in browser storage.
-- **Reading:** files are fetched as raw content (handles large files beyond the
-  1 MB limit of the JSON contents API). Year files are fetched on demand.
+- **Reading:** the branch head's tree is listed, and changed content files are
+  fetched as raw blobs (no 1 MB limit).
 - **Writing:** all changed files and new images go up as a **single commit**
   via the Git Data API (create blobs → create tree → create commit → update
   ref). The update is conditional on the branch still pointing at the commit we
@@ -247,15 +247,37 @@ Deferred from M3:
 - Images referenced with `/images/…` don't display in the editor or preview
   until the editor can read them from the repo (M4).
 
-### M4 — GitHub connection
-- [ ] Settings: repo + token, connection check.
-- [ ] File list loaded from the repo; lazy year loading.
-- [ ] Save (single commit, `[skip ci]`) and Save & Publish (commit or
-      `workflow_dispatch`), build status in the top bar.
-- [ ] Create / rename / delete pages; page settings (nav).
-- [ ] Conflict detection and reload.
+### M4 — GitHub connection ✅
+- [x] Settings: repository, branch, build workflow and token; checks access
+      before connecting. Connecting loads the repo's blog, or uploads the
+      browser's blog to a repo that has none.
+- [x] All content files load from the repo (see deviation below), and changes
+      made on GitHub are brought in on startup and on every save.
+- [x] Save: one commit with `[skip ci]`. Save & Publish: a normal commit, or a
+      `workflow_dispatch` when there's nothing to save; the build is followed
+      in the top bar and links to the site or the failed run. Ctrl/⌘-S saves.
+- [x] Pages: create, settings (title, navigation, order, label, draft),
+      rename, delete. Blog settings screen for `blog.opml`.
+- [x] Conflicts: a file changed both here and on GitHub asks which version to
+      keep; either way history is kept (no force pushes). Changes to other
+      files merge automatically, including a push that lands mid-save.
+- [x] Images under `/images/` show in the editor and preview, loaded from the
+      repo (public repositories).
+- [x] The editor is published to this repo's GitHub Pages
+      (`.github/workflows/editor.yml`).
+- [x] Tests: sync logic against an in-memory fake of the GitHub API; the same
+      fake drives Playwright tests of connecting, saving, publishing,
+      conflicts, pages and settings.
 - **Done when:** you can write and publish daily from the hosted editor on a
   laptop with no local tooling.
+
+Deviations from the plan:
+- **Year files load eagerly, not lazily.** Each is one small request, the
+  preview needs them all, and unchanged files come from the browser's copy.
+  Lazy loading can come back if a blog ever gets big enough to need it.
+- GitHub's `permissions` check only shows the token's *user* can push; a
+  fine-grained token missing Contents write is reported when saving.
+- Images in private repositories don't display in the editor yet.
 
 ### M5 — Mobile and element menus
 - [ ] Responsive layout, drawers, keyboard-pinned toolbar.
