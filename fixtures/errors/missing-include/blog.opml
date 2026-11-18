@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <title>Missing include</title>
+    <porridge:baseUrl>https://example.com/</porridge:baseUrl>
+  </head>
+  <body>
+    <outline text="2026" type="include" url="blog/2026.opml"/>
+    <outline text="2025" type="include" url="blog/2025.opml"/>
+  </body>
+</opml>

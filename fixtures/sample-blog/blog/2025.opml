@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <title>2025</title>
+  </head>
+  <body>
+    <outline text="December 2025" type="calendarMonth" date="2025-12">
+      <outline text="31st December" type="calendarDay" date="2025-12-31">
+        <outline text="Written by hand with no created attribute: anchor #n2, counted from the bottom."/>
+        <outline text="Also hand-written: anchor #n1. Adding entries above these won't change their anchors."/>
+      </outline>
+      <outline text="1st December" type="calendarDay" date="2025-12-01">
+        <outline text="Older posts live in last year's file, pulled in by an include in blog.opml." created="Mon, 01 Dec 2025 09:00:00 GMT" myTool:rating="5" xmlns:myTool="https://example.com/my-tool"/>
+        <outline text="Unknown attributes, like the one on the entry above, are kept when the editor saves." created="Mon, 01 Dec 2025 08:00:00 GMT" customFlag="keep-me"/>
+      </outline>
+      <outline text="Some day in December" type="calendarDay">
+        <outline text="This day has no date attribute: the builder warns and skips it." created="Mon, 15 Dec 2025 10:00:00 GMT"/>
+      </outline>
+    </outline>
+    <outline text="June 2025" type="calendarMonth" date="2025-06">
+      <outline text="15th June" type="calendarDay" date="2025-06-15">
+        <outline text="09:00 GMT is 10:00 BST, so this is #a100000. It's first in document order, so it keeps the plain anchor." created="Sun, 15 Jun 2025 09:00:00 GMT"/>
+        <outline text="Same created time as the entry above: the builder warns and this one gets #a100000-2." created="Sun, 15 Jun 2025 09:00:00 GMT"/>
+        <outline text="An unparseable created value: warned about and treated as missing, so its anchor is #n1." created="last Tuesday"/>
+      </outline>
+    </outline>
+    <outline text="Not a calendar node: a format error, so the builder warns and skips it."/>
+  </body>
+</opml>

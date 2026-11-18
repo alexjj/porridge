@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <title>What I'm doing now</title>
+    <porridge:inNav>true</porridge:inNav>
+    <porridge:navOrder>2</porridge:navOrder>
+    <porridge:navLabel>Now</porridge:navLabel>
+  </head>
+  <body>
+    <outline text="The nav shows this page as &quot;Now&quot; (navLabel), after About (navOrder 2)."/>
+    <outline text="Reading">
+      <outline text="See the [books page](/books/), which isn't in the nav."/>
+    </outline>
+  </body>
+</opml>

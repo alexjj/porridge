@@ -48,7 +48,9 @@ porridge (this repo — the app)              my-blog (content repo, one per use
 ├─ packages/editor  static web app           ├─ pages/about.opml   other pages
 ├─ packages/build   CLI used by the Action   ├─ images/2026/11/…
 ├─ action.yml       reusable GitHub Action   └─ .github/workflows/build.yml
-└─ template/        starter content repo          (uses: alexjj/porridge@v1)
+├─ template/        starter content repo          (uses: alexjj/porridge@v1)
+└─ fixtures/        test content covering
+                    every rule in format.md
 ```
 
 ### 3.1 `packages/core` (shared by editor and builder)
@@ -58,7 +60,8 @@ the editor's live preview and the published site use the same code, preview and
 output can't drift apart.
 
 - OPML parse / serialize, preserving unknown attributes and head elements
-  (round-trip safe: load → save with no edits produces an identical file).
+  (round-trip safe: load → save with no edits keeps every element, attribute
+  and their order; a file porridge has saved once comes back byte-identical).
 - Tree model with operations: insert, delete, split, merge, indent, outdent,
   move up/down, all expressed as reversible operations (powers undo/redo).
 - Calendar helpers: find or create year file / month / day for a given date in
@@ -72,24 +75,9 @@ output can't drift apart.
 
 - A Node CLI: `porridge build <content-dir> <out-dir>`.
 - Published as a composite GitHub Action at the root of this repo
-  (`action.yml`), so a content repo's workflow is a few lines:
-
-```yaml
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-permissions: { contents: read, pages: write, id-token: write }
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: alexjj/porridge@v1        # builds into ./_site
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: _site }
-      - uses: actions/deploy-pages@v4
-```
+  (`action.yml`, input `output`, default `_site`), so a content repo's
+  workflow is short: see
+  [`template/.github/workflows/build.yml`](../template/.github/workflows/build.yml).
 
 - Commits whose message contains `[skip ci]` don't trigger it (that's how Save
   avoids a build — see §5).
@@ -121,7 +109,7 @@ Solid; decide at the start of milestone 3). No backend.
 │ porridge          ● unsaved    [Save] [Publish]   ⚙          │  thin top bar
 ├────────────┬──────────────────────────────────┬──────────────┤
 │ blog       │ ▾ November 2026                  │ Syntax help  │
-│ ▸ 2026     │   ▾ November 18                  │ **bold**     │
+│ ▸ 2026     │   ▾ 18th November                │ **bold**     │
 │ ▸ 2025     │     • A one-paragraph post…      │ [link](url)  │
 │ pages      │     • Post with a title          │ ![img](url)  │
 │   about    │         • First paragraph…       │ Shortcuts…   │
@@ -207,10 +195,13 @@ outlines is a later improvement.
 
 Each milestone ends with something usable.
 
-### M1 — Format spec and sample content
-- [ ] `docs/format.md` finalised.
-- [ ] `template/` content repo: `blog.opml`, `blog/2026.opml`, `pages/about.opml`,
-      workflow file, sample images.
+### M1 — Format spec and sample content ✅
+- [x] `docs/format.md` finalised (v1).
+- [x] `template/`: clean starter content repo — `blog.opml`,
+      `blog/2026.opml`, `pages/about.opml`, workflow file, setup README.
+- [x] `fixtures/sample-blog/`: covers every rule in the spec, including
+      warning cases, with a rule → location table in `fixtures/README.md`.
+- [x] `fixtures/errors/`: one small repo per build-failing error.
 - **Done when:** the sample files cover every rule in the spec.
 
 ### M2 — Core library and builder
@@ -219,7 +210,10 @@ Each milestone ends with something usable.
 - [ ] Include resolution, calendar model, draft/comment filtering.
 - [ ] Renderers: home, day, month, year, page, RSS; base theme.
 - [ ] `porridge build` CLI and `action.yml`.
-- [ ] Golden-file tests: sample content → expected HTML.
+- [ ] Golden-file tests: `fixtures/sample-blog` → expected HTML and warnings;
+      each `fixtures/errors/*` fails with the right error.
+- [ ] Round-trip test: every fixture file loads and saves with the same
+      elements, attributes and order (byte-identical once saved by porridge).
 - **Done when:** a content repo built from `template/` publishes a working
   blog to GitHub Pages on push, from hand-edited OPML.
 
