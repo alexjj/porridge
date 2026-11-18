@@ -208,7 +208,16 @@ function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
   const hash = `<a class="permalink" href="${href}" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
   const out = [`<article class="entry" id="${entry.anchor}">`];
   if (entry.body === null) {
-    out.push(`<p>${hash}${md.html(entry.text)}</p>`);
+    const html = md.html(entry.text);
+    // A post that starts with a captioned image: the "#" goes just before the
+    // caption text, rather than beside the top of the image.
+    const caption = /<span class="caption" aria-hidden="true">([^<]*)<\/span>/;
+    if (html.startsWith(`<span class="figure">`) && caption.test(html)) {
+      const withHash = html.replace(caption, (c) => `<span class="caption-line">${hash}${c}</span>`);
+      out.push(`<p>${withHash}</p>`);
+    } else {
+      out.push(`<p>${hash}${html}</p>`);
+    }
   } else {
     const title = md.html(entry.text);
     // A title that already contains a link can't be wrapped in another one.

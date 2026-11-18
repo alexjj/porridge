@@ -80,6 +80,10 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .figure { display: block; margin: 0.5rem 0; text-align: center; }
 .figure img { display: block; margin: 0 auto; }
 .caption { display: block; margin-top: 0.4rem; color: var(--muted); font-size: 0.88em; line-height: 1.4; }
+/* A post that starts with an image: its "#" sits just before the caption. */
+.caption-line { display: block; margin-top: 0.4rem; text-align: center; color: var(--muted); font-size: 0.88em; line-height: 1.4; }
+.caption-line .caption { display: inline; margin: 0; font-size: inherit; }
+.caption-line .permalink { position: static; display: inline; margin-right: 0.35em; }
 
 /* Lightbox: an image opened full size. */
 img.zoomable { cursor: zoom-in; }

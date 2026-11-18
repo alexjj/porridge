@@ -51,6 +51,28 @@ describe("home page", () => {
   });
 });
 
+describe("permalinks", () => {
+  const withEntry = (text: string) =>
+    year.replace(`<outline text="c" created="Wed, 18 Nov 2026 10:00:00 GMT"/>`, `<outline text="${text}" created="Wed, 18 Nov 2026 10:00:00 GMT"/>`);
+  const dayPage = async (text: string) => {
+    const { files } = await buildSite(memorySource({ "blog.opml": blog(10), "blog/2026.opml": withEntry(text) }));
+    return files.find((f) => f.path === "2026/11/18/index.html")!.content;
+  };
+  const HASH = `<a class="permalink" href="/2026/11/18/#a100000" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
+
+  it("puts the # before the caption of a post that starts with a captioned image", async () => {
+    expect(await dayPage("![Notebooks](/images/n.webp)")).toContain(
+      `<p><span class="figure"><img src="/images/n.webp" alt="Notebooks">` +
+        `<span class="caption-line">${HASH}<span class="caption" aria-hidden="true">Notebooks</span></span></span></p>`,
+    );
+  });
+
+  it("keeps the # at the start for text, and for images without a caption", async () => {
+    expect(await dayPage("Text first ![Notebooks](/images/n.webp)")).toContain(`<p>${HASH}Text first`);
+    expect(await dayPage("![](/images/n.webp)")).toContain(`<p>${HASH}<img src="/images/n.webp" alt=""></p>`);
+  });
+});
+
 describe("settings", () => {
   it("warns about bad values and falls back to defaults", async () => {
     const bad = blog(0).replace("</head>", "<porridge:timezone>Mars/Olympus</porridge:timezone></head>");
