@@ -48,7 +48,7 @@ porridge (this repo — the app)              my-blog (content repo, one per use
 ├─ packages/editor  static web app           ├─ pages/about.opml   other pages
 ├─ packages/build   CLI used by the Action   ├─ images/2026/11/…
 ├─ action.yml       reusable GitHub Action   └─ .github/workflows/build.yml
-├─ template/        starter content repo          (uses: alexjj/porridge@v1)
+├─ template/        starter content repo          (uses: alexjj/porridge@main)
 └─ fixtures/        test content covering
                     every rule in format.md
 ```
@@ -219,7 +219,8 @@ Each milestone ends with something usable.
       byte-identical.
 - [x] CI: typecheck, tests, `dist/` freshness check, and a run of the action
       itself against `template/`.
-- [ ] Tag `v1` so `uses: alexjj/porridge@v1` resolves (after merging to main).
+- [x] Blogs use `alexjj/porridge@main`, so builder changes reach them on the
+      next publish (the `v1` tag still exists for anyone pinned to it).
 - **Done when:** a content repo built from `template/` publishes a working
   blog to GitHub Pages on push, from hand-edited OPML.
 
