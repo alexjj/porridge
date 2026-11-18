@@ -1,0 +1,86 @@
+// The default theme: one stylesheet, readable typography, light and dark.
+
+export const STYLESHEET = `:root {
+  --bg: #fbfaf6;
+  --text: #24221e;
+  --muted: #7a756c;
+  --rule: #e6e1d6;
+  --link: #8a4b1f;
+  --link-hover: #5e3110;
+  --serif: "Iowan Old Style", "Charter", "Sitka Text", Cambria, Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1b18;
+    --text: #e9e5dc;
+    --muted: #9b958a;
+    --rule: #34322d;
+    --link: #e0a46e;
+    --link-hover: #f3c79c;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 1.125rem/1.65 var(--serif);
+}
+.site-header, main, .site-footer {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+a { color: var(--link); text-underline-offset: 0.15em; }
+a:hover { color: var(--link-hover); }
+img { max-width: 100%; height: auto; border-radius: 4px; }
+
+.site-header { padding-top: 2.5rem; padding-bottom: 1rem; font-family: var(--sans); }
+.site-title { font-size: 1.35rem; font-weight: 700; color: var(--text); text-decoration: none; }
+.site-description { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.95rem; }
+.site-nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin-top: 0.75rem; font-size: 0.95rem; }
+.site-nav a { color: var(--muted); text-decoration: none; }
+.site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--text); }
+
+.page-title { font-family: var(--sans); font-size: 1.6rem; line-height: 1.25; margin: 1.5rem 0 1rem; }
+
+.day { border-top: 1px solid var(--rule); padding-top: 1.25rem; margin-top: 1.5rem; }
+.day-title { font-family: var(--sans); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 0.75rem; }
+.day-title a { color: var(--muted); text-decoration: none; }
+.day-title a:hover { color: var(--text); }
+
+.entry { margin: 0 0 1.5rem; scroll-margin-top: 1rem; }
+.entry:target { background: color-mix(in srgb, var(--link) 8%, transparent); border-radius: 4px; box-shadow: 0 0 0 0.5rem color-mix(in srgb, var(--link) 8%, transparent); }
+.entry p { margin: 0 0 0.85rem; }
+.entry-title { font-family: var(--sans); font-size: 1.2rem; line-height: 1.3; margin: 0 0 0.5rem; }
+.entry-title > a:first-child { color: var(--text); text-decoration: none; }
+.entry-title > a:first-child:hover { color: var(--link); }
+.permalink { color: var(--muted); text-decoration: none; font-family: var(--sans); font-size: 0.85em; }
+.permalink:hover { color: var(--link); }
+
+ul { padding-left: 1.4rem; margin: 0 0 0.85rem; }
+li { margin: 0.15rem 0; }
+li > ul { margin: 0.15rem 0 0; }
+code { font-size: 0.88em; background: var(--rule); padding: 0.1em 0.3em; border-radius: 3px; }
+mark { background: #f6e3a1; color: inherit; padding: 0 0.15em; }
+@media (prefers-color-scheme: dark) { mark { background: #6b5718; } }
+
+.page h2 { font-family: var(--sans); font-size: 1.25rem; margin: 2rem 0 0.5rem; }
+.page h3 { font-family: var(--sans); font-size: 1.05rem; margin: 1.5rem 0 0.4rem; }
+.page h4 { font-family: var(--sans); font-size: 0.95rem; margin: 1.25rem 0 0.3rem; color: var(--muted); }
+.page p { margin: 0 0 0.85rem; }
+
+.calendar { list-style: none; padding: 0; }
+.calendar li { margin: 0 0 0.5rem; }
+.calendar-month { font-family: var(--sans); font-weight: 600; text-decoration: none; }
+.calendar-days a { display: inline-block; min-width: 1.6rem; text-align: center; font-family: var(--sans); font-size: 0.9rem; }
+
+.pager { display: flex; justify-content: space-between; gap: 1rem; margin: 2rem 0; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--sans); font-size: 0.95rem; }
+.pager .older { margin-left: auto; text-align: right; }
+.empty { color: var(--muted); }
+
+.site-footer { margin-top: 3rem; padding-top: 1rem; padding-bottom: 3rem; border-top: 1px solid var(--rule); color: var(--muted); font-family: var(--sans); font-size: 0.85rem; }
+.site-footer a { color: var(--muted); }
+`;

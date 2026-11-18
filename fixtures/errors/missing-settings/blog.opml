@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <description>No title and no porridge:baseUrl.</description>
+  </head>
+  <body>
+    <outline text="2026" type="include" url="blog/2026.opml"/>
+  </body>
+</opml>

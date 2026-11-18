@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <title>2026</title>
+    <expansionState>1,2</expansionState>
+  </head>
+  <body>
+    <outline text="November 2026" type="calendarMonth" date="2026-11">
+      <outline text="18th November" type="calendarDay" date="2026-11-18">
+        <outline text="This one isn't finished yet" created="Wed, 18 Nov 2026 21:05:00 GMT" isDraft="true">
+          <outline text="Drafts are saved in the file but never published, children included."/>
+        </outline>
+        <outline text="Starting porridge" created="Wed, 18 Nov 2026 17:40:10 GMT">
+          <outline text="This entry has children, so its text is the **title** and the children are the body. The title links to [the permalink](/2026/11/18/#a174010)."/>
+          <outline text="![A bowl of porridge](/images/2026/11/porridge.jpg)"/>
+          <outline text="A body node with children becomes a paragraph followed by a list:">
+            <outline text="Oats"/>
+            <outline text="Milk, or water if you're *brave*">
+              <outline text="Lists nest as deep as the outline does"/>
+            </outline>
+            <outline text="Salt, not sugar" isComment="true"/>
+            <outline text="Golden syrup"/>
+          </outline>
+          <outline text="Comments are notes to self and never appear on the site." isComment="true"/>
+          <outline text="Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;https://example.com&gt;."/>
+        </outline>
+        <outline text="A one-paragraph post with no children, so no title. It still gets an anchor and a ¶ permalink." created="Wed, 18 Nov 2026 09:12:03 GMT"/>
+      </outline>
+      <outline text="17th November" type="calendarDay" date="2026-11-17">
+        <outline text="Two entries in a day, newest first. This one has `inline code` and a [link to an earlier day](/2026/11/02/)." created="Tue, 17 Nov 2026 20:00:00 GMT"/>
+        <outline text="Morning. An entry can have a title and just one body paragraph." created="Tue, 17 Nov 2026 07:30:00 GMT">
+          <outline text="Like this."/>
+        </outline>
+      </outline>
+      <outline text="2nd November" type="calendarDay" date="2026-11-02">
+        <outline text="The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st." created="Mon, 02 Nov 2026 12:00:00 GMT"/>
+      </outline>
+    </outline>
+    <outline text="October 2026" type="calendarMonth" date="2026-10">
+      <outline text="31st October" type="calendarDay" date="2026-10-31">
+        <outline text="A titled entry whose only child is a comment" created="Sat, 31 Oct 2026 18:00:00 GMT">
+          <outline text="Renders as a heading with no body." isComment="true"/>
+        </outline>
+      </outline>
+      <outline text="12th October" type="calendarDay" date="2026-10-12">
+        <outline text="Every entry on this day is a draft, so the day isn't published at all." created="Mon, 12 Oct 2026 10:00:00 GMT" isDraft="true"/>
+      </outline>
+    </outline>
+    <outline text="September 2026" type="calendarMonth" date="2026-09">
+      <outline text="3rd September" type="calendarDay" date="2026-09-03">
+        <outline text="This whole month only has a comment, so the month isn't published either." created="Thu, 03 Sep 2026 10:00:00 GMT" isComment="true"/>
+      </outline>
+    </outline>
+    <outline text="July 2026" type="calendarMonth" date="2026-07">
+      <outline text="16th July" type="calendarDay" date="2026-07-16">
+        <outline text="Created at 23:20 GMT on the 15th, which is 00:20 BST on the 16th in Europe/London. So it's filed under the 16th and its anchor is #a002000." created="Wed, 15 Jul 2026 23:20:00 GMT"/>
+      </outline>
+      <outline text="15th July" type="calendarDay" date="2026-07-15">
+        <outline text="Created at 22:30 GMT, 23:30 BST: still the 15th, anchor #a233000." created="Wed, 15 Jul 2026 22:30:00 GMT"/>
+      </outline>
+    </outline>
+  </body>
+</opml>

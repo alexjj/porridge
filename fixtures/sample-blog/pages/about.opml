@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0" xmlns:porridge="https://github.com/alexjj/porridge">
+  <head>
+    <title>About</title>
+    <porridge:inNav>true</porridge:inNav>
+    <porridge:navOrder>1</porridge:navOrder>
+  </head>
+  <body>
+    <outline text="Hello. A top-level node without children is a paragraph."/>
+    <outline text="This blog is written in an outliner and stored as OPML."/>
+    <outline text="Elsewhere">
+      <outline text="A top-level node with children is an h2 section; this is a paragraph inside it."/>
+      <outline text="Social">
+        <outline text="Second level with children is an h3."/>
+        <outline text="[Mastodon](https://example.social/@me)"/>
+      </outline>
+      <outline text="Code">
+        <outline text="Projects">
+          <outline text="Third level with children is an h4."/>
+          <outline text="Below that, nodes with children become lists:">
+            <outline text="[porridge](https://github.com/alexjj/porridge)">
+              <outline text="nested item"/>
+            </outline>
+            <outline text="something else"/>
+          </outline>
+        </outline>
+      </outline>
+    </outline>
+    <outline text="Contact details I haven't decided on yet" isDraft="true">
+      <outline text="Skipped with all its children."/>
+    </outline>
+    <outline text="Remember to add a photo." isComment="true"/>
+  </body>
+</opml>

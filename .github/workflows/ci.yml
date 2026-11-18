@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Check dist/ is up to date
+        run: |
+          npm run bundle
+          git diff --exit-code dist/ || (echo "::error::dist/porridge.mjs is out of date. Run 'npm run bundle' and commit it." && exit 1)
+
+  action:
+    # Runs this repo's action the way a blog's workflow would.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          content: template
+          output: _site
+      - run: test -f _site/index.html && test -f _site/rss.xml && test -f _site/about/index.html
+      - name: Build errors fail the step
+        run: |
+          if node dist/porridge.mjs build fixtures/errors/missing-settings _broken; then
+            echo "::error::Expected the build to fail" && exit 1
+          fi

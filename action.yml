@@ -1,0 +1,33 @@
+name: porridge build
+description: Build a porridge blog (OPML in a git repo) into a static site.
+branding:
+  icon: book-open
+  color: orange
+
+inputs:
+  content:
+    description: Folder containing blog.opml, relative to the workspace.
+    default: "."
+  output:
+    description: Folder to write the site to. It's replaced on each build.
+    default: _site
+  base-url:
+    description: Use this instead of porridge:baseUrl from blog.opml (e.g. for preview deployments).
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Build site
+      shell: bash
+      env:
+        CONTENT: ${{ inputs.content }}
+        OUTPUT: ${{ inputs.output }}
+        BASE_URL: ${{ inputs.base-url }}
+      run: |
+        args=(build "$CONTENT" "$OUTPUT")
+        if [ -n "$BASE_URL" ]; then args+=(--base-url "$BASE_URL"); fi
+        node "$GITHUB_ACTION_PATH/dist/porridge.mjs" "${args[@]}"
