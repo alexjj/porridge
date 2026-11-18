@@ -84,6 +84,9 @@
     {#if sheet}<div class="sheet-title">{node.text || "Empty line"}</div>{/if}
     <button role="menuitem" onclick={run((n) => ws.zoomTo(n.id))}>Zoom in</button>
     {#if !locked}
+      <button role="menuitem" onclick={run((n) => ws.select(n.id, n.id, true))}>Select…</button>
+    {/if}
+    {#if !locked}
       <button role="menuitem" onclick={run((n) => startInsert(ws, "link", n, cursor))}>Add link…</button>
       <button role="menuitem" onclick={run((n) => ws.pickImage?.(n, cursor))}>Add image…</button>
     {/if}

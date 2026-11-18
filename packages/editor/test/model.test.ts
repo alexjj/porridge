@@ -337,3 +337,72 @@ describe("images", async () => {
     expect(suggestAlt("PXL_20261118_193005.jpg")).toBe("");
   });
 });
+
+describe("zoomed-in title", async () => {
+  const { splitIntoFirstChild } = await import("../src/model/ops.js");
+  it("Enter moves the rest of the title into a new first child", () => {
+    const { roots, tree, id } = setup("titletail\n  child");
+    expect(splitIntoFirstChild(tree, id("titletail"), 5)).toEqual({ id: find(roots, "tail").id, caret: 0 });
+    expect(draw(roots)).toBe("title\n  tail\n  child\n");
+  });
+});
+
+describe("selecting several lines", async () => {
+  const { block, indentBlock, outdentBlock, moveBlock, removeBlock } = await import("../src/model/ops.js");
+  const sel = (t: ReturnType<typeof setup>, a: string, h: string) => block(t.tree, t.id(a), t.id(h));
+  const names = (b: NonNullable<ReturnType<typeof block>>) => b.list.slice(b.start, b.end + 1).map((n) => n.text);
+
+  it("selects a run of siblings in either direction", () => {
+    const t = setup("a\nb\nc\nd");
+    expect(names(sel(t, "b", "c")!)).toEqual(["b", "c"]);
+    expect(names(sel(t, "d", "b")!)).toEqual(["b", "c", "d"]);
+    expect(names(sel(t, "c", "c")!)).toEqual(["c"]);
+  });
+
+  it("widens to whole lines at the common level", () => {
+    const t = setup("a\n  a1\n  a2\nb\n  b1\nc");
+    expect(names(sel(t, "a2", "b1")!)).toEqual(["a", "b"]);
+    expect(names(sel(t, "a", "a2")!)).toEqual(["a"]);
+    expect(names(sel(t, "a1", "a2")!)).toEqual(["a1", "a2"]);
+  });
+
+  it("won't select calendar headings", () => {
+    const t = setup("#day\n  e1\n  e2\n#day2\n  e3");
+    expect(names(sel(t, "e1", "e2")!)).toEqual(["e1", "e2"]);
+    expect(sel(t, "e1", "e3")).toBeNull();
+  });
+
+  it("stays inside the zoomed-in line", () => {
+    const t = setup("p\n  c1\n  c2\nq");
+    t.tree.zoom = find(t.roots, "p");
+    expect(names(sel(t, "c1", "c2")!)).toEqual(["c1", "c2"]);
+    expect(sel(t, "c1", "q")).toBeNull();
+  });
+
+  it("indents, outdents, moves and deletes them together", () => {
+    const t = setup("a\nb\nc\nd");
+    expect(indentBlock(t.tree, sel(t, "b", "c")!)).toBe(true);
+    expect(draw(t.roots)).toBe("a\n  b\n  c\nd\n");
+    expect(outdentBlock(t.tree, sel(t, "b", "c")!)).toBe(true);
+    expect(draw(t.roots)).toBe("a\nb\nc\nd\n");
+    expect(moveBlock(sel(t, "b", "c")!, -1)).toBe(true);
+    expect(draw(t.roots)).toBe("b\nc\na\nd\n");
+    expect(moveBlock(sel(t, "b", "c")!, -1)).toBe(false);
+    expect(moveBlock(sel(t, "b", "c")!, 1)).toBe(true);
+    expect(draw(t.roots)).toBe("a\nb\nc\nd\n");
+    expect(indentBlock(t.tree, sel(t, "a", "b")!)).toBe(false);
+    expect(removeBlock(sel(t, "b", "d")!)).toBe(true);
+    expect(draw(t.roots)).toBe("a\n");
+  });
+
+  it("outdents children, leaving later siblings behind", () => {
+    const t = setup("p\n  x\n  y\n  z\nq");
+    expect(outdentBlock(t.tree, sel(t, "x", "y")!)).toBe(true);
+    expect(draw(t.roots)).toBe("p\n  z\nx\ny\nq\n");
+  });
+
+  it("won't take entries out of their day", () => {
+    const t = setup("#day\n  e1\n  e2");
+    expect(outdentBlock(t.tree, sel(t, "e1", "e2")!)).toBe(false);
+  });
+});

@@ -10,6 +10,7 @@
   import Sidebar from "./Sidebar.svelte";
   import TopBar from "./TopBar.svelte";
   import { startInsert, type Range } from "../store/commands.js";
+  import { handleSelectionKey } from "../store/keys.js";
   import type { ENode } from "../model/tree.js";
   import type { Remote } from "../store/remote.svelte.js";
   import type { Workspace } from "../store/workspace.svelte.js";
@@ -48,6 +49,23 @@
   }
 
   function onkeydown(e: KeyboardEvent) {
+    // Selected lines take the keys, unless something else (a dialog, a field) has focus.
+    const target = e.target as HTMLElement;
+    const free = target === document.body || !!target.closest?.(".main");
+    const quiet = free && !ws.inserting && !ws.menu && !document.querySelector("dialog[open]");
+    if (ws.selection && quiet) {
+      if (handleSelectionKey(e, ws)) return;
+    }
+    // Undo still works when nothing is being edited (e.g. after deleting selected lines).
+    if (quiet && !ws.editingId && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      const k = e.key.toLowerCase();
+      if (k === "z" || k === "y") {
+        e.preventDefault();
+        if (k === "y" || e.shiftKey) ws.redo();
+        else ws.undo();
+        return;
+      }
+    }
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
       e.preventDefault();
       if (remote.conn) void remote.save(false);
@@ -56,7 +74,16 @@
   }
 </script>
 
-<svelte:window onbeforeunload={() => void ws.flush()} {onkeydown} />
+<svelte:window
+  onbeforeunload={() => void ws.flush()}
+  {onkeydown}
+  onpointerup={() => (ws.dragAnchor = null)}
+  onpointerdown={(e) => {
+    // Clicking outside the outline (and its toolbar and menus) clears a selection.
+    const t = e.target as HTMLElement;
+    if (ws.selection && !t.closest(".row, .edit-toolbar, .node-menu, .menu-scrim, dialog")) ws.clearSelection();
+  }}
+/>
 <svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && void ws.flush()} />
 
 <div class="app" class:sidebar-open={sidebarOpen} class:panel-open={panelOpen}>
@@ -96,7 +123,7 @@
 {#if ws.inserting}
   {#key ws.inserting}<InsertDialog {ws} />{/key}
 {/if}
-{#if compact && ws.editingId && !ws.inserting && !ws.menu}
+{#if compact && (ws.editingId || ws.selection) && !ws.inserting && !ws.menu}
   <EditToolbar {ws} />
 {/if}
 {#if ws.toast}

@@ -283,3 +283,18 @@ textarea.text { scroll-margin-bottom: 80px; }
   .row { padding-left: 26px; }
   .toggle { left: -14px; }
 }
+
+/* ---- Selecting several lines, and the zoomed-in title ------------------- */
+
+.node.selected > .row { background: var(--accent-soft); border-radius: 6px; }
+.node.selected > .row .rendered { cursor: default; }
+.outline.selecting { user-select: none; -webkit-user-select: none; }
+.tb-count { flex: none; padding: 0 8px 0 4px; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.edit-toolbar .tb-danger { color: var(--danger); }
+.edit-toolbar .tb-text { width: auto; padding: 0 12px; font-weight: 600; color: var(--accent); }
+
+.title-text { flex: 1; min-width: 0; cursor: text; border-radius: 6px; }
+.title-text:focus { outline: none; }
+.title-text.empty { color: var(--muted); }
+.title-text code { font: 0.8em var(--mono); background: var(--hover); padding: 1px 4px; border-radius: 3px; }
+.title-input { flex: 1; min-width: 0; display: block; margin: 0; padding: 0 4px; border: 0; outline: none; resize: none; overflow: hidden; font: inherit; line-height: 1.25; color: var(--text); background: var(--hover); border-radius: 6px; }

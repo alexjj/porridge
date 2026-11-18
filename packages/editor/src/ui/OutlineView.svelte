@@ -1,5 +1,6 @@
 <script lang="ts">
   import NodeView from "./NodeView.svelte";
+  import ZoomTitle from "./ZoomTitle.svelte";
   import { ancestors } from "../model/ops.js";
   import { isLocked, isYearFile, kind } from "../model/tree.js";
   import type { Workspace } from "../store/workspace.svelte.js";
@@ -16,7 +17,7 @@
 </script>
 
 {#if file}
-  <div class="outline">
+  <div class="outline" class:selecting={ws.selection !== null}>
     <nav class="crumbs" aria-label="Zoom path">
       {#if zoom}
         <button class="crumb" onclick={() => ws.zoomTo(null)}>{ws.title(file.path)}</button>
@@ -28,7 +29,7 @@
     </nav>
     <h1 class="doc-title">
       {#if zoom}
-        {#if isLocked(zoom)}{zoom.text}{:else}{@html ws.renderText(zoom.text) || "Untitled"}{/if}
+        {#if isLocked(zoom)}{zoom.text}{:else}<ZoomTitle {ws} node={zoom} />{/if}
       {:else}
         {ws.title(file.path)}
         {#if file.path.startsWith("pages/")}

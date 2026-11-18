@@ -120,3 +120,27 @@ test("nothing scrolls sideways on a phone", async ({ page }) => {
   const { scroll, width } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, width: window.innerWidth }));
   expect(scroll).toBeLessThanOrEqual(width);
 });
+
+test("selecting several lines with taps, then indenting them", async ({ page }) => {
+  await openEditor(page);
+  await page.getByRole("button", { name: "New entry" }).tap();
+  await page.keyboard.type("first");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("second");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("third");
+  await toolbar(page).getByRole("button", { name: "Done" }).tap();
+
+  const bullet = (text: string) =>
+    page.locator(".node", { has: page.locator(":scope > .row > .text", { hasText: new RegExp(`^${text}$`) }) }).locator(":scope > .row > .bullet");
+  await bullet("second").tap();
+  await page.getByRole("menu", { name: "Line menu" }).getByRole("menuitem", { name: "Select…" }).tap();
+  await page.locator(".rendered", { hasText: /^third$/ }).tap();
+
+  const selectionBar = page.getByRole("toolbar", { name: "Selected lines" });
+  await expect(selectionBar).toContainText("2 selected");
+  await selectionBar.getByRole("button", { name: "Indent" }).tap();
+  expect(await outline(page)).toContain("    first\n      second\n      third\n");
+  await selectionBar.getByRole("button", { name: "Done" }).tap();
+  await expect(selectionBar).toBeHidden();
+});

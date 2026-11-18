@@ -193,3 +193,102 @@ export function pasteLines(tree: Tree, id: string, start: number, end: number, l
   siblings.splice(index + 1, 0, ...rest);
   return { id: last.id, caret };
 }
+
+/** Enter in the zoomed-in title: text after the caret becomes its first child. */
+export function splitIntoFirstChild(tree: Tree, id: string, caret: number): Focus | null {
+  const loc = editable(tree, id);
+  if (!loc) return null;
+  const { node } = loc;
+  const created = newNode(node.text.slice(caret));
+  node.text = node.text.slice(0, caret);
+  node.children.unshift(created);
+  tree.collapsed.delete(node.id);
+  return { id: created.id, caret: 0 };
+}
+
+// ---------------------------------------------------------------------------
+// Selecting several lines
+//
+// A selection runs from an anchor line to a head line. It's widened to whole
+// sibling lines under their common parent (as in Workflowy), so "indent these"
+// and "move these" always act on a neat run of siblings. Calendar headings
+// can't be selected.
+
+export interface Block {
+  parent: ENode | null;
+  list: ENode[];
+  start: number;
+  end: number;
+}
+
+function chain(roots: ENode[], id: string): ENode[] {
+  const loc = locate(roots, id);
+  return loc ? [...ancestors(roots, id), loc.node] : [];
+}
+
+/** The run of siblings selected by anchor and head, or null if it can't be selected. */
+export function block(tree: Tree, anchorId: string, headId: string): Block | null {
+  const a = chain(tree.roots, anchorId);
+  const h = chain(tree.roots, headId);
+  if (!a.length || !h.length) return null;
+  let i = 0;
+  while (i < a.length && i < h.length && a[i] === h[i]) i++;
+
+  let parent: ENode | null;
+  let first: ENode;
+  let last: ENode;
+  if (i === a.length || i === h.length) {
+    // One contains the other (or they're the same line): select the outer one.
+    const outer = i === a.length ? a : h;
+    first = last = outer[i - 1]!;
+    parent = outer[i - 2] ?? null;
+  } else {
+    parent = i > 0 ? a[i - 1]! : null;
+    first = a[i]!;
+    last = h[i]!;
+  }
+  // Stay inside the zoomed-in line.
+  if (tree.zoom && (first === tree.zoom || !chain(tree.roots, first.id).includes(tree.zoom))) return null;
+  const list = parent ? parent.children : tree.roots;
+  const ia = list.indexOf(first);
+  const ih = list.indexOf(last);
+  const start = Math.min(ia, ih);
+  const end = Math.max(ia, ih);
+  if (list.slice(start, end + 1).some(isLocked)) return null;
+  return { parent, list, start, end };
+}
+
+/** Tab: the selected lines become the last children of the line above them. */
+export function indentBlock(tree: Tree, b: Block): boolean {
+  const prev = b.list[b.start - 1];
+  if (!prev || isLocked(prev)) return false;
+  const nodes = b.list.splice(b.start, b.end - b.start + 1);
+  prev.children.push(...nodes);
+  tree.collapsed.delete(prev.id);
+  return true;
+}
+
+/** Shift-Tab: the selected lines move out to follow their parent. */
+export function outdentBlock(tree: Tree, b: Block): boolean {
+  const parent = b.parent;
+  if (!parent || parent === tree.zoom || isLocked(parent)) return false;
+  const parentLoc = locate(tree.roots, parent.id)!;
+  const nodes = b.list.splice(b.start, b.end - b.start + 1);
+  parentLoc.siblings.splice(parentLoc.index + 1, 0, ...nodes);
+  return true;
+}
+
+/** Move the selected lines past the sibling above (-1) or below (1). */
+export function moveBlock(b: Block, dir: -1 | 1): boolean {
+  const i = dir === -1 ? b.start - 1 : b.end + 1;
+  const other = b.list[i];
+  if (!other || isLocked(other)) return false;
+  b.list.splice(i, 1);
+  b.list.splice(dir === -1 ? b.end : b.start, 0, other);
+  return true;
+}
+
+export function removeBlock(b: Block): boolean {
+  b.list.splice(b.start, b.end - b.start + 1);
+  return true;
+}

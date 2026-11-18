@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { indentBlock, moveBlock, outdentBlock, removeBlock } from "../model/ops.js";
   import { doIndent, doMove, doOutdent, editing, rangeOf, startInsert, type Editing } from "../store/commands.js";
   import type { Workspace } from "../store/workspace.svelte.js";
 
@@ -27,10 +28,44 @@
     if (e) fn(e);
   };
 
+  const count = $derived(ws.block ? ws.block.end - ws.block.start + 1 : 0);
+
   // Tapping a button mustn't take focus from the text, or the keyboard closes.
   const keepFocus = (e: Event) => e.preventDefault();
 </script>
 
+{#if ws.selection}
+<div class="edit-toolbar" role="toolbar" aria-label="Selected lines" style="bottom:{bottom}px">
+  <span class="tb-count">{count} selected</span>
+  <button aria-label="Outdent" onclick={() => ws.blockOp("outdent", (t, b) => outdentBlock(t, b))}>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 5H9M17 10H9M17 15H9M6 7l-3 3 3 3" /></svg>
+  </button>
+  <button aria-label="Indent" onclick={() => ws.blockOp("indent", (t, b) => indentBlock(t, b))}>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 5H9M17 10H9M17 15H9M3 7l3 3-3 3" /></svg>
+  </button>
+  <button aria-label="Move up" onclick={() => ws.blockOp("move", (_t, b) => moveBlock(b, -1))}>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16V4M5 9l5-5 5 5" /></svg>
+  </button>
+  <button aria-label="Move down" onclick={() => ws.blockOp("move", (_t, b) => moveBlock(b, 1))}>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5" /></svg>
+  </button>
+  <button aria-label="Undo" onclick={() => ws.undo()}>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h9a5 5 0 0 1 0 10H9" /></svg>
+  </button>
+  <button
+    aria-label="Delete"
+    class="tb-danger"
+    onclick={() => {
+      ws.blockOp("delete", (_t, b) => removeBlock(b));
+      ws.clearSelection();
+    }}
+  >
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 11h6l1-11" /></svg>
+  </button>
+  <span class="tb-spacer"></span>
+  <button class="tb-text" onclick={() => ws.clearSelection()}>Done</button>
+</div>
+{:else}
 <div class="edit-toolbar" role="toolbar" aria-label="Editing" style="bottom:{bottom}px">
   <button aria-label="Outdent" onmousedown={keepFocus} onclick={act((e) => doOutdent(ws, e))}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 5H9M17 10H9M17 15H9M6 7l-3 3 3 3" /></svg>
@@ -76,3 +111,4 @@
     <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="9" rx="1.5" /><path d="M5.5 6.5h1M9.5 6.5h1M13.5 6.5h1M6.5 9.5h7M7 15l3 2.5 3-2.5" /></svg>
   </button>
 </div>
+{/if}

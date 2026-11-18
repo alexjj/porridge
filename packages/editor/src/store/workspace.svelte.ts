@@ -6,7 +6,7 @@ import { SvelteSet } from "svelte/reactivity";
 import { createInlineRenderer, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
 import { imagePath } from "../model/images.js";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
-import { ancestors, locate, type Focus, type Tree } from "../model/ops.js";
+import { ancestors, block, locate, neighbour, type Block, type Focus, type Tree } from "../model/ops.js";
 import {
   slugify,
   fileFromOpml,
@@ -75,6 +75,20 @@ export class Workspace {
   /** A link or image is being added to a node, replacing [start, end) of its text. */
   inserting: { kind: "link" | "image"; id: string; start: number; end: number; selected: string; file?: File } | null =
     $state(null);
+  /**
+   * Several lines selected, from `anchor` to `head`. When `sticky` (started
+   * from the line menu, for touch screens), tapping a line extends it.
+   */
+  selection: { anchor: string; head: string; sticky: boolean } | null = $state(null);
+  /** The line a mouse drag started on, while the button is held. */
+  dragAnchor: string | null = null;
+  /** Every line shown as selected: the selected lines and everything in them. */
+  selectedIds: Set<string> = $derived.by(() => {
+    const ids = new Set<string>();
+    const b = this.block;
+    if (b) for (const n of walk(b.list.slice(b.start, b.end + 1))) ids.add(n.id);
+    return ids;
+  });
   /** A short message shown briefly at the bottom ("Link copied"). */
   toast = $state("");
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -119,6 +133,47 @@ export class Workspace {
 
   tree(): Tree {
     return { roots: this.file?.nodes ?? [], collapsed: this.collapsed, zoom: this.zoom };
+  }
+
+  /** The run of sibling lines the selection covers, if any. */
+  get block(): Block | null {
+    const s = this.selection;
+    return s && this.file ? block(this.tree(), s.anchor, s.head) : null;
+  }
+
+  /** Select from `anchor` to `head`. Returns false if those lines can't be selected together. */
+  select(anchor: string, head: string, sticky = this.selection?.sticky ?? false): boolean {
+    if (!this.file || !block(this.tree(), anchor, head)) return false;
+    this.selection = { anchor, head, sticky };
+    if (this.editingId) {
+      (document.getElementById(`ta-${this.editingId}`) as HTMLTextAreaElement | null)?.blur();
+      this.editingId = null;
+    }
+    window.getSelection()?.removeAllRanges();
+    return true;
+  }
+
+  /** Shift-↑/↓: move the selection's head to the line above or below. */
+  extendSelection(dir: -1 | 1) {
+    const s = this.selection;
+    const next = s && neighbour(this.tree(), s.head, dir);
+    if (s && next) this.select(s.anchor, next.id);
+  }
+
+  clearSelection() {
+    this.selection = null;
+  }
+
+  /** Run an operation on all the selected lines, as one undo step. */
+  blockOp(kindName: string, fn: (t: Tree, b: Block) => boolean): boolean {
+    const file = this.file;
+    const b = this.block;
+    if (!file || !b) return false;
+    const before = this.snapshot([file.path]);
+    if (!fn(this.tree(), b)) return false;
+    this.record(before, kindName);
+    this.changed(file);
+    return true;
   }
 
   /** Year files (newest first) and pages, for the sidebar. */
@@ -480,12 +535,14 @@ export class Workspace {
     if (!this.files[path]) return;
     this.current = path;
     this.editingId = null;
+    this.selection = null;
     this.scheduleSave();
   }
 
   zoomTo(id: string | null) {
     this.zoomIds[this.current] = id;
     this.editingId = null;
+    this.selection = null;
   }
 
   toggle(id: string) {
@@ -507,6 +564,7 @@ export class Workspace {
       return;
     }
     for (const a of ancestors(this.file.nodes, id)) this.collapsed.delete(a.id);
+    this.selection = null;
     this.editingId = id;
     flushSync();
     const ta = document.getElementById(`ta-${id}`) as HTMLTextAreaElement | null;

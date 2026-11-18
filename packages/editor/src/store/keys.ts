@@ -1,6 +1,18 @@
 // Keyboard shortcuts for a node being edited.
 
-import { locate, mergeUp, neighbour, remove, split, visible } from "../model/ops.js";
+import {
+  indentBlock,
+  locate,
+  mergeUp,
+  moveBlock,
+  neighbour,
+  outdentBlock,
+  remove,
+  removeBlock,
+  split,
+  splitIntoFirstChild,
+  visible,
+} from "../model/ops.js";
 import { doIndent, doMove, doOutdent, rangeOf, startInsert } from "./commands.js";
 import { isLocked, type ENode } from "../model/tree.js";
 import type { Workspace } from "./workspace.svelte.js";
@@ -78,11 +90,33 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
     return;
   }
 
+  // The zoomed-in line's title: Enter starts its first child, and moving,
+  // indenting or joining it make no sense from inside it.
+  const isTitle = ws.zoom?.id === id;
+  /** Go up into the title from the first line under it. */
+  const toTitle = (caret: number) => {
+    const z = ws.zoom;
+    if (!z || isTitle || isLocked(z)) return false;
+    stop();
+    ws.focusNode(z.id, Math.min(caret, z.text.length));
+    return true;
+  };
+  if (isTitle) {
+    const joinOrDelete =
+      (key === "Backspace" && (mod || (start === 0 && end === 0))) ||
+      (key === "Delete" && start === end && end === ta.value.length);
+    if (key === "Tab" || joinOrDelete) {
+      stop();
+      return;
+    }
+  }
+
   if (key === "Enter") {
     stop();
     if (mod || e.altKey) return;
     if (start !== end) ws.setText(node, ta.value.slice(0, start) + ta.value.slice(end));
-    ws.op("split", id, (t) => split(t, id, start));
+    if (isTitle) ws.op("split", id, (t) => splitIntoFirstChild(t, id, start));
+    else ws.op("split", id, (t) => split(t, id, start));
     return;
   }
 
@@ -97,20 +131,29 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
     const dir = key === "ArrowUp" ? -1 : 1;
     if (e.shiftKey && (e.altKey || mod)) {
       stop();
-      doMove(ws, { node, ta }, dir);
+      if (!isTitle) doMove(ws, { node, ta }, dir);
       return;
     }
     if (mod) {
       stop();
-      ws.setCollapsed(id, dir === -1);
+      if (!isTitle) ws.setCollapsed(id, dir === -1);
       return;
     }
-    if (e.shiftKey || e.altKey) return;
+    // Shift-↑ at the very start or Shift-↓ at the very end selects whole lines.
+    if (e.shiftKey && !e.altKey) {
+      if (isTitle || (dir === -1 ? start !== 0 : end !== ta.value.length)) return;
+      stop();
+      ws.select(id, neighbour(ws.tree(), id, dir)?.id ?? id, false);
+      return;
+    }
+    if (e.altKey) return;
     if (dir === -1 ? !onFirstLine(ta) : !onLastLine(ta)) return;
     const other = neighbour(ws.tree(), id, dir);
     if (other) {
       stop();
       ws.focusNode(other.id, Math.min(start, other.text.length));
+    } else if (dir === -1) {
+      toTitle(start);
     }
     return;
   }
@@ -121,6 +164,8 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
     if (other) {
       stop();
       ws.focusNode(other.id, key === "ArrowLeft" ? other.text.length : 0);
+    } else if (atEdge && key === "ArrowLeft") {
+      toTitle(Infinity);
     }
     return;
   }
@@ -180,4 +225,54 @@ export function handleKey(e: KeyboardEvent, ws: Workspace, node: ENode, ta: HTML
     ws.editingId = null;
     ta.blur();
   }
+}
+
+/**
+ * Keys while several lines are selected (nothing has focus then). Returns
+ * true if the key was handled.
+ */
+export function handleSelectionKey(e: KeyboardEvent, ws: Workspace): boolean {
+  const s = ws.selection;
+  if (!s || e.isComposing) return false;
+  const mod = e.ctrlKey || e.metaKey;
+  const key = e.key;
+  const lower = key.length === 1 ? key.toLowerCase() : key;
+
+  const handled = (fn: () => void) => {
+    e.preventDefault();
+    fn();
+    return true;
+  };
+
+  if (mod && lower === "z") return handled(() => (e.shiftKey ? ws.redo() : ws.undo()));
+  if (mod && lower === "y") return handled(() => ws.redo());
+  if (key === "Tab") {
+    return handled(() => ws.blockOp(e.shiftKey ? "outdent" : "indent", (t, b) => (e.shiftKey ? outdentBlock(t, b) : indentBlock(t, b))));
+  }
+  if (key === "ArrowUp" || key === "ArrowDown") {
+    const dir = key === "ArrowUp" ? -1 : 1;
+    if (e.shiftKey && (e.altKey || mod)) return handled(() => ws.blockOp("move", (_t, b) => moveBlock(b, dir)));
+    if (e.shiftKey) return handled(() => ws.extendSelection(dir));
+    if (!mod && !e.altKey) {
+      // Back to typing, on the line the selection reached.
+      return handled(() => {
+        const head = locate(ws.file!.nodes, s.head)?.node;
+        if (head) ws.focusNode(head.id, dir === -1 ? 0 : head.text.length);
+      });
+    }
+  }
+  if (key === "Backspace" || key === "Delete") {
+    return handled(() => {
+      ws.blockOp("delete", (_t, b) => removeBlock(b));
+      ws.clearSelection();
+    });
+  }
+  if (key === "Enter") {
+    return handled(() => {
+      const head = locate(ws.file!.nodes, s.head)?.node;
+      if (head) ws.focusNode(head.id, head.text.length);
+    });
+  }
+  if (key === "Escape") return handled(() => ws.clearSelection());
+  return false;
 }

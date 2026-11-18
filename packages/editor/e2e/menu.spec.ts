@@ -88,6 +88,8 @@ test("the menu works from the keyboard", async ({ page }) => {
   await openMenu(page, "Hello, world");
   await expect(lineMenu(page).getByRole("menuitem", { name: "Zoom in" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
+  await expect(lineMenu(page).getByRole("menuitem", { name: "Select…" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
   await expect(lineMenu(page).getByRole("menuitem", { name: "Add link…" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(lineMenu(page)).toBeHidden();

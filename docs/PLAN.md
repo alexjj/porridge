@@ -306,8 +306,14 @@ tests emulate a phone in Chromium; they can't show how the on-screen keyboard
 and the toolbar behave on real devices.
 
 Deferred:
-- The zoomed-in node's title is still display-only.
 - Images in private repositories still don't display in the editor.
+
+### Since M5
+- [x] The zoomed-in line's title is editable (Enter starts its first child).
+- [x] Several lines can be selected (drag, Shift-click, Shift-↑/↓ at a line's
+      edge, or "Select…" in the line menu on touch screens) and indented,
+      moved or deleted together. Selections widen to whole sibling lines.
+- [x] Site search with Pagefind; `#` permalinks in the margin.
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.

@@ -14,6 +14,36 @@
   const nodeKind = $derived(kind(node));
   const isDraft = $derived(node.attrs.isDraft === "true");
   const isComment = $derived(node.attrs.isComment === "true");
+  const selected = $derived(ws.selectedIds.has(node.id));
+
+  // Selecting several lines: drag across them with the mouse, or shift-click.
+  function onRowPointerDown(e: PointerEvent) {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    if ((e.target as HTMLElement).closest(".bullet, .toggle")) return;
+    if (e.shiftKey) {
+      const from = ws.selection?.anchor ?? ws.editingId;
+      if (from && from !== node.id && ws.select(from, node.id)) {
+        e.preventDefault();
+        return;
+      }
+    }
+    if (ws.selection && !ws.selection.sticky) ws.clearSelection();
+    ws.dragAnchor = node.id;
+  }
+
+  function onRowPointerEnter(e: PointerEvent) {
+    const anchor = ws.dragAnchor;
+    if (!anchor || !(e.buttons & 1)) return;
+    if (anchor !== node.id || ws.selection) ws.select(anchor, node.id);
+  }
+
+  /** On touch screens, after "Select" in the line menu, taps extend the selection. */
+  function extendBySticky(): boolean {
+    const s = ws.selection;
+    if (!s?.sticky) return false;
+    ws.select(s.anchor, node.id);
+    return true;
+  }
 
   let ta: HTMLTextAreaElement | undefined = $state();
 
@@ -29,6 +59,9 @@
   });
 
   function startEditing(e: MouseEvent) {
+    if (extendBySticky()) return;
+    // Shift-click selected lines (on pointerdown); don't start editing.
+    if (e.shiftKey && ws.selection) return;
     const link = (e.target as HTMLElement).closest("a");
     if (link) {
       e.preventDefault();
@@ -62,8 +95,9 @@
   }
 </script>
 
-<li class="node {nodeKind}" class:draft={isDraft} class:comment={isComment} data-id={node.id}>
-  <div class="row">
+<li class="node {nodeKind}" class:draft={isDraft} class:comment={isComment} class:selected data-id={node.id}>
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="row" onpointerdown={onRowPointerDown} onpointerenter={onRowPointerEnter}>
     {#if hasKids}
       <button
         class="toggle"
@@ -83,6 +117,7 @@
       aria-haspopup="menu"
       tabindex="-1"
       onclick={(e) => {
+        if (extendBySticky()) return;
         const r = e.currentTarget.getBoundingClientRect();
         ws.menu = { id: node.id, x: r.left, y: r.bottom + 4 };
       }}
