@@ -25,6 +25,7 @@ exports[`sample blog > matches the expected output 1`] = `
   "index.html",
   "now/index.html",
   "rss.xml",
+  "search/index.html",
   "style.css",
 ]
 `;

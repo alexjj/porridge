@@ -43,6 +43,7 @@ export function renderSite(site: Site): OutputFile[] {
   for (const y of years) add(`${y}/index.html`, renderYearPage(ctx, y));
 
   add("archive/index.html", renderArchivePage(ctx));
+  add("search/index.html", renderSearchPage(ctx));
   for (const page of site.pages) add(`${page.slug}/index.html`, renderPage(ctx, page));
   add("rss.xml", renderRss(ctx));
   add("404.html", render404(ctx));
@@ -91,7 +92,8 @@ function renderDayPage(ctx: Ctx, i: number): string {
       older && { href: `${ctx.base}${dayPath(older.date)}`, label: longDayLabel(older.date) },
     ),
   ];
-  return layout(ctx, { title: longDayLabel(day.date), body: body.join("\n") });
+  // Day pages are what search indexes (home, month and year pages repeat them).
+  return layout(ctx, { title: longDayLabel(day.date), body: body.join("\n"), indexed: true });
 }
 
 function renderMonthPage(ctx: Ctx, months: string[], i: number): string {
@@ -145,7 +147,41 @@ function renderCalendarList(ctx: Ctx, days: Day[]): string {
 
 function renderPage(ctx: Ctx, page: Page): string {
   const body = [`<h1 class="page-title">${esc(page.title)}</h1>`, ...renderPageNodes(ctx.md, page.body, 1)];
-  return layout(ctx, { title: page.title, body: `<article class="page">\n${body.join("\n")}\n</article>`, current: page.slug });
+  return layout(ctx, {
+    title: page.title,
+    body: `<article class="page">\n${body.join("\n")}\n</article>`,
+    current: page.slug,
+    indexed: true,
+  });
+}
+
+/**
+ * Search, powered by Pagefind. The index (/pagefind/) is built after the
+ * site by the GitHub Action; without it the page says search isn't ready.
+ */
+function renderSearchPage(ctx: Ctx): string {
+  const b = ctx.base;
+  const body = `<h1 class="page-title">Search</h1>
+<div id="search" class="search"><noscript><p class="empty">Search needs JavaScript.</p></noscript></div>
+<script src="${b}pagefind/pagefind-ui.js"></script>
+<script>
+(function () {
+  var el = document.getElementById("search");
+  if (!window.PagefindUI) {
+    el.innerHTML = '<p class="empty">Search isn\u2019t available yet. Its index is built when the site is published.</p>';
+    return;
+  }
+  var ui = new PagefindUI({ element: "#search", showSubResults: true, showImages: false, autofocus: true, resetStyles: false });
+  var q = new URLSearchParams(location.search).get("q");
+  if (q) ui.triggerSearch(q);
+})();
+</script>`;
+  return layout(ctx, {
+    title: "Search",
+    body,
+    current: "search",
+    head: `<link rel="stylesheet" href="${b}pagefind/pagefind-ui.css">`,
+  });
 }
 
 function render404(ctx: Ctx): string {
@@ -158,8 +194,9 @@ function render404(ctx: Ctx): string {
 
 function renderDay(ctx: Ctx, day: Day): string {
   return [
-    `<section class="day">`,
-    `<h2 class="day-title"><a href="${ctx.base}${dayPath(day.date)}">${esc(longDayLabel(day.date))}</a></h2>`,
+    // For search: the date is the result's title, not part of its text.
+    `<section class="day" data-pagefind-meta="title:${esc(longDayLabel(day.date))}">`,
+    `<h2 class="day-title" data-pagefind-ignore><a href="${ctx.base}${dayPath(day.date)}">${esc(longDayLabel(day.date))}</a></h2>`,
     ...day.entries.map((e) => renderEntry(ctx.md, e, permalink(ctx, e))),
     `</section>`,
   ].join("\n");
@@ -274,19 +311,33 @@ function pager(newer: Link | undefined, older: Link | undefined): string {
   if (!newer && !older) return "";
   const n = newer ? `<a class="newer" href="${newer.href}">← ${esc(newer.label)}</a>` : "<span></span>";
   const o = older ? `<a class="older" href="${older.href}">${esc(older.label)} →</a>` : "<span></span>";
-  return `<nav class="pager">${n}${o}</nav>`;
+  return `<nav class="pager" data-pagefind-ignore>${n}${o}</nav>`;
 }
 
-function layout(ctx: Ctx, opts: { title: string; body: string; current?: string }): string {
+function layout(
+  ctx: Ctx,
+  opts: {
+    title: string;
+    body: string;
+    current?: string;
+    /** Include this page in search. */
+    indexed?: boolean;
+    /** Extra tags for <head>. */
+    head?: string;
+  },
+): string {
   const s = ctx.site.settings;
   const title = opts.title ? `${opts.title} – ${s.title}` : s.title;
   const navLinks: { key: string; href: string; label: string }[] = [
     ...ctx.site.nav.map((p) => ({ key: p.slug, href: `${ctx.base}${p.slug}/`, label: p.navLabel })),
     { key: "archive", href: `${ctx.base}archive/`, label: "Archive" },
   ];
-  const nav = navLinks
-    .map((l) => `<a href="${l.href}"${l.key === opts.current ? ` aria-current="page"` : ""}>${esc(l.label)}</a>`)
-    .join("\n");
+  const current = (key: string) => (key === opts.current ? ` aria-current="page"` : "");
+  const nav = [
+    ...navLinks.map((l) => `<a href="${l.href}"${current(l.key)}>${esc(l.label)}</a>`),
+    `<a class="search-link" href="${ctx.base}search/" aria-label="Search" title="Search"${current("search")}>` +
+      `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.5 12.5L17 17"/></svg></a>`,
+  ].join("\n");
   const owner = s.ownerName ? `${esc(s.ownerName)} · ` : "";
 
   return `<!doctype html>
@@ -298,7 +349,7 @@ function layout(ctx: Ctx, opts: { title: string; body: string; current?: string 
 <link rel="stylesheet" href="${ctx.base}style.css">
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
-</head>
+${opts.head ? `${opts.head}\n` : ""}</head>
 <body>
 <header class="site-header">
 <a class="site-title" href="${ctx.base}"${opts.current === "home" ? ` aria-current="page"` : ""}>${esc(s.title)}</a>
@@ -306,7 +357,7 @@ ${s.description ? `<p class="site-description">${esc(s.description)}</p>\n` : ""
 ${nav}
 </nav>
 </header>
-<main>
+<main${opts.indexed ? " data-pagefind-body" : ""}>
 ${opts.body}
 </main>
 <footer class="site-footer">

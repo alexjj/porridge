@@ -91,6 +91,7 @@ output can't drift apart.
 | `/2026/11/` | Month archive — all days in the month, in full |
 | `/2026/` | Year index — list of months/days |
 | `/archive/` | Every year, month and day; linked from the navigation |
+| `/search/` | Search, linked by a magnifier icon at the end of the navigation. Uses [Pagefind](https://pagefind.app/): the action indexes day pages and pages after the build (`search: false` turns it off) |
 | `/about/` etc. | One page per file in `pages/` |
 | `/rss.xml` | RSS 2.0 feed of the most recent entries, each linking to its anchor |
 | `/404.html` | Not-found page (GitHub Pages serves it automatically) |

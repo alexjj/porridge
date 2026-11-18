@@ -222,7 +222,8 @@ Published at `/<slug>/`.
 - Lowercase letters, digits and hyphens, starting with a letter:
   `^[a-z][a-z0-9-]*$`. (Starting with a letter keeps pages clear of the
   `/2026/` year URLs.)
-- Reserved, can't be used: `images`, `rss`, `index`, `assets`, `archive`.
+- Reserved, can't be used: `images`, `rss`, `index`, `assets`, `archive`,
+  `search`, `pagefind`.
 
 ### Rendering rules
 

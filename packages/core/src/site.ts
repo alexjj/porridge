@@ -91,7 +91,7 @@ export interface Site {
   warnings: Warning[];
 }
 
-export const RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive"];
+export const RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive", "search", "pagefind"];
 const SLUG = /^[a-z][a-z0-9-]*$/;
 
 /** Why `slug` can't be a page name, or undefined if it can. */

@@ -203,3 +203,46 @@ describe("buildToDirectory", () => {
     expect(site.days).toHaveLength(1);
   });
 });
+
+describe("search", async () => {
+  const { files } = await buildSite(nodeSource(fixture("sample-blog")));
+  const file = (path: string) => files.find((f) => f.path === path)?.content ?? "";
+
+  it("has a search page and a search link in the navigation", () => {
+    expect(file("search/index.html")).toContain(`<script src="/my-blog/pagefind/pagefind-ui.js"></script>`);
+    expect(file("search/index.html")).toContain(`<link rel="stylesheet" href="/my-blog/pagefind/pagefind-ui.css">`);
+    expect(file("index.html")).toContain(`<a class="search-link" href="/my-blog/search/" aria-label="Search" title="Search">`);
+  });
+
+  it("marks only day pages and pages for indexing", () => {
+    const indexed = files.filter((f) => f.content.includes("<main data-pagefind-body>")).map((f) => f.path).sort();
+    expect(indexed).toEqual([
+      "2025/06/15/index.html",
+      "2025/12/01/index.html",
+      "2025/12/31/index.html",
+      "2026/07/15/index.html",
+      "2026/07/16/index.html",
+      "2026/10/31/index.html",
+      "2026/11/02/index.html",
+      "2026/11/17/index.html",
+      "2026/11/18/index.html",
+      "about/index.html",
+      "books/index.html",
+      "now/index.html",
+    ]);
+  });
+
+  it("Pagefind indexes exactly those pages", async () => {
+    const pagefind = await import("pagefind");
+    const out = join(mkdtempSync(join(tmpdir(), "porridge-search-")), "site");
+    await buildToDirectory(fixture("sample-blog"), out);
+    const { index } = await pagefind.createIndex({});
+    const result = await index!.addDirectory({ path: out });
+    expect(result.errors).toEqual([]);
+    // page_count counts every HTML file read; the written index says how many were kept.
+    await index!.writeFiles({ outputPath: join(out, "pagefind") });
+    await pagefind.close();
+    const entry = JSON.parse(readFileSync(join(out, "pagefind/pagefind-entry.json"), "utf8"));
+    expect(entry.languages["en-gb"].page_count).toBe(12);
+  }, 60_000);
+});

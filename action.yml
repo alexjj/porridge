@@ -14,6 +14,9 @@ inputs:
   base-url:
     description: Use this instead of porridge:baseUrl from blog.opml (e.g. for preview deployments).
     default: ""
+  search:
+    description: Build the search index with Pagefind ("true" or "false").
+    default: "true"
 
 runs:
   using: composite
@@ -31,3 +34,9 @@ runs:
         args=(build "$CONTENT" "$OUTPUT")
         if [ -n "$BASE_URL" ]; then args+=(--base-url "$BASE_URL"); fi
         node "$GITHUB_ACTION_PATH/dist/porridge.mjs" "${args[@]}"
+    - name: Build search index
+      if: inputs.search == 'true'
+      shell: bash
+      env:
+        OUTPUT: ${{ inputs.output }}
+      run: npx --yes pagefind@1.6.0 --site "$OUTPUT"

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-gb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search – My Daily</title>
+<link rel="stylesheet" href="/my-blog/style.css">
+<link rel="alternate" type="application/rss+xml" title="My Daily" href="https://example.github.io/my-blog/rss.xml">
+<meta name="generator" content="porridge">
+<link rel="stylesheet" href="/my-blog/pagefind/pagefind-ui.css">
+</head>
+<body>
+<header class="site-header">
+<a class="site-title" href="/my-blog/">My Daily</a>
+<p class="site-description">Notes, mostly daily.</p>
+<nav class="site-nav">
+<a href="/my-blog/about/">About</a>
+<a href="/my-blog/now/">Now</a>
+<a href="/my-blog/archive/">Archive</a>
+<a class="search-link" href="/my-blog/search/" aria-label="Search" title="Search" aria-current="page"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.5 12.5L17 17"/></svg></a>
+</nav>
+</header>
+<main>
+<h1 class="page-title">Search</h1>
+<div id="search" class="search"><noscript><p class="empty">Search needs JavaScript.</p></noscript></div>
+<script src="/my-blog/pagefind/pagefind-ui.js"></script>
+<script>
+(function () {
+  var el = document.getElementById("search");
+  if (!window.PagefindUI) {
+    el.innerHTML = '<p class="empty">Search isn’t available yet. Its index is built when the site is published.</p>';
+    return;
+  }
+  var ui = new PagefindUI({ element: "#search", showSubResults: true, showImages: false, autofocus: true, resetStyles: false });
+  var q = new URLSearchParams(location.search).get("q");
+  if (q) ui.triggerSearch(q);
+})();
+</script>
+</main>
+<footer class="site-footer">
+<p>Your Name · <a href="/my-blog/rss.xml">RSS</a> · Made with <a href="https://github.com/alexjj/porridge">porridge</a></p>
+</footer>
+</body>
+</html>

@@ -7495,7 +7495,7 @@ var PorridgeError = class extends Error {
   file;
   line;
 };
-var RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive"];
+var RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive", "search", "pagefind"];
 var SLUG = /^[a-z][a-z0-9-]*$/;
 async function loadSite(source, options = {}) {
   const warnings = [];
@@ -7770,6 +7770,27 @@ mark { background: #f6e3a1; color: inherit; padding: 0 0.15em; }
 .pager .older { margin-left: auto; text-align: right; }
 .empty { color: var(--muted); }
 
+.search-link { display: inline-flex; align-items: center; }
+.search-link svg { width: 1.05em; height: 1.05em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+/* Pagefind's search box and results, in the site's colours and fonts. */
+.search .pagefind-ui {
+  --pagefind-ui-scale: 0.9;
+  --pagefind-ui-primary: var(--link);
+  --pagefind-ui-text: var(--text);
+  --pagefind-ui-background: var(--bg);
+  --pagefind-ui-border: var(--rule);
+  --pagefind-ui-tag: var(--rule);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 6px;
+  --pagefind-ui-font: var(--sans);
+}
+.search .pagefind-ui__search-input { color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
+.search .pagefind-ui__search-input::placeholder { color: var(--muted); opacity: 1; }
+.search .pagefind-ui__search-clear { color: var(--muted); background: transparent; }
+.search .pagefind-ui__result-link { color: var(--text); }
+.search .pagefind-ui__result-excerpt { font-family: var(--serif); }
+.search mark { background: color-mix(in srgb, var(--link) 22%, transparent); color: inherit; }
+
 .site-footer { margin-top: 3rem; padding-top: 1rem; padding-bottom: 3rem; border-top: 1px solid var(--rule); color: var(--muted); font-family: var(--sans); font-size: 0.85rem; }
 .site-footer a { color: var(--muted); }
 `;
@@ -7791,6 +7812,7 @@ function renderSite(site) {
   const years = unique(site.days.map((d) => d.date.slice(0, 4)));
   for (const y of years) add(`${y}/index.html`, renderYearPage(ctx, y));
   add("archive/index.html", renderArchivePage(ctx));
+  add("search/index.html", renderSearchPage(ctx));
   for (const page of site.pages) add(`${page.slug}/index.html`, renderPage(ctx, page));
   add("rss.xml", renderRss(ctx));
   add("404.html", render404(ctx));
@@ -7829,7 +7851,7 @@ function renderDayPage(ctx, i) {
       older && { href: `${ctx.base}${dayPath(older.date)}`, label: longDayLabel(older.date) }
     )
   ];
-  return layout(ctx, { title: longDayLabel(day.date), body: body.join("\n") });
+  return layout(ctx, { title: longDayLabel(day.date), body: body.join("\n"), indexed: true });
 }
 function renderMonthPage(ctx, months, i) {
   const month = months[i];
@@ -7874,9 +7896,38 @@ function renderCalendarList(ctx, days) {
 }
 function renderPage(ctx, page) {
   const body = [`<h1 class="page-title">${esc(page.title)}</h1>`, ...renderPageNodes(ctx.md, page.body, 1)];
-  return layout(ctx, { title: page.title, body: `<article class="page">
+  return layout(ctx, {
+    title: page.title,
+    body: `<article class="page">
 ${body.join("\n")}
-</article>`, current: page.slug });
+</article>`,
+    current: page.slug,
+    indexed: true
+  });
+}
+function renderSearchPage(ctx) {
+  const b = ctx.base;
+  const body = `<h1 class="page-title">Search</h1>
+<div id="search" class="search"><noscript><p class="empty">Search needs JavaScript.</p></noscript></div>
+<script src="${b}pagefind/pagefind-ui.js"></script>
+<script>
+(function () {
+  var el = document.getElementById("search");
+  if (!window.PagefindUI) {
+    el.innerHTML = '<p class="empty">Search isn\u2019t available yet. Its index is built when the site is published.</p>';
+    return;
+  }
+  var ui = new PagefindUI({ element: "#search", showSubResults: true, showImages: false, autofocus: true, resetStyles: false });
+  var q = new URLSearchParams(location.search).get("q");
+  if (q) ui.triggerSearch(q);
+})();
+</script>`;
+  return layout(ctx, {
+    title: "Search",
+    body,
+    current: "search",
+    head: `<link rel="stylesheet" href="${b}pagefind/pagefind-ui.css">`
+  });
 }
 function render404(ctx) {
   const body = `<h1 class="page-title">Not found</h1>
@@ -7885,8 +7936,9 @@ function render404(ctx) {
 }
 function renderDay(ctx, day) {
   return [
-    `<section class="day">`,
-    `<h2 class="day-title"><a href="${ctx.base}${dayPath(day.date)}">${esc(longDayLabel(day.date))}</a></h2>`,
+    // For search: the date is the result's title, not part of its text.
+    `<section class="day" data-pagefind-meta="title:${esc(longDayLabel(day.date))}">`,
+    `<h2 class="day-title" data-pagefind-ignore><a href="${ctx.base}${dayPath(day.date)}">${esc(longDayLabel(day.date))}</a></h2>`,
     ...day.entries.map((e) => renderEntry(ctx.md, e, permalink(ctx, e))),
     `</section>`
   ].join("\n");
@@ -7977,7 +8029,7 @@ function pager(newer, older) {
   if (!newer && !older) return "";
   const n = newer ? `<a class="newer" href="${newer.href}">\u2190 ${esc(newer.label)}</a>` : "<span></span>";
   const o = older ? `<a class="older" href="${older.href}">${esc(older.label)} \u2192</a>` : "<span></span>";
-  return `<nav class="pager">${n}${o}</nav>`;
+  return `<nav class="pager" data-pagefind-ignore>${n}${o}</nav>`;
 }
 function layout(ctx, opts) {
   const s = ctx.site.settings;
@@ -7986,7 +8038,11 @@ function layout(ctx, opts) {
     ...ctx.site.nav.map((p) => ({ key: p.slug, href: `${ctx.base}${p.slug}/`, label: p.navLabel })),
     { key: "archive", href: `${ctx.base}archive/`, label: "Archive" }
   ];
-  const nav = navLinks.map((l) => `<a href="${l.href}"${l.key === opts.current ? ` aria-current="page"` : ""}>${esc(l.label)}</a>`).join("\n");
+  const current = (key) => key === opts.current ? ` aria-current="page"` : "";
+  const nav = [
+    ...navLinks.map((l) => `<a href="${l.href}"${current(l.key)}>${esc(l.label)}</a>`),
+    `<a class="search-link" href="${ctx.base}search/" aria-label="Search" title="Search"${current("search")}><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.5 12.5L17 17"/></svg></a>`
+  ].join("\n");
   const owner = s.ownerName ? `${esc(s.ownerName)} \xB7 ` : "";
   return `<!doctype html>
 <html lang="${esc(s.language)}">
@@ -7997,7 +8053,8 @@ function layout(ctx, opts) {
 <link rel="stylesheet" href="${ctx.base}style.css">
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
-</head>
+${opts.head ? `${opts.head}
+` : ""}</head>
 <body>
 <header class="site-header">
 <a class="site-title" href="${ctx.base}"${opts.current === "home" ? ` aria-current="page"` : ""}>${esc(s.title)}</a>
@@ -8006,7 +8063,7 @@ ${s.description ? `<p class="site-description">${esc(s.description)}</p>
 ${nav}
 </nav>
 </header>
-<main>
+<main${opts.indexed ? " data-pagefind-body" : ""}>
 ${opts.body}
 </main>
 <footer class="site-footer">

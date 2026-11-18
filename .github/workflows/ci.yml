@@ -48,6 +48,8 @@ jobs:
           content: template
           output: _site
       - run: test -f _site/index.html && test -f _site/rss.xml && test -f _site/about/index.html
+      - name: Search index was built
+        run: test -f _site/search/index.html && test -f _site/pagefind/pagefind-ui.js && test -f _site/pagefind/pagefind-entry.json
       - name: Build errors fail the step
         run: |
           if node dist/porridge.mjs build fixtures/errors/missing-settings _broken; then
