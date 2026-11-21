@@ -2,17 +2,18 @@
 
 An outliner-based daily blogging platform. Content is OPML in a git repo; the editor is a static web app and the site is built by GitHub Actions.
 
-- [Build plan](docs/PLAN.md)
 - [File format](docs/format.md)
 - [Starter blog repo](https://github.com/alexjj/porridge-blog-template) (a copy of [`template/`](template/), kept in sync by `.github/workflows/sync-template.yml`)
 
 ## Using the editor
 
-The editor is a static web app, published to this repository's GitHub Pages by `.github/workflows/editor.yml` (turn on Pages once under **Settings → Pages → Source: GitHub Actions**). It talks to GitHub straight from your browser; there's no server.
+The editor is a static web app. Visit it [here](https://porridge.alexjj.com/), the code is this repo - you could host it yourself if you want. Point it to your github repo that contains your blog's data, the app pushes updates to your repo. Authorisation is done via Github Tokens saved only in your local browser.
 
-1. Create your blog repo from [porridge-blog-template](https://github.com/alexjj/porridge-blog-template) (**Use this template**) and set it up as its README says.
+## Getting started with a new blog
+
+1. Create your blog repo from [porridge-blog-template](https://github.com/alexjj/porridge-blog-template) and set it up as its README says.
 2. Create a [fine-grained token](https://github.com/settings/personal-access-tokens/new) for just that repo, with **Contents** and **Actions** set to read and write.
-3. Open the editor, choose **Connect GitHub**, and enter the repo and token. The token is kept only in that browser.
+3. Open the [editor](https://porridge.alexjj.com/), choose **Connect GitHub**, and enter the repo and token. The token is kept only in that browser.
 
 **Save** commits your changes without rebuilding the site; **Publish** commits and rebuilds, and shows when the site is live.
 
