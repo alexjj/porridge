@@ -244,7 +244,7 @@ var require_saxes = __commonJS({
     var CLOSE_BRACKET = 93;
     var NEL = 133;
     var LS = 8232;
-    var isQuote = (c) => c === DQUOTE || c === SQUOTE;
+    var isQuote2 = (c) => c === DQUOTE || c === SQUOTE;
     var QUOTES = [DQUOTE, SQUOTE];
     var DOCTYPE_TERMINATOR = [...QUOTES, OPEN_BRACKET, GREATER];
     var DTD_TERMINATOR = [...QUOTES, LESS, CLOSE_BRACKET];
@@ -873,7 +873,7 @@ var require_saxes = __commonJS({
             this.text += String.fromCodePoint(c);
             if (c === OPEN_BRACKET) {
               this.state = S_DTD;
-            } else if (isQuote(c)) {
+            } else if (isQuote2(c)) {
               this.state = S_DOCTYPE_QUOTE;
               this.q = c;
             }
@@ -897,7 +897,7 @@ var require_saxes = __commonJS({
           this.state = S_DOCTYPE;
         } else if (c === LESS) {
           this.state = S_DTD_OPEN_WAKA;
-        } else if (isQuote(c)) {
+        } else if (isQuote2(c)) {
           this.state = S_DTD_QUOTED;
           this.q = c;
         }
@@ -1270,7 +1270,7 @@ var require_saxes = __commonJS({
         if (isS(c)) {
           return;
         }
-        if (!isQuote(c)) {
+        if (!isQuote2(c)) {
           this.fail("value must be quoted.");
           this.q = SPACE;
         } else {
@@ -1449,7 +1449,7 @@ var require_saxes = __commonJS({
       }
       sAttribValue() {
         const c = this.getCodeNorm();
-        if (isQuote(c)) {
+        if (isQuote2(c)) {
           this.q = c;
           this.state = S_ATTRIB_VALUE_QUOTED;
         } else if (!isS(c)) {
@@ -7789,6 +7789,15 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .caption-line .caption { display: inline; margin: 0; font-size: inherit; }
 .caption-line .permalink { position: static; display: inline; margin-right: 0.35em; }
 
+/* Quotations: a line starting with ">", its source on the lines under it. */
+.quote { margin: 1.25rem 0; padding: 0.15rem 0 0.15rem 1.25rem; border-left: 3px solid var(--link); }
+.entry > .quote:first-child { margin-top: 0; }
+.quote p { margin: 0; font-size: 1.12em; font-style: italic; line-height: 1.55; }
+.quote footer { margin-top: 0.5rem; font-family: var(--sans); font-size: 0.88rem; color: var(--muted); }
+.quote footer::before { content: "\\2014\\00a0"; }
+.quote cite { font-style: normal; }
+.quote cite a { color: var(--muted); }
+
 /* Lightbox: an image opened full size. */
 img.zoomable { cursor: zoom-in; }
 img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
@@ -8027,10 +8036,22 @@ function renderDay(ctx, day) {
     `</section>`
   ].join("\n");
 }
+var QUOTE = /^>\s?/;
+var isQuote = (text3) => QUOTE.test(text3);
+function renderQuote(md, text3, sources, prefix = "") {
+  const quote = `<p>${prefix}${md.html(text3.replace(QUOTE, ""))}</p>`;
+  const cite = sources.length ? `
+<footer><cite>${sources.map((s) => md.html(attr(s, "text") ?? "")).join(", ")}</cite></footer>` : "";
+  return `<blockquote class="quote">
+${quote}${cite}
+</blockquote>`;
+}
 function renderEntry(md, entry, href) {
   const hash = `<a class="permalink" href="${href}" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
   const out = [`<article class="entry" id="${entry.anchor}">`];
-  if (entry.body === null) {
+  if (isQuote(entry.text)) {
+    out.push(renderQuote(md, entry.text, entry.body ?? [], hash));
+  } else if (entry.body === null) {
     const html = md.html(entry.text);
     const caption = /<span class="caption" aria-hidden="true">([^<]*)<\/span>/;
     if (html.startsWith(`<span class="figure">`) && caption.test(html)) {
@@ -8057,8 +8078,12 @@ function renderBody(md, node, body) {
 function renderBlocks(md, nodes) {
   const out = [];
   for (const node of nodes) {
-    out.push(`<p>${md.html(text2(node))}</p>`);
     const kids = publishedChildren(node);
+    if (isQuote(text2(node))) {
+      out.push(renderQuote(md, text2(node), kids));
+      continue;
+    }
+    out.push(`<p>${md.html(text2(node))}</p>`);
     if (kids.length) out.push(...bulleted(node) ? [renderList(md, kids)] : renderBlocks(md, kids));
   }
   return out;
@@ -8077,7 +8102,9 @@ function renderPageNodes(md, nodes, depth) {
   const out = [];
   for (const node of nodes) {
     const kids = publishedChildren(node);
-    if (kids.length === 0) {
+    if (isQuote(text2(node))) {
+      out.push(renderQuote(md, text2(node), kids));
+    } else if (kids.length === 0) {
       out.push(`<p>${md.html(text2(node))}</p>`);
     } else {
       const h = `h${depth + 1}`;
@@ -8094,10 +8121,10 @@ function renderRss(ctx) {
   const pubDate = (e) => formatRfc822(e.created ?? zonedMidnight(e.date, settings.timezone));
   const items = entries.map((e) => {
     const link2 = permalink(ctx, e, true);
-    const html = e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
+    const html = isQuote(e.text) ? renderQuote(ctx.mdAbs, e.text, e.body ?? []) : e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
     return [
       `    <item>`,
-      ...e.body !== null ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : [],
+      ...e.body !== null && !isQuote(e.text) ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : [],
       `      <link>${escXml(link2)}</link>`,
       `      <guid isPermaLink="true">${escXml(link2)}</guid>`,
       `      <pubDate>${pubDate(e)}</pubDate>`,

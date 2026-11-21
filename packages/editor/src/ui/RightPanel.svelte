@@ -44,6 +44,7 @@
         <dt><code>[text](https://…)</code></dt><dd>a link</dd>
         <dt><code>![alt](/images/…)</code></dt><dd>an image</dd>
         <dt><code>&lt;mark&gt;…&lt;/mark&gt;</code></dt><dd>HTML works too</dd>
+        <dt><code>&gt; A quote</code></dt><dd>a quotation; its source goes on a line under it</dd>
       </dl>
       <h3>Posts</h3>
       <p>Each line under a day is an entry. A line with no children is a short post; a line with children becomes the post's title, and its children are the paragraphs.</p>

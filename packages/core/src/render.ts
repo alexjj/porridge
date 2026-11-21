@@ -203,11 +203,30 @@ function renderDay(ctx: Ctx, day: Day): string {
   ].join("\n");
 }
 
+// ---------------------------------------------------------------------------
+// Quotes: a line starting with ">" is a quotation; the lines under it are
+// its source.
+
+const QUOTE = /^>\s?/;
+export const isQuote = (text: string): boolean => QUOTE.test(text);
+
+/** `<blockquote>` for a quote line; `prefix` goes before the quoted text (the "#" link). */
+function renderQuote(md: InlineRenderer, text: string, sources: Outline[], prefix = ""): string {
+  const quote = `<p>${prefix}${md.html(text.replace(QUOTE, ""))}</p>`;
+  const cite = sources.length
+    ? `\n<footer><cite>${sources.map((s) => md.html(attr(s, "text") ?? "")).join(", ")}</cite></footer>`
+    : "";
+  return `<blockquote class="quote">\n${quote}${cite}\n</blockquote>`;
+}
+
 function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
   // Every entry gets a "#" link, hung in the left margin beside its first line.
   const hash = `<a class="permalink" href="${href}" title="Link to this entry" aria-label="Link to this entry" data-pagefind-ignore>#</a>`;
   const out = [`<article class="entry" id="${entry.anchor}">`];
-  if (entry.body === null) {
+  if (isQuote(entry.text)) {
+    // A quote as a post: no title, its children are the source.
+    out.push(renderQuote(md, entry.text, entry.body ?? [], hash));
+  } else if (entry.body === null) {
     const html = md.html(entry.text);
     // A post that starts with a captioned image: the "#" goes just before the
     // caption text, rather than beside the top of the image.
@@ -249,8 +268,12 @@ function renderBody(md: InlineRenderer, node: Outline, body: Outline[]): string[
 function renderBlocks(md: InlineRenderer, nodes: Outline[]): string[] {
   const out: string[] = [];
   for (const node of nodes) {
-    out.push(`<p>${md.html(text(node))}</p>`);
     const kids = publishedChildren(node);
+    if (isQuote(text(node))) {
+      out.push(renderQuote(md, text(node), kids));
+      continue;
+    }
+    out.push(`<p>${md.html(text(node))}</p>`);
     if (kids.length) out.push(...(bulleted(node) ? [renderList(md, kids)] : renderBlocks(md, kids)));
   }
   return out;
@@ -270,7 +293,9 @@ function renderPageNodes(md: InlineRenderer, nodes: Outline[], depth: number): s
   const out: string[] = [];
   for (const node of nodes) {
     const kids = publishedChildren(node);
-    if (kids.length === 0) {
+    if (isQuote(text(node))) {
+      out.push(renderQuote(md, text(node), kids));
+    } else if (kids.length === 0) {
       out.push(`<p>${md.html(text(node))}</p>`);
     } else {
       const h = `h${depth + 1}`;
@@ -293,11 +318,14 @@ function renderRss(ctx: Ctx): string {
 
   const items = entries.map((e) => {
     const link = permalink(ctx, e, true);
-    const html =
-      e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
+    const html = isQuote(e.text)
+      ? renderQuote(ctx.mdAbs, e.text, e.body ?? [])
+      : e.body === null
+        ? `<p>${ctx.mdAbs.html(e.text)}</p>`
+        : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
     return [
       `    <item>`,
-      ...(e.body !== null ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : []),
+      ...(e.body !== null && !isQuote(e.text) ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : []),
       `      <link>${escXml(link)}</link>`,
       `      <guid isPermaLink="true">${escXml(link)}</guid>`,
       `      <pubDate>${pubDate(e)}</pubDate>`,

@@ -43,6 +43,15 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .caption-line .caption { display: inline; margin: 0; font-size: inherit; }
 .caption-line .permalink { position: static; display: inline; margin-right: 0.35em; }
 
+/* Quotations: a line starting with ">", its source on the lines under it. */
+.quote { margin: 1.25rem 0; padding: 0.15rem 0 0.15rem 1.25rem; border-left: 3px solid var(--link); }
+.entry > .quote:first-child { margin-top: 0; }
+.quote p { margin: 0; font-size: 1.12em; font-style: italic; line-height: 1.55; }
+.quote footer { margin-top: 0.5rem; font-family: var(--sans); font-size: 0.88rem; color: var(--muted); }
+.quote footer::before { content: "\2014\00a0"; }
+.quote cite { font-style: normal; }
+.quote cite a { color: var(--muted); }
+
 /* Lightbox: an image opened full size. */
 img.zoomable { cursor: zoom-in; }
 img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }

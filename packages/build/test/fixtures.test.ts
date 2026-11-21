@@ -146,6 +146,24 @@ describe("rendered sample blog", async () => {
     expect(file("rss.xml")).toContain(`&lt;img src=&quot;https://example.github.io/my-blog/images/2026/11/porridge.jpg&quot;`);
   });
 
+  it("renders quotes with their source", () => {
+    expect(file("2026/11/02/index.html")).toContain(
+      `<article class="entry" id="a120000">\n<blockquote class="quote">\n<p><a class="permalink" href="/my-blog/2026/11/02/#a120000"`,
+    );
+    expect(file("2026/11/02/index.html")).toContain(
+      `>#</a>The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st.</p>\n` +
+        `<footer><cite>A quote post; its children are the source, like <a href="https://example.com/spec">the spec</a></cite></footer>\n</blockquote>`,
+    );
+    expect(file("2026/11/18/index.html")).toContain(`<blockquote class="quote">\n<p>A quote inside a post, with no source.</p>\n</blockquote>`);
+    expect(file("about/index.html")).toContain(
+      `<blockquote class="quote">\n<p>A quote on a page is a quote, not a section heading.</p>\n<footer><cite>Someone <em>wise</em></cite></footer>\n</blockquote>`,
+    );
+    // In RSS a quote has no title.
+    const item = file("rss.xml").split("<item>").find((i) => i.includes("<link>https://example.github.io/my-blog/2026/11/02/#a120000</link>"))!;
+    expect(item).not.toContain("<title>");
+    expect(item).toContain("&lt;blockquote class=&quot;quote&quot;&gt;");
+  });
+
   it("renders lines under a body line as paragraphs, unless it has list=bullets", () => {
     const day = file("2026/11/18/index.html");
     expect(day).toContain(

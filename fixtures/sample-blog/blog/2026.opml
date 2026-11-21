@@ -24,6 +24,7 @@
           <outline text="Comments are notes to self and never appear on the site." isComment="true"/>
           <outline text="Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;https://example.com&gt;.">
             <outline text="A line under a line, without list=&quot;bullets&quot;, is just another paragraph."/>
+            <outline text="&gt;A quote inside a post, with no source."/>
           </outline>
         </outline>
         <outline text="A one-paragraph post with no children, so no title. It still gets an anchor and a # permalink." created="Wed, 18 Nov 2026 09:12:03 GMT"/>
@@ -38,7 +39,9 @@
         </outline>
       </outline>
       <outline text="2nd November" type="calendarDay" date="2026-11-02">
-        <outline text="The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st." created="Mon, 02 Nov 2026 12:00:00 GMT"/>
+        <outline text="&gt; The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st." created="Mon, 02 Nov 2026 12:00:00 GMT">
+          <outline text="A quote post; its children are the source, like [the spec](https://example.com/spec)"/>
+        </outline>
       </outline>
     </outline>
     <outline text="October 2026" type="calendarMonth" date="2026-10">

@@ -26,7 +26,10 @@
 &lt;li&gt;Golden syrup&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;a href=&quot;https://example.com&quot;&gt;https://example.com&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;A line under a line, without list=&amp;quot;bullets&amp;quot;, is just another paragraph.&lt;/p&gt;</description>
+&lt;p&gt;A line under a line, without list=&amp;quot;bullets&amp;quot;, is just another paragraph.&lt;/p&gt;
+&lt;blockquote class=&quot;quote&quot;&gt;
+&lt;p&gt;A quote inside a post, with no source.&lt;/p&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <link>https://example.github.io/my-blog/2026/11/18/#a091203</link>
@@ -58,7 +61,10 @@
       <link>https://example.github.io/my-blog/2026/11/02/#a120000</link>
       <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/02/#a120000</guid>
       <pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
-      <description>&lt;p&gt;The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st.&lt;/p&gt;</description>
+      <description>&lt;blockquote class=&quot;quote&quot;&gt;
+&lt;p&gt;The 2nd: ordinal suffixes are 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd, 31st.&lt;/p&gt;
+&lt;footer&gt;&lt;cite&gt;A quote post; its children are the source, like &lt;a href=&quot;https://example.com/spec&quot;&gt;the spec&lt;/a&gt;&lt;/cite&gt;&lt;/footer&gt;
+&lt;/blockquote&gt;</description>
     </item>
     <item>
       <title>A titled entry whose only child is a comment</title>

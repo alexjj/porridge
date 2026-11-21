@@ -304,3 +304,7 @@ textarea.text { scroll-margin-bottom: 80px; }
 .rendered .figure { display: inline-block; vertical-align: top; max-width: 100%; margin: 4px 0; text-align: center; }
 .rendered .figure img { display: block; margin: 0 auto; }
 .rendered .caption { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--muted); }
+
+/* Quotes: a line starting with ">"; the lines under it are its source. */
+.node.quote > .row .rendered { border-left: 3px solid var(--accent); border-radius: 0; padding-left: 10px; font-style: italic; }
+.node.quote > .children .rendered { color: var(--muted); font-size: 14px; }

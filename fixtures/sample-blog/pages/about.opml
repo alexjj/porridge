@@ -8,6 +8,9 @@
   <body>
     <outline text="Hello. A top-level node without children is a paragraph."/>
     <outline text="This blog is written in an outliner and stored as OPML."/>
+    <outline text="&gt; A quote on a page is a quote, not a section heading.">
+      <outline text="Someone *wise*"/>
+    </outline>
     <outline text="Elsewhere">
       <outline text="A top-level node with children is an h2 section; this is a paragraph inside it."/>
       <outline text="Social">

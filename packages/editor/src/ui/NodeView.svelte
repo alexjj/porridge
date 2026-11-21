@@ -2,6 +2,7 @@
   import NodeView from "./NodeView.svelte";
   import { isLocked, kind, type ENode } from "../model/tree.js";
   import { pasteLines } from "../model/ops.js";
+  import { isQuote } from "@porridge/core";
   import { pasteAsImage, pasteAsLink } from "../store/commands.js";
   import { handleKey } from "../store/keys.js";
   import type { Workspace } from "../store/workspace.svelte.js";
@@ -16,6 +17,8 @@
   const isDraft = $derived(node.attrs.isDraft === "true");
   const isComment = $derived(node.attrs.isComment === "true");
   const isBullets = $derived(node.attrs.list === "bullets");
+  // A line starting with ">" is a quote; shown without the ">" until edited.
+  const isQuoteLine = $derived(nodeKind === "node" && isQuote(node.text));
   const selected = $derived(ws.selectedIds.has(node.id));
 
   // Selecting several lines: drag across them with the mouse, or shift-click.
@@ -98,7 +101,7 @@
   }
 </script>
 
-<li class="node {nodeKind}" class:draft={isDraft} class:comment={isComment} class:selected data-id={node.id}>
+<li class="node {nodeKind}" class:draft={isDraft} class:comment={isComment} class:quote={isQuoteLine} class:selected data-id={node.id}>
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="row" onpointerdown={onRowPointerDown} onpointerenter={onRowPointerEnter}>
     {#if hasKids}
@@ -156,7 +159,7 @@
         onfocus={() => ws.focusNode(node.id, node.text.length)}
         onkeydown={() => {}}
       >
-        {@html ws.renderText(node.text)}
+        {@html ws.renderText(isQuoteLine ? node.text.replace(/^>\s?/, "") : node.text)}
       </div>
     {/if}
     {#if isDraft}<span class="tag">Draft</span>{/if}

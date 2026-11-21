@@ -316,6 +316,8 @@ Deferred:
 - [x] Site search with Pagefind; `#` permalinks in the margin.
 - [x] "Children as bullets" (`list="bullets"`): a line's children render as a
       bulleted list, for page sections (e.g. books under a year) and posts.
+- [x] Quotations: a line starting with `>` is a blockquote; the lines under it
+      are its source ("— source"). Works as a post, in posts and on pages.
 - [x] The site address is optional: blogs built by the Action fall back to
       the repository's Pages address (`actions/configure-pages`), so the
       template has no placeholder and its own Pages site renders properly.

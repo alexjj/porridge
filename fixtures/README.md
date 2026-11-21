@@ -29,6 +29,8 @@ golden files for the renderer tests.
 | §4 Body node with children → paragraph + nested paragraphs | "Starting porridge" — "Inline HTML is allowed" |
 | §4 Body node with `list="bullets"` → paragraph + nested list | "Starting porridge" — ingredients |
 | §4 `isDraft` on an entry | 18th November 21:05 |
+| §4 Quote entry with a source (no title) | 2nd November |
+| §4 Quote as a nested body line, no source | "Starting porridge" — "Inline HTML is allowed" |
 | §4 `list="bullets"` on a titled entry | 17th November 07:30 |
 | §4 `isComment` on a body node and a list item | "Starting porridge" |
 | §4 Titled entry with all children removed | 31st October |
@@ -40,6 +42,7 @@ golden files for the renderer tests.
 | §4 Non-calendar node at month level (warning) | `blog/2025.opml` — last node |
 | §5 Page in nav with `navOrder` | `pages/about.opml` |
 | §5 `list="bullets"` on a page section | `pages/books.opml` |
+| §5 Quote on a page (not a heading) | `pages/about.opml` |
 | §5 `navLabel` override | `pages/now.opml` |
 | §5 Page not in nav | `pages/books.opml` |
 | §5 Draft page (`porridge:isDraft`) | `pages/ideas.opml` |

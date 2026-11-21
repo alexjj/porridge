@@ -161,6 +161,12 @@ The body contains only `include` nodes, one per year, **newest first**. Their
   bulleted list, and lines under a list item nest as sub-lists.
 - `list="bullets"` on a titled entry renders its body as a bulleted list
   (children of list items nest as sub-lists) instead of paragraphs.
+- **Quotes:** a node whose text starts with `>` (an optional space after it is
+  dropped) is a quotation, rendered as a `<blockquote>`. Its children are the
+  source, shown underneath as "— source" (several are joined with commas;
+  Markdown such as links works). This applies to entries (a quote entry has
+  no title, even with children), body nodes and page nodes (a quote is never
+  a section heading). The `#` permalink sits beside the quote's first line.
 - `isDraft` and `isComment` remove the node and everything beneath it, at any
   level (entry or body node). An entry whose children are all removed renders
   as a heading with no body.
@@ -185,7 +191,8 @@ The body contains only `include` nodes, one per year, **newest first**. Their
 ### RSS
 
 - One `<item>` per published entry, newest first, up to `porridge:rssItems`.
-- Titled entries have a `<title>`; untitled entries have none (valid RSS 2.0).
+- Titled entries have a `<title>`; untitled entries and quotes have none
+  (valid RSS 2.0).
 - `<description>` is the entry's rendered HTML.
 - `<link>` and `<guid isPermaLink="true">` are the permalink.
 - `<pubDate>` is `created`; entries without `created` use the day's date at
