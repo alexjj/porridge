@@ -138,6 +138,14 @@ test("selecting several lines with taps, then indenting them", async ({ page }) 
   await expect(selectionBar).toContainText("2 selected");
   await selectionBar.getByRole("button", { name: "Indent" }).tap();
   expect(await outline(page)).toContain("    first\n      second\n      third\n");
+  // Copy, from the toolbar.
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await selectionBar.getByRole("button", { name: "Copy" }).tap();
+  await expect(page.locator(".toast")).toHaveText("Copied 2 lines");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("- second\n- third\n");
+  // The toolbar fits a small phone.
+  const bar = await selectionBar.evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(bar.scroll).toBeLessThanOrEqual(bar.client);
   await selectionBar.getByRole("button", { name: "Done" }).tap();
   await expect(selectionBar).toBeHidden();
 });

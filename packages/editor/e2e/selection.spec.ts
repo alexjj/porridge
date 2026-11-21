@@ -153,3 +153,58 @@ test.describe("selecting several lines", () => {
     await expect(editing(page)).toHaveValue("four");
   });
 });
+
+test.describe("copying selected lines", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  });
+
+  test("Ctrl-C copies them, with everything under them, as a list", async ({ page }) => {
+    await page.getByText("Hello, world").click();
+    await page.keyboard.press("End");
+    await page.keyboard.press("Shift+ArrowDown"); // selects the whole post (Hello, world and its lines)
+    await expect(selected(page)).toHaveCount(3);
+    await page.keyboard.press("Control+c");
+    await expect(page.locator(".toast")).toHaveText("Copied 1 line");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      "- Hello, world\n  - This is the first post on a new [porridge](https://github.com/alexjj/porridge) blog.\n  - Edit or delete it, then write your own.\n",
+    );
+    const html = await page.evaluate(async () => {
+      const [item] = await navigator.clipboard.read();
+      return (await item!.getType("text/html")).text();
+    });
+    expect(html).toContain(`<ul><li>Hello, world<ul><li>This is the first post on a new <a href="https://github.com/alexjj/porridge">porridge</a> blog.</li>`);
+    // Copying leaves the outline alone.
+    expect(await outline(page)).toContain("    Hello, world\n      This is the first post");
+  });
+
+  test("pasting copied lines back keeps their nesting", async ({ page }) => {
+    await page.getByText("Hello, world").click();
+    await page.keyboard.press("End");
+    await page.keyboard.press("Shift+ArrowDown");
+    await page.keyboard.press("Control+c");
+    await newEntry(page);
+    await page.keyboard.press("Control+v");
+    expect(await outline(page)).toBe(`November 2026
+  18th November
+    Hello, world
+      This is the first post on a new porridge blog.
+      Edit or delete it, then write your own.|
+    Hello, world
+      This is the first post on a new porridge blog.
+      Edit or delete it, then write your own.`);
+  });
+
+  test("Ctrl-X cuts them, and undo puts them back", async ({ page }) => {
+    await fiveLines(page);
+    await row(page, "two").locator(".text").click();
+    await page.keyboard.press("End");
+    await page.keyboard.press("Shift+ArrowDown");
+    await page.keyboard.press("Control+x");
+    await expect(page.locator(".toast")).toHaveText("Cut 2 lines");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("- two\n- three\n");
+    expect(await outline(page)).toContain("    one\n    four\n    five\n");
+    await page.keyboard.press("Control+z");
+    expect(await outline(page)).toContain("    one\n    two\n    three\n    four\n");
+  });
+});

@@ -1,7 +1,8 @@
 <script lang="ts">
   import NodeView from "./NodeView.svelte";
   import { isLocked, kind, type ENode } from "../model/tree.js";
-  import { pasteLines } from "../model/ops.js";
+  import { parsePastedText } from "../model/clipboard.js";
+  import { pasteOutline } from "../model/ops.js";
   import { isQuote } from "@porridge/core";
   import { pasteAsImage, pasteAsLink } from "../store/commands.js";
   import { handleKey } from "../store/keys.js";
@@ -81,14 +82,15 @@
     if (ta && (pasteAsImage(e, ws, node, ta) || pasteAsLink(e, ws, node, ta, text))) return;
     if (!text.includes("\n") || !ta) return;
     e.preventDefault();
-    const lines = text.replace(/\r\n?/g, "\n").split("\n").map((l) => l.trim()).filter((l, i, all) => l || (i > 0 && i < all.length - 1));
+    // Several lines: indentation and "- " list markers become nesting.
+    const lines = parsePastedText(text);
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
     if (lines.length < 2) {
-      ws.setText(node, ta.value.slice(0, start) + (lines[0] ?? "") + ta.value.slice(end));
+      ws.setText(node, ta.value.slice(0, start) + (lines[0]?.text ?? "") + ta.value.slice(end));
       return;
     }
-    ws.op("paste", node.id, (t) => pasteLines(t, node.id, start, end, lines));
+    ws.op("paste", node.id, (t) => pasteOutline(t, node.id, start, end, lines));
   }
 
   // Moving a node rebuilds its textarea, and removing the old one fires blur.

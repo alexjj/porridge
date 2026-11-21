@@ -179,18 +179,41 @@ export function move(tree: Tree, id: string, dir: -1 | 1): boolean {
   return true;
 }
 
-/** Paste of several lines: the first goes in at the caret, the rest become siblings. */
-export function pasteLines(tree: Tree, id: string, start: number, end: number, lines: string[]): Focus | null {
+/** One pasted line and how deeply it's indented (0 = top level of the paste). */
+export interface PastedLine {
+  text: string;
+  depth: number;
+}
+
+/**
+ * Paste of several lines. The first goes in at the caret; lines indented
+ * under it become its children; the rest become siblings after it, keeping
+ * their nesting. The text after the caret ends up after the last pasted line.
+ */
+export function pasteOutline(tree: Tree, id: string, start: number, end: number, lines: PastedLine[]): Focus | null {
   const loc = editable(tree, id);
   if (!loc || lines.length < 2) return null;
+  const roots: ENode[] = [];
+  const stack: { depth: number; node: ENode }[] = [];
+  for (const line of lines) {
+    const created = newNode(line.text);
+    while (stack.length && stack[stack.length - 1]!.depth >= line.depth) stack.pop();
+    (stack.length ? stack[stack.length - 1]!.node.children : roots).push(created);
+    stack.push({ depth: line.depth, node: created });
+  }
   const { node, siblings, index } = loc;
   const tail = node.text.slice(end);
-  node.text = node.text.slice(0, start) + lines[0];
-  const rest = lines.slice(1).map((l) => newNode(l));
-  const last = rest[rest.length - 1]!;
+  const first = roots.shift()!;
+  node.text = node.text.slice(0, start) + first.text;
+  if (first.children.length) {
+    node.children.unshift(...first.children);
+    tree.collapsed.delete(node.id);
+  }
+  siblings.splice(index + 1, 0, ...roots);
+  const deepestLast = (n: ENode): ENode => (n.children.length ? deepestLast(n.children[n.children.length - 1]!) : n);
+  const last = roots.length ? deepestLast(roots[roots.length - 1]!) : deepestLast(first.children[first.children.length - 1]!);
   const caret = last.text.length;
   last.text += tail;
-  siblings.splice(index + 1, 0, ...rest);
   return { id: last.id, caret };
 }
 

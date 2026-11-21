@@ -5,6 +5,7 @@ import { flushSync } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
 import { createInlineRenderer, isPlaceholderUrl, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
 import { imagePath } from "../model/images.js";
+import { outlineToHtml, outlineToText } from "../model/clipboard.js";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
 import { ancestors, block, locate, neighbour, type Block, type Focus, type Tree } from "../model/ops.js";
 import {
@@ -164,6 +165,38 @@ export class Workspace {
 
   clearSelection() {
     this.selection = null;
+  }
+
+  /**
+   * The selected lines (with everything under them) for the clipboard: an
+   * indented Markdown list, and the same as rich HTML.
+   */
+  selectionForClipboard(): { text: string; html: string; count: number } | null {
+    const b = this.block;
+    if (!b) return null;
+    const nodes = b.list.slice(b.start, b.end + 1);
+    return {
+      text: outlineToText(nodes),
+      html: outlineToHtml(nodes, (t) => this.md.html(t)),
+      count: nodes.length,
+    };
+  }
+
+  /** Copy the selected lines (phones: from the toolbar). */
+  async copySelection(): Promise<boolean> {
+    const c = this.selectionForClipboard();
+    if (!c) return false;
+    try {
+      const item = new ClipboardItem({
+        "text/plain": new Blob([c.text], { type: "text/plain" }),
+        "text/html": new Blob([c.html], { type: "text/html" }),
+      });
+      await navigator.clipboard.write([item]);
+    } catch {
+      await navigator.clipboard.writeText(c.text);
+    }
+    this.notify(`Copied ${c.count} line${c.count === 1 ? "" : "s"}`);
+    return true;
   }
 
   /** Run an operation on all the selected lines, as one undo step. */

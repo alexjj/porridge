@@ -308,3 +308,10 @@ textarea.text { scroll-margin-bottom: 80px; }
 /* Quotes: a line starting with ">"; the lines under it are its source. */
 .node.quote > .row .rendered { border-left: 3px solid var(--accent); border-radius: 0; padding-left: 10px; font-style: italic; }
 .node.quote > .children .rendered { color: var(--muted); font-size: 14px; }
+
+/* Narrow phones: the selection count shrinks to a pill (still read as "2 selected"). */
+@media (max-width: 400px) {
+  .tb-count { padding: 0 4px 0 2px; }
+  .tb-count-n { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); font-weight: 600; text-align: center; }
+  .tb-count-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}

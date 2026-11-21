@@ -11,6 +11,7 @@
   import TopBar from "./TopBar.svelte";
   import { startInsert, type Range } from "../store/commands.js";
   import { handleSelectionKey } from "../store/keys.js";
+  import { removeBlock } from "../model/ops.js";
   import type { ENode } from "../model/tree.js";
   import type { Remote } from "../store/remote.svelte.js";
   import type { Workspace } from "../store/workspace.svelte.js";
@@ -46,6 +47,21 @@
     if (imageInput) imageInput.value = "";
     if (file && imageFor) startInsert(ws, "image", imageFor.node, imageFor.range, file);
     imageFor = null;
+  }
+
+  /** Ctrl/⌘-C and -X on selected lines: copy them (as a list), and for cut, remove them. */
+  function copyOrCut(e: ClipboardEvent, cut: boolean) {
+    if (!ws.selection || !e.clipboardData || ws.inserting || document.querySelector("dialog[open]")) return;
+    const c = ws.selectionForClipboard();
+    if (!c) return;
+    e.preventDefault();
+    e.clipboardData.setData("text/plain", c.text);
+    e.clipboardData.setData("text/html", c.html);
+    if (cut) {
+      ws.blockOp("cut", (_t, b) => removeBlock(b));
+      ws.clearSelection();
+    }
+    ws.notify(`${cut ? "Cut" : "Copied"} ${c.count} line${c.count === 1 ? "" : "s"}`);
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -84,7 +100,11 @@
     if (ws.selection && !t.closest(".row, .edit-toolbar, .node-menu, .menu-scrim, dialog")) ws.clearSelection();
   }}
 />
-<svelte:document onvisibilitychange={() => document.visibilityState === "hidden" && void ws.flush()} />
+<svelte:document
+  onvisibilitychange={() => document.visibilityState === "hidden" && void ws.flush()}
+  oncopy={(e) => copyOrCut(e, false)}
+  oncut={(e) => copyOrCut(e, true)}
+/>
 
 <div class="app" class:sidebar-open={sidebarOpen} class:panel-open={panelOpen}>
   <TopBar

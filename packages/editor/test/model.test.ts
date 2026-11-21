@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { addEntry, dayOf, ensureEntryTimes, uniqueCreated } from "../src/model/calendar.js";
-import { indent, mergeUp, move, neighbour, outdent, pasteLines, remove, split, visible, type Tree } from "../src/model/ops.js";
+import { indent, mergeUp, move, neighbour, outdent, pasteOutline, remove, split, visible, type Tree } from "../src/model/ops.js";
 import { fileFromOpml, fileToOpml, newNode, type EFile, type ENode } from "../src/model/tree.js";
 
 const repo = join(import.meta.dirname, "../../..");
@@ -180,7 +180,7 @@ describe("remove, navigation and paste", () => {
 
   it("pastes several lines as siblings", () => {
     const { roots, tree, id } = setup("startEND");
-    const focus = pasteLines(tree, id("startEND"), 5, 5, ["1", "2", "3"])!;
+    const focus = pasteOutline(tree, id("startEND"), 5, 5, ["1", "2", "3"].map((text) => ({ text, depth: 0 })))!;
     expect(draw(roots)).toBe("start1\n2\n3END\n");
     expect(focus.caret).toBe(1);
   });
@@ -436,5 +436,49 @@ describe("pasting a link onto selected text", async () => {
   it("makes the link", () => {
     expect(linkMarkdown("search engine", "https://www.google.com")).toBe("[search engine](https://www.google.com)");
     expect(linkMarkdown("a [b]", "https://x.com/(y)")).toBe("[a \\[b\\]](https://x.com/(y%29)");
+  });
+});
+
+describe("copying and pasting lines", async () => {
+  const { outlineToHtml, outlineToText, parsePastedText } = await import("../src/model/clipboard.js");
+
+  it("copies lines as an indented Markdown list and as HTML", () => {
+    const roots = sketch("Porridge\n  oats\n  milk\n    or water\nSalt");
+    expect(outlineToText(roots)).toBe("- Porridge\n  - oats\n  - milk\n    - or water\n- Salt\n");
+    expect(outlineToHtml(roots, (t) => `<b>${t}</b>`)).toBe(
+      "<ul><li><b>Porridge</b><ul><li><b>oats</b></li><li><b>milk</b><ul><li><b>or water</b></li></ul></li></ul></li><li><b>Salt</b></li></ul>",
+    );
+  });
+
+  it("reads indentation and list markers from pasted text", () => {
+    expect(parsePastedText("- Porridge\n  - oats\n  - milk\n    - or water\n- Salt\n")).toEqual([
+      { text: "Porridge", depth: 0 },
+      { text: "oats", depth: 1 },
+      { text: "milk", depth: 1 },
+      { text: "or water", depth: 2 },
+      { text: "Salt", depth: 0 },
+    ]);
+    expect(parsePastedText("one\r\n\r\ntwo\n\tthree\n• four")).toEqual([
+      { text: "one", depth: 0 },
+      { text: "two", depth: 0 },
+      { text: "three", depth: 1 },
+      { text: "four", depth: 0 },
+    ]);
+    // Numbers stay: they're often part of the text.
+    expect(parsePastedText("1. first\n2. second")[0]!.text).toBe("1. first");
+  });
+
+  it("pastes a nested list back as lines, keeping the nesting", () => {
+    const { roots, tree, id } = setup("startEND\nafter");
+    const lines = parsePastedText("- Porridge\n  - oats\n  - milk\n- Salt");
+    const focus = pasteOutline(tree, id("startEND"), 5, 5, lines)!;
+    expect(draw(roots)).toBe("startPorridge\n  oats\n  milk\nSaltEND\nafter\n");
+    expect(focus).toEqual({ id: find(roots, "SaltEND").id, caret: 4 });
+  });
+
+  it("puts the rest of the line after the last pasted line, even a nested one", () => {
+    const { roots, tree, id } = setup("startEND");
+    pasteOutline(tree, id("startEND"), 5, 5, parsePastedText("Porridge\n  oats"));
+    expect(draw(roots)).toBe("startPorridge\n  oatsEND\n");
   });
 });

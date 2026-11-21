@@ -55,7 +55,7 @@
         {/each}
       </dl>
       <p class="hint">Click a bullet for its menu: zoom in, add a link or image, copy its link, mark it as a draft, or delete it. {MOD}-[ zooms back out.</p>
-      <p class="hint">To act on several lines at once, drag across them, Shift-click, or press Shift-↑/↓ at the start or end of a line. Then Tab, move or delete them together.</p>
+      <p class="hint">To act on several lines at once, drag across them, Shift-click, or press Shift-↑/↓ at the start or end of a line. Then Tab, move, copy ({MOD}-C), cut or delete them together.</p>
     </div>
   {:else}
     <div class="preview">

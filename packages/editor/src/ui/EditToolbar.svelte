@@ -36,7 +36,7 @@
 
 {#if ws.selection}
 <div class="edit-toolbar" role="toolbar" aria-label="Selected lines" style="bottom:{bottom}px">
-  <span class="tb-count">{count} selected</span>
+  <span class="tb-count"><span class="tb-count-n">{count}</span><span class="tb-count-label"> selected</span></span>
   <button aria-label="Outdent" onclick={() => ws.blockOp("outdent", (t, b) => outdentBlock(t, b))}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 5H9M17 10H9M17 15H9M6 7l-3 3 3 3" /></svg>
   </button>
@@ -51,6 +51,9 @@
   </button>
   <button aria-label="Undo" onclick={() => ws.undo()}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4L3 8l4 4M3 8h9a5 5 0 0 1 0 10H9" /></svg>
+  </button>
+  <button aria-label="Copy" onclick={() => void ws.copySelection()}>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5" /><path d="M13 7V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v7A1.5 1.5 0 0 0 4.5 13H7" /></svg>
   </button>
   <button
     aria-label="Delete"
