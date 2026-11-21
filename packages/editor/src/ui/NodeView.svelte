@@ -15,6 +15,7 @@
   const nodeKind = $derived(kind(node));
   const isDraft = $derived(node.attrs.isDraft === "true");
   const isComment = $derived(node.attrs.isComment === "true");
+  const isBullets = $derived(node.attrs.list === "bullets");
   const selected = $derived(ws.selectedIds.has(node.id));
 
   // Selecting several lines: drag across them with the mouse, or shift-click.
@@ -159,6 +160,7 @@
       </div>
     {/if}
     {#if isDraft}<span class="tag">Draft</span>{/if}
+    {#if isBullets}<span class="tag" title="Its children are shown as bullets on the site">Bullets</span>{/if}
   </div>
 
   {#if hasKids && !isCollapsed}

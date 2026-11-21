@@ -592,12 +592,17 @@ export class Workspace {
 
   /** Turn a true/false attribute such as isDraft on or off. */
   setFlag(id: string, name: "isDraft" | "isComment", on: boolean) {
+    this.setAttr(id, name, on ? "true" : null);
+  }
+
+  /** Set (or with null, remove) one of a line's attributes, as an undo step. */
+  setAttr(id: string, name: string, value: string | null) {
     const file = this.file;
     const node = file && locate(file.nodes, id)?.node;
-    if (!file || !node) return;
-    this.record(this.snapshot([file.path]), "flag", id);
-    if (on) node.attrs[name] = "true";
-    else delete node.attrs[name];
+    if (!file || !node || node.attrs[name] === (value ?? undefined)) return;
+    this.record(this.snapshot([file.path]), "attribute", id);
+    if (value === null) delete node.attrs[name];
+    else node.attrs[name] = value;
     this.changed(file);
   }
 

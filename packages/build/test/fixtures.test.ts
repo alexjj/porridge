@@ -146,6 +146,16 @@ describe("rendered sample blog", async () => {
     expect(file("rss.xml")).toContain(`&lt;img src=&quot;https://example.github.io/my-blog/images/2026/11/porridge.jpg&quot;`);
   });
 
+  it("renders list=bullets children as a bulleted list, in posts and pages", () => {
+    expect(file("2026/11/17/index.html")).toContain(
+      `has a bulleted body.</a></h3>\n<ul>\n<li>Like this.</li>\n<li>And this.\n<ul>\n<li>With a sub-bullet.</li>\n</ul>\n</li>\n</ul>\n</article>`,
+    );
+    expect(file("books/index.html")).toContain(
+      `<h2>2026</h2>\n<ul>\n<li><em>A Book I Liked</em> by Someone</li>\n<li><em>Another One</em> by Someone Else</li>\n</ul>\n</section>`,
+    );
+    expect(file("rss.xml")).toContain("&lt;li&gt;With a sub-bullet.&lt;/li&gt;");
+  });
+
   it("renders page sections as h2-h4, then lists", () => {
     const about = file("about/index.html");
     expect(about).toContain("<h2>Elsewhere</h2>");

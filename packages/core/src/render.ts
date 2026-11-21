@@ -226,13 +226,22 @@ function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
         ? `<h3 class="entry-title">${hash}${title}</h3>`
         : `<h3 class="entry-title">${hash}<a href="${href}">${title}</a></h3>`,
     );
-    out.push(...renderBlocks(md, entry.body));
+    out.push(...renderBody(md, entry.node, entry.body));
   }
   out.push(`</article>`);
   return out.join("\n");
 }
 
 /** Body nodes: paragraphs, with children becoming a nested list. */
+/** `list="bullets"` on a line: its children render as a bulleted list. */
+const bulleted = (node: Outline) => attr(node, "list") === "bullets";
+
+/** A titled post's body: paragraphs, or a bulleted list if the post asks for one. */
+function renderBody(md: InlineRenderer, node: Outline, body: Outline[]): string[] {
+  if (body.length === 0) return [];
+  return bulleted(node) ? [renderList(md, body)] : renderBlocks(md, body);
+}
+
 function renderBlocks(md: InlineRenderer, nodes: Outline[]): string[] {
   const out: string[] = [];
   for (const node of nodes) {
@@ -261,7 +270,8 @@ function renderPageNodes(md: InlineRenderer, nodes: Outline[], depth: number): s
       out.push(`<p>${md.html(text(node))}</p>`);
     } else {
       const h = `h${depth + 1}`;
-      out.push(`<section>`, `<${h}>${md.html(text(node))}</${h}>`, ...renderPageNodes(md, kids, depth + 1), `</section>`);
+      const inner = bulleted(node) ? [renderList(md, kids)] : renderPageNodes(md, kids, depth + 1);
+      out.push(`<section>`, `<${h}>${md.html(text(node))}</${h}>`, ...inner, `</section>`);
     }
   }
   return out;
@@ -280,7 +290,7 @@ function renderRss(ctx: Ctx): string {
   const items = entries.map((e) => {
     const link = permalink(ctx, e, true);
     const html =
-      e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBlocks(ctx.mdAbs, e.body).join("\n");
+      e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
     return [
       `    <item>`,
       ...(e.body !== null ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : []),

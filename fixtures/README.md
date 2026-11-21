@@ -24,10 +24,11 @@ golden files for the renderer tests.
 | §4 Timezone decides the day | `blog/2026.opml` — 15th & 16th July (BST) |
 | §4 Day with only drafts not published | `blog/2026.opml` — 12th October |
 | §4 Month with nothing publishable not published | `blog/2026.opml` — September 2026 |
-| §4 Entry without children (untitled, ¶) | `blog/2026.opml` — 18th November 09:12 |
+| §4 Entry without children (untitled, `#` permalink) | `blog/2026.opml` — 18th November 09:12 |
 | §4 Entry with children (titled) | `blog/2026.opml` — "Starting porridge" |
 | §4 Body node with children → paragraph + nested list | "Starting porridge" — ingredients |
 | §4 `isDraft` on an entry | 18th November 21:05 |
+| §4 `list="bullets"` on a titled entry | 17th November 07:30 |
 | §4 `isComment` on a body node and a list item | "Starting porridge" |
 | §4 Titled entry with all children removed | 31st October |
 | §4 Anchor from `created` in the blog's timezone | all entries; claimed anchors are checked |
@@ -37,6 +38,7 @@ golden files for the renderer tests.
 | §4 Calendar node without `date` (warning) | `blog/2025.opml` — "Some day in December" |
 | §4 Non-calendar node at month level (warning) | `blog/2025.opml` — last node |
 | §5 Page in nav with `navOrder` | `pages/about.opml` |
+| §5 `list="bullets"` on a page section | `pages/books.opml` |
 | §5 `navLabel` override | `pages/now.opml` |
 | §5 Page not in nav | `pages/books.opml` |
 | §5 Draft page (`porridge:isDraft`) | `pages/ideas.opml` |

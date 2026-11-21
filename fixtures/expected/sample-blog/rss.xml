@@ -40,11 +40,18 @@
       <description>&lt;p&gt;Two entries in a day, newest first. This one has &lt;code&gt;inline code&lt;/code&gt; and a &lt;a href=&quot;https://example.github.io/my-blog/2026/11/02/&quot;&gt;link to an earlier day&lt;/a&gt;.&lt;/p&gt;</description>
     </item>
     <item>
-      <title>Morning. An entry can have a title and just one body paragraph.</title>
+      <title>Morning. A titled entry with list=&quot;bullets&quot; has a bulleted body.</title>
       <link>https://example.github.io/my-blog/2026/11/17/#a073000</link>
       <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/17/#a073000</guid>
       <pubDate>Tue, 17 Nov 2026 07:30:00 GMT</pubDate>
-      <description>&lt;p&gt;Like this.&lt;/p&gt;</description>
+      <description>&lt;ul&gt;
+&lt;li&gt;Like this.&lt;/li&gt;
+&lt;li&gt;And this.
+&lt;ul&gt;
+&lt;li&gt;With a sub-bullet.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</description>
     </item>
     <item>
       <link>https://example.github.io/my-blog/2026/11/02/#a120000</link>

@@ -6,7 +6,7 @@
   </head>
   <body>
     <outline text="Published at /books/ but not shown in the navigation."/>
-    <outline text="2026">
+    <outline text="2026" list="bullets">
       <outline text="*A Book I Liked* by Someone"/>
       <outline text="*Another One* by Someone Else"/>
     </outline>

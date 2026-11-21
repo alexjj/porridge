@@ -55,6 +55,7 @@ images/2026/11/…     uploaded images
 | `date` | `YYYY-MM` or `YYYY-MM-DD` | The month or day a calendar node represents |
 | `isDraft` | `true` | Kept in the file, skipped by the builder (with its children) |
 | `isComment` | `true` | Kept in the file, never rendered (with its children) |
+| `list` | `bullets` | The node's children render as a bulleted list instead of paragraphs (see below) |
 
 Boolean attributes are true only when the value is exactly `true`; absent or
 any other value means false.
@@ -157,6 +158,8 @@ The body contains only `include` nodes, one per year, **newest first**. Their
 - Body children render as paragraphs. A body node that itself has children
   renders as a paragraph followed by a nested list of its children,
   recursively.
+- `list="bullets"` on a titled entry renders its body as a bulleted list
+  (children of list items nest as sub-lists) instead of paragraphs.
 - `isDraft` and `isComment` remove the node and everything beneath it, at any
   level (entry or body node). An entry whose children are all removed renders
   as a heading with no body.
@@ -232,6 +235,9 @@ Published at `/<slug>/`.
 - Top-level node **with** children → `<h2>` section heading, children render
   inside it.
 - Second level with children → `<h3>`; third level with children → `<h4>`.
+- A heading node with `list="bullets"` keeps its heading, and its children
+  render as a bulleted list (nesting as sub-lists) instead of paragraphs and
+  sub-headings.
 - Below that, a node with children renders as a paragraph followed by a nested
   list (the same rule as entry bodies).
 - `isDraft` / `isComment` nodes are skipped with their children.

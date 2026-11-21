@@ -12,6 +12,7 @@
   const link = $derived(node ? ws.permalink(node.id) : null);
   const isDraft = $derived(node?.attrs.isDraft === "true");
   const isComment = $derived(node?.attrs.isComment === "true");
+  const isBullets = $derived(node?.attrs.list === "bullets");
   const collapsed = $derived(node ? ws.collapsed.has(node.id) : false);
 
   let el: HTMLDivElement | undefined = $state();
@@ -100,6 +101,9 @@
       </button>
       <button role="menuitemcheckbox" aria-checked={isComment} onclick={run((n) => ws.setFlag(n.id, "isComment", n.attrs.isComment !== "true"))}>
         {isComment ? "Not a comment" : "Comment (note to self)"}
+      </button>
+      <button role="menuitemcheckbox" aria-checked={isBullets} onclick={run((n) => ws.setAttr(n.id, "list", n.attrs.list === "bullets" ? null : "bullets"))}>
+        {isBullets ? "Children as paragraphs" : "Children as bullets"}
       </button>
     {/if}
     {#if node.children.length}

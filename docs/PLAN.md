@@ -314,6 +314,8 @@ Deferred:
       edge, or "Select…" in the line menu on touch screens) and indented,
       moved or deleted together. Selections widen to whole sibling lines.
 - [x] Site search with Pagefind; `#` permalinks in the margin.
+- [x] "Children as bullets" (`list="bullets"`): a line's children render as a
+      bulleted list, for page sections (e.g. books under a year) and posts.
 - [x] The site address is optional: blogs built by the Action fall back to
       the repository's Pages address (`actions/configure-pages`), so the
       template has no placeholder and its own Pages site renders properly.

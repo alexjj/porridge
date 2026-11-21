@@ -28,8 +28,11 @@
       </outline>
       <outline text="17th November" type="calendarDay" date="2026-11-17">
         <outline text="Two entries in a day, newest first. This one has `inline code` and a [link to an earlier day](/2026/11/02/)." created="Tue, 17 Nov 2026 20:00:00 GMT"/>
-        <outline text="Morning. An entry can have a title and just one body paragraph." created="Tue, 17 Nov 2026 07:30:00 GMT">
+        <outline text="Morning. A titled entry with list=&quot;bullets&quot; has a bulleted body." created="Tue, 17 Nov 2026 07:30:00 GMT" list="bullets">
           <outline text="Like this."/>
+          <outline text="And this.">
+            <outline text="With a sub-bullet."/>
+          </outline>
         </outline>
       </outline>
       <outline text="2nd November" type="calendarDay" date="2026-11-02">

@@ -8044,10 +8044,15 @@ function renderEntry(md, entry, href) {
     out.push(
       title.includes("<a ") ? `<h3 class="entry-title">${hash}${title}</h3>` : `<h3 class="entry-title">${hash}<a href="${href}">${title}</a></h3>`
     );
-    out.push(...renderBlocks(md, entry.body));
+    out.push(...renderBody(md, entry.node, entry.body));
   }
   out.push(`</article>`);
   return out.join("\n");
+}
+var bulleted = (node) => attr(node, "list") === "bullets";
+function renderBody(md, node, body) {
+  if (body.length === 0) return [];
+  return bulleted(node) ? [renderList(md, body)] : renderBlocks(md, body);
 }
 function renderBlocks(md, nodes) {
   const out = [];
@@ -8076,7 +8081,8 @@ function renderPageNodes(md, nodes, depth) {
       out.push(`<p>${md.html(text2(node))}</p>`);
     } else {
       const h = `h${depth + 1}`;
-      out.push(`<section>`, `<${h}>${md.html(text2(node))}</${h}>`, ...renderPageNodes(md, kids, depth + 1), `</section>`);
+      const inner = bulleted(node) ? [renderList(md, kids)] : renderPageNodes(md, kids, depth + 1);
+      out.push(`<section>`, `<${h}>${md.html(text2(node))}</${h}>`, ...inner, `</section>`);
     }
   }
   return out;
@@ -8088,7 +8094,7 @@ function renderRss(ctx) {
   const pubDate = (e) => formatRfc822(e.created ?? zonedMidnight(e.date, settings.timezone));
   const items = entries.map((e) => {
     const link2 = permalink(ctx, e, true);
-    const html = e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBlocks(ctx.mdAbs, e.body).join("\n");
+    const html = e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
     return [
       `    <item>`,
       ...e.body !== null ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : [],

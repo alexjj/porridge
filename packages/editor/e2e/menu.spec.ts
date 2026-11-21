@@ -204,3 +204,21 @@ test("pasting an image opens the Add image dialog", async ({ page }) => {
   // A small PNG the WebP doesn't beat is kept as it is; otherwise it's WebP.
   await expect(editing(page)).toHaveValue(/^Screenshot: !\[An orange rectangle\]\(\/images\/2026\/11\/image-18193000\.(webp|png)\)$/);
 });
+
+test("Children as bullets is set from the menu and shows in the preview", async ({ page }) => {
+  await openMenu(page, "Hello, world");
+  await lineMenu(page).getByRole("menuitemcheckbox", { name: "Children as bullets" }).click();
+  const hello = page.locator(".node", { has: page.locator(":scope > .row", { hasText: "Hello, world" }) });
+  await expect(hello.locator(":scope > .row .tag")).toHaveText("Bullets");
+
+  await page.getByRole("tab", { name: "Preview" }).click();
+  await page.getByText("This is the first post").click({ position: { x: 5, y: 5 } });
+  await expect(editing(page)).toBeFocused();
+  const frame = page.frameLocator(".preview iframe");
+  await expect(frame.locator("article.entry ul li").first()).toContainText("This is the first post");
+
+  // One undo step.
+  await page.keyboard.press("Control+z");
+  await expect(hello.locator(":scope > .row .tag")).toHaveCount(0);
+  await expect(frame.locator("article.entry ul")).toHaveCount(0);
+});
