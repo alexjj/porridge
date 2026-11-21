@@ -13,7 +13,7 @@
         <outline text="Starting porridge" created="Wed, 18 Nov 2026 17:40:10 GMT">
           <outline text="This entry has children, so its text is the **title** and the children are the body. The title links to [the permalink](/2026/11/18/#a174010)."/>
           <outline text="![A bowl of porridge](/images/2026/11/porridge.jpg)"/>
-          <outline text="A body node with children becomes a paragraph followed by a list:">
+          <outline text="A body node with list=&quot;bullets&quot; becomes a paragraph followed by a list:" list="bullets">
             <outline text="Oats"/>
             <outline text="Milk, or water if you're *brave*">
               <outline text="Lists nest as deep as the outline does"/>
@@ -22,7 +22,9 @@
             <outline text="Golden syrup"/>
           </outline>
           <outline text="Comments are notes to self and never appear on the site." isComment="true"/>
-          <outline text="Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;https://example.com&gt;."/>
+          <outline text="Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;https://example.com&gt;.">
+            <outline text="A line under a line, without list=&quot;bullets&quot;, is just another paragraph."/>
+          </outline>
         </outline>
         <outline text="A one-paragraph post with no children, so no title. It still gets an anchor and a # permalink." created="Wed, 18 Nov 2026 09:12:03 GMT"/>
       </outline>

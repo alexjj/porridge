@@ -17,7 +17,7 @@
       <outline text="Code">
         <outline text="Projects">
           <outline text="Third level with children is an h4."/>
-          <outline text="Below that, nodes with children become lists:">
+          <outline text="Below that, a node with list=&quot;bullets&quot; becomes a list:" list="bullets">
             <outline text="[porridge](https://github.com/alexjj/porridge)">
               <outline text="nested item"/>
             </outline>

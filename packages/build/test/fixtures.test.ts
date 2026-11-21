@@ -69,7 +69,7 @@ describe("sample blog", () => {
     expect(titled!.body!.map((n) => n.attrs.get("text")!.slice(0, 20))).toEqual([
       "This entry has child",
       "![A bowl of porridge",
-      "A body node with chi",
+      "A body node with lis",
       "Inline HTML is allow",
     ]);
     // Titled entry whose only child is a comment: heading with no body.
@@ -144,6 +144,14 @@ describe("rendered sample blog", async () => {
   it("rewrites root-relative URLs to the base path, and to absolute URLs in RSS", () => {
     expect(file("2026/11/18/index.html")).toContain(`<img src="/my-blog/images/2026/11/porridge.jpg"`);
     expect(file("rss.xml")).toContain(`&lt;img src=&quot;https://example.github.io/my-blog/images/2026/11/porridge.jpg&quot;`);
+  });
+
+  it("renders lines under a body line as paragraphs, unless it has list=bullets", () => {
+    const day = file("2026/11/18/index.html");
+    expect(day).toContain(
+      `autolinks like <a href="https://example.com">https://example.com</a>.</p>\n<p>A line under a line, without list=&quot;bullets&quot;, is just another paragraph.</p>`,
+    );
+    expect(day).toContain(`becomes a paragraph followed by a list:</p>\n<ul>\n<li>Oats</li>`);
   });
 
   it("renders list=bullets children as a bulleted list, in posts and pages", () => {

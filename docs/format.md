@@ -156,8 +156,9 @@ The body contains only `include` nodes, one per year, **newest first**. Their
   that links to the entry's permalink, with the same `#` in the margin; the
   children are its body.
 - Body children render as paragraphs. A body node that itself has children
-  renders as a paragraph followed by a nested list of its children,
-  recursively.
+  renders as a paragraph followed by its children, also as paragraphs
+  (recursively), unless it has `list="bullets"`: then its children are a
+  bulleted list, and lines under a list item nest as sub-lists.
 - `list="bullets"` on a titled entry renders its body as a bulleted list
   (children of list items nest as sub-lists) instead of paragraphs.
 - `isDraft` and `isComment` remove the node and everything beneath it, at any
@@ -238,8 +239,9 @@ Published at `/<slug>/`.
 - A heading node with `list="bullets"` keeps its heading, and its children
   render as a bulleted list (nesting as sub-lists) instead of paragraphs and
   sub-headings.
-- Below that, a node with children renders as a paragraph followed by a nested
-  list (the same rule as entry bodies).
+- Below that, a node with children renders as a paragraph followed by its
+  children as paragraphs, or as a bulleted list with `list="bullets"` (the
+  same rule as entry bodies).
 - `isDraft` / `isComment` nodes are skipped with their children.
 
 ## 6. Images

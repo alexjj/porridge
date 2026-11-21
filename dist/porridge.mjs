@@ -8059,7 +8059,7 @@ function renderBlocks(md, nodes) {
   for (const node of nodes) {
     out.push(`<p>${md.html(text2(node))}</p>`);
     const kids = publishedChildren(node);
-    if (kids.length) out.push(renderList(md, kids));
+    if (kids.length) out.push(...bulleted(node) ? [renderList(md, kids)] : renderBlocks(md, kids));
   }
   return out;
 }

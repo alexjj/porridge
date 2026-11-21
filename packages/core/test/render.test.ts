@@ -73,6 +73,20 @@ describe("permalinks", () => {
   });
 });
 
+describe("bullets don't spread", () => {
+  it("only lines with list=bullets get a list; a sibling's children stay paragraphs", async () => {
+    const post = `<outline text="Updates" created="Wed, 18 Nov 2026 10:00:00 GMT">
+      <outline text="You can add bullets now." list="bullets"><outline text="We're all children"/><outline text="I'm the favourite"/></outline>
+      <outline text="New domain"><outline text="btw, custom domains work too."/></outline>
+    </outline>`;
+    const y = year.replace(`<outline text="c" created="Wed, 18 Nov 2026 10:00:00 GMT"/>`, post);
+    const { files } = await buildSite(memorySource({ "blog.opml": blog(10), "blog/2026.opml": y }));
+    const html = files.find((f) => f.path === "2026/11/18/index.html")!.content;
+    expect(html).toContain(`<p>You can add bullets now.</p>\n<ul>\n<li>We're all children</li>\n<li>I'm the favourite</li>\n</ul>`);
+    expect(html).toContain(`<p>New domain</p>\n<p>btw, custom domains work too.</p>`);
+  });
+});
+
 describe("site address", () => {
   const withBase = (base: string | null) =>
     blog(10).replace("<porridge:baseUrl>https://e.com/</porridge:baseUrl>", base === null ? "" : `<porridge:baseUrl>${base}</porridge:baseUrl>`);

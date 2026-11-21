@@ -242,12 +242,16 @@ function renderBody(md: InlineRenderer, node: Outline, body: Outline[]): string[
   return bulleted(node) ? [renderList(md, body)] : renderBlocks(md, body);
 }
 
+/**
+ * Body lines are paragraphs. Lines under a line are paragraphs too, unless
+ * that line has list="bullets", which makes them a bulleted list.
+ */
 function renderBlocks(md: InlineRenderer, nodes: Outline[]): string[] {
   const out: string[] = [];
   for (const node of nodes) {
     out.push(`<p>${md.html(text(node))}</p>`);
     const kids = publishedChildren(node);
-    if (kids.length) out.push(renderList(md, kids));
+    if (kids.length) out.push(...(bulleted(node) ? [renderList(md, kids)] : renderBlocks(md, kids)));
   }
   return out;
 }
