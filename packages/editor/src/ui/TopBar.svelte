@@ -109,6 +109,12 @@
     </button>
   {/if}
 
+  {#if ws.siteBase !== "/"}
+    <a class="icon" href={ws.siteBase} target="_blank" rel="noopener" aria-label="View site" title="View your site ({ws.siteBase})">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 4h5v5M16 4l-7 7M14 11.5V15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3.5" /></svg>
+    </a>
+  {/if}
+
   <button class="primary" aria-label="New entry" onclick={() => ws.newEntry()}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
     <span>New entry</span>

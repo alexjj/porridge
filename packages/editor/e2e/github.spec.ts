@@ -208,3 +208,19 @@ test("disconnecting keeps the blog in the browser", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Connect GitHub" })).toBeVisible();
   expect(await outline(page)).toContain("Hello, world");
 });
+
+test("View site opens the blog in a new tab", async ({ page }) => {
+  await fakeGitHub(page);
+  // Not connected, and no site address yet: nothing to open.
+  await expect(page.getByRole("link", { name: "View site" })).toHaveCount(0);
+  await connected(page);
+  // Connected with no address in Blog settings: the repo's Pages address.
+  const view = page.getByRole("link", { name: "View site" });
+  await expect(view).toHaveAttribute("href", "https://me.github.io/blog/");
+  await expect(view).toHaveAttribute("target", "_blank");
+  // An address in Blog settings wins.
+  await menu(page, "Blog settings…");
+  await page.getByRole("dialog", { name: "Settings" }).getByLabel("Site address").fill("https://blog.example/");
+  await page.getByRole("dialog", { name: "Settings" }).getByRole("button", { name: "Close" }).click();
+  await expect(view).toHaveAttribute("href", "https://blog.example/");
+});
