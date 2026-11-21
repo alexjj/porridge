@@ -36,7 +36,7 @@
 
 {#if ws.selection}
 <div class="edit-toolbar" role="toolbar" aria-label="Selected lines" style="bottom:{bottom}px">
-  <span class="tb-count"><span class="tb-count-n">{count}</span><span class="tb-count-label"> selected</span></span>
+  <span class="tb-count"><span class="tb-count-n">{count}</span>{" "}<span class="tb-count-label">selected</span></span>
   <button aria-label="Outdent" onclick={() => ws.blockOp("outdent", (t, b) => outdentBlock(t, b))}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 5H9M17 10H9M17 15H9M6 7l-3 3 3 3" /></svg>
   </button>
