@@ -7,6 +7,21 @@ import { attr, publishedChildren, type Outline } from "./opml.js";
 import type { Day, Entry, Page, Site } from "./site.js";
 import { SCRIPT, STYLESHEET } from "./theme.js";
 
+/** Short fingerprint of a file's contents (FNV-1a), so browsers fetch a changed file straight away. */
+function fingerprint(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+
+// GitHub Pages lets browsers cache files for a while; a new ?v= on every
+// change means pages never show with an old stylesheet or script.
+const STYLE_VERSION = fingerprint(STYLESHEET);
+const SCRIPT_VERSION = fingerprint(SCRIPT);
+
 export interface OutputFile {
   /** Path within the output directory, using `/`. */
   path: string;
@@ -400,8 +415,8 @@ function layout(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
-<link rel="stylesheet" href="${ctx.base}style.css">
-<script src="${ctx.base}porridge.js" defer></script>
+<link rel="stylesheet" href="${ctx.base}style.css?v=${STYLE_VERSION}">
+<script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
 ${opts.head ? `${opts.head}\n` : ""}</head>

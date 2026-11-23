@@ -53,3 +53,28 @@ test("pages without images load the script without errors", async ({ page }) => 
   await expect(page.locator("dialog")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test("a video fills the width of the column at 16:9", async ({ page }) => {
+  // The player itself comes from YouTube; only the layout matters here.
+  await page.route("https://www.youtube-nocookie.com/**", (route) => route.fulfill({ status: 200, body: "<html></html>", contentType: "text/html" }));
+  await page.goto(`${SITE}2026/11/18/`);
+  const column = (await page.locator("main").evaluate((m) => {
+    const cs = getComputedStyle(m);
+    return m.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  })) as number;
+  const box = (await page.locator(".video iframe").boundingBox())!;
+  expect(Math.round(box.width)).toBe(Math.round(column));
+  expect(box.height / box.width).toBeCloseTo(9 / 16, 2);
+  // The stylesheet and script are fingerprinted, so a changed theme is never served stale.
+  await expect(page.locator('link[rel="stylesheet"]')).toHaveAttribute("href", /\/style\.css\?v=[0-9a-f]{8}$/);
+  await expect(page.locator("script[src*='porridge.js']")).toHaveAttribute("src", /\/porridge\.js\?v=[0-9a-f]{8}$/);
+});
+
+test("a video is full width on a phone too", async ({ page }) => {
+  await page.route("https://www.youtube-nocookie.com/**", (route) => route.fulfill({ status: 200, body: "<html></html>", contentType: "text/html" }));
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto(`${SITE}2026/11/18/`);
+  const box = (await page.locator(".video iframe").boundingBox())!;
+  expect(box.width).toBeGreaterThan(300);
+  expect(box.height / box.width).toBeCloseTo(9 / 16, 2);
+});

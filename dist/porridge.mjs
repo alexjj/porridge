@@ -7486,7 +7486,10 @@ var watchUrl = (v) => `https://www.youtube.com/watch?v=${v.id}${v.start ? `&t=${
 var thumbnailUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
 function videoEmbed(v) {
   const src = `https://www.youtube-nocookie.com/embed/${v.id}${v.start ? `?start=${v.start}` : ""}`;
-  return `<span class="video"><iframe src="${src}" title="YouTube video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></span>`;
+  return (
+    // width/height tell YouTube the player is large, so it serves a sharp preview image.
+    `<span class="video"><iframe src="${src}" width="1280" height="720" title="YouTube video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></span>`
+  );
 }
 function videoLink(v) {
   return `<a href="${watchUrl(v).replace(/&/g, "&amp;")}"><img src="${thumbnailUrl(v)}" alt="YouTube video"></a>`;
@@ -7848,8 +7851,10 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .quote cite a { color: var(--muted); }
 
 /* YouTube videos: a line that's just a YouTube address. */
-.video { display: block; margin: 0.5rem 0; }
-.video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 6px; background: var(--rule); }
+/* A 16:9 box the full width of the column (padding sizes it, which works in
+   every browser), with the player filling it. */
+.video { position: relative; display: block; width: 100%; height: 0; padding-top: 56.25%; margin: 0.5rem 0; overflow: hidden; border-radius: 6px; background: var(--rule); }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 /* Lightbox: an image opened full size. */
 img.zoomable { cursor: zoom-in; }
@@ -7941,6 +7946,16 @@ mark { background: #f6e3a1; color: inherit; padding: 0 0.15em; }
 `;
 
 // packages/core/src/render.ts
+function fingerprint(text3) {
+  let h = 2166136261;
+  for (let i = 0; i < text3.length; i++) {
+    h ^= text3.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+var STYLE_VERSION = fingerprint(STYLESHEET);
+var SCRIPT_VERSION = fingerprint(SCRIPT);
 function renderSite(site) {
   const ctx = {
     site,
@@ -8228,8 +8243,8 @@ function layout(ctx, opts) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
-<link rel="stylesheet" href="${ctx.base}style.css">
-<script src="${ctx.base}porridge.js" defer></script>
+<link rel="stylesheet" href="${ctx.base}style.css?v=${STYLE_VERSION}">
+<script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
 ${opts.head ? `${opts.head}

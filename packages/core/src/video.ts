@@ -54,7 +54,8 @@ export const thumbnailUrl = (v: Video): string => `https://i.ytimg.com/vi/${v.id
 export function videoEmbed(v: Video): string {
   const src = `https://www.youtube-nocookie.com/embed/${v.id}${v.start ? `?start=${v.start}` : ""}`;
   return (
-    `<span class="video"><iframe src="${src}" title="YouTube video" loading="lazy" ` +
+    // width/height tell YouTube the player is large, so it serves a sharp preview image.
+    `<span class="video"><iframe src="${src}" width="1280" height="720" title="YouTube video" loading="lazy" ` +
     `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ` +
     `referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></span>`
   );

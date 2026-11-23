@@ -105,7 +105,7 @@ describe("sample blog", () => {
   it("can override the base URL for previews", async () => {
     const { files } = await buildSite(nodeSource(fixture("sample-blog")), { baseUrl: "http://localhost:8080" });
     const home = files.find((f) => f.path === "index.html")!.content;
-    expect(home).toContain(`href="/style.css"`);
+    expect(home).toContain(`href="/style.css?v=`);
     expect(home).toContain(`href="http://localhost:8080/rss.xml"`);
   });
 });

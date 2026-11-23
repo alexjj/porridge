@@ -33,7 +33,7 @@ describe("rendering videos", () => {
 
   it("embeds a privacy-enhanced, lazy player on the site", () => {
     expect(createInlineRenderer("/").html(url)).toBe(
-      `<span class="video"><iframe src="https://www.youtube-nocookie.com/embed/C-TY_XSMboY?start=90" title="YouTube video" loading="lazy" ` +
+      `<span class="video"><iframe src="https://www.youtube-nocookie.com/embed/C-TY_XSMboY?start=90" width="1280" height="720" title="YouTube video" loading="lazy" ` +
         `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ` +
         `referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></span>`,
     );
