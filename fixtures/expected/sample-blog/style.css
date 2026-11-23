@@ -86,7 +86,7 @@ img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px
 .day-title a { color: var(--muted); text-decoration: none; }
 .day-title a:hover { color: var(--text); }
 
-.entry { position: relative; margin: 0 0 1.5rem; scroll-margin-top: 1rem; }
+.entry { position: relative; margin: 0; scroll-margin-top: 1rem; }
 .entry:target { background: color-mix(in srgb, var(--link) 8%, transparent); border-radius: 4px; box-shadow: 0 0 0 0.5rem color-mix(in srgb, var(--link) 8%, transparent); }
 .entry p { margin: 0 0 0.85rem; }
 .entry-title { font-family: var(--sans); font-size: 1.2rem; line-height: 1.3; margin: 0 0 0.5rem; }
