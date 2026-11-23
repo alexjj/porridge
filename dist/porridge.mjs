@@ -7879,7 +7879,7 @@ img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px
 
 .page-title { font-family: var(--sans); font-size: 1.6rem; line-height: 1.25; margin: 1.5rem 0 1rem; }
 
-.day { border-top: 1px solid var(--rule); padding-top: 1.25rem; margin-top: 1.5rem; }
+.day { border-top: 1px solid var(--rule); padding-top: 1.25rem; }
 .day-title { font-family: var(--sans); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 0.75rem; }
 .day-title a { color: var(--muted); text-decoration: none; }
 .day-title a:hover { color: var(--text); }
