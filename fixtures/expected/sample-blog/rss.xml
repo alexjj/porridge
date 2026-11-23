@@ -29,7 +29,9 @@
 &lt;p&gt;A line under a line, without list=&amp;quot;bullets&amp;quot;, is just another paragraph.&lt;/p&gt;
 &lt;blockquote class=&quot;quote&quot;&gt;
 &lt;p&gt;A quote inside a post, with no source.&lt;/p&gt;
-&lt;/blockquote&gt;</description>
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=C-TY_XSMboY&amp;amp;t=90s&quot;&gt;&lt;img src=&quot;https://i.ytimg.com/vi/C-TY_XSMboY/hqdefault.jpg&quot; alt=&quot;YouTube video&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;A YouTube address mid-sentence, https://www.youtube.com/watch?v=6NzAn238PPE, stays text.&lt;/p&gt;</description>
     </item>
     <item>
       <link>https://example.github.io/my-blog/2026/11/18/#a091203</link>

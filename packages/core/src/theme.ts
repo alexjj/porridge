@@ -94,6 +94,10 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .quote cite { font-style: normal; }
 .quote cite a { color: var(--muted); }
 
+/* YouTube videos: a line that's just a YouTube address. */
+.video { display: block; margin: 0.5rem 0; }
+.video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 6px; background: var(--rule); }
+
 /* Lightbox: an image opened full size. */
 img.zoomable { cursor: zoom-in; }
 img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }

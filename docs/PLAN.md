@@ -321,6 +321,9 @@ Deferred:
 - [x] Copy and cut selected lines (Ctrl/⌘-C/X, or Copy on the phone toolbar)
       as an indented Markdown list plus rich HTML; pasting indented or
       bulleted text rebuilds the nesting.
+- [x] YouTube videos: a line that's just a YouTube address is embedded
+      (privacy-enhanced player); RSS gets a linked thumbnail, the editor a
+      thumbnail.
 - [x] The site address is optional: blogs built by the Action fall back to
       the repository's Pages address (`actions/configure-pages`), so the
       template has no placeholder and its own Pages site renders properly.

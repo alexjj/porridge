@@ -7450,8 +7450,54 @@ _defineProperty(MarkdownIt, "ParserInline", ParserInline);
 _defineProperty(MarkdownIt, "StateInline", StateInline);
 var MarkdownItCallable = callable(MarkdownIt);
 
+// packages/core/src/video.ts
+var ID = /^[A-Za-z0-9_-]{11}$/;
+function seconds(value) {
+  if (/^\d+$/.test(value)) return Number(value);
+  const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(value);
+  if (!m || !m[0]) return 0;
+  return Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0);
+}
+function parseVideo(text3) {
+  let t = text3.trim();
+  if (t.startsWith("<") && t.endsWith(">")) t = t.slice(1, -1);
+  if (/\s/.test(t)) return null;
+  let url;
+  try {
+    url = new URL(t);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  const host = url.hostname.toLowerCase().replace(/^(www|m)\./, "");
+  let id = null;
+  if (host === "youtu.be") {
+    id = url.pathname.slice(1).split("/")[0] ?? null;
+  } else if (host === "youtube.com" || host === "youtube-nocookie.com") {
+    if (url.pathname === "/watch") id = url.searchParams.get("v");
+    else id = /^\/(?:embed|shorts|live|v)\/([^/]+)/.exec(url.pathname)?.[1] ?? null;
+  }
+  if (!id || !ID.test(id)) return null;
+  const t2 = url.searchParams.get("t") ?? url.searchParams.get("start");
+  const start = t2 ? seconds(t2) : 0;
+  return start ? { id, start } : { id };
+}
+var watchUrl = (v) => `https://www.youtube.com/watch?v=${v.id}${v.start ? `&t=${v.start}s` : ""}`;
+var thumbnailUrl = (v) => `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+function videoEmbed(v) {
+  const src = `https://www.youtube-nocookie.com/embed/${v.id}${v.start ? `?start=${v.start}` : ""}`;
+  return `<span class="video"><iframe src="${src}" title="YouTube video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></span>`;
+}
+function videoLink(v) {
+  return `<a href="${watchUrl(v).replace(/&/g, "&amp;")}"><img src="${thumbnailUrl(v)}" alt="YouTube video"></a>`;
+}
+function videoThumbnail(v) {
+  return `<span class="video-thumb"><img src="${thumbnailUrl(v)}" alt="YouTube video"><span class="video-play" aria-hidden="true">\u25B6</span></span>`;
+}
+
 // packages/core/src/markdown.ts
-function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix) {
+function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix, video = "embed") {
+  const showVideo = { embed: videoEmbed, link: videoLink, thumbnail: videoThumbnail }[video];
   const md = new MarkdownItCallable({ html: true, linkify: false, typographer: false });
   const rewriteWith = (prefix) => (url) => url.startsWith("/") && !url.startsWith("//") ? prefix + url.slice(1) : url;
   const rewrite = rewriteWith(urlPrefix);
@@ -7477,7 +7523,10 @@ function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix) {
     }
   });
   return {
-    html: (text3) => md.renderInline(text3),
+    html: (text3) => {
+      const v = parseVideo(text3);
+      return v ? showVideo(v) : md.renderInline(text3);
+    },
     plain: (text3) => {
       const [inline2] = md.parseInline(text3, {});
       let out = "";
@@ -7798,6 +7847,10 @@ img { max-width: 100%; height: auto; border-radius: 4px; }
 .quote cite { font-style: normal; }
 .quote cite a { color: var(--muted); }
 
+/* YouTube videos: a line that's just a YouTube address. */
+.video { display: block; margin: 0.5rem 0; }
+.video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 6px; background: var(--rule); }
+
 /* Lightbox: an image opened full size. */
 img.zoomable { cursor: zoom-in; }
 img.zoomable:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
@@ -7892,7 +7945,8 @@ function renderSite(site) {
   const ctx = {
     site,
     md: createInlineRenderer(site.settings.basePath),
-    mdAbs: createInlineRenderer(site.settings.baseUrl),
+    // RSS: feed readers drop video players, so videos are linked thumbnails.
+    mdAbs: createInlineRenderer(site.settings.baseUrl, site.settings.baseUrl, "link"),
     base: site.settings.basePath
   };
   const files = [];

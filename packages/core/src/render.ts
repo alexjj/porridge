@@ -27,7 +27,8 @@ export function renderSite(site: Site): OutputFile[] {
   const ctx: Ctx = {
     site,
     md: createInlineRenderer(site.settings.basePath),
-    mdAbs: createInlineRenderer(site.settings.baseUrl),
+    // RSS: feed readers drop video players, so videos are linked thumbnails.
+    mdAbs: createInlineRenderer(site.settings.baseUrl, site.settings.baseUrl, "link"),
     base: site.settings.basePath,
   };
   const files: OutputFile[] = [];

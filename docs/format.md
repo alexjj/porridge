@@ -251,7 +251,7 @@ Published at `/<slug>/`.
   same rule as entry bodies).
 - `isDraft` / `isComment` nodes are skipped with their children.
 
-## 6. Images
+## 6. Images and videos
 
 - Uploaded via the editor to `images/YYYY/MM/<name>.<ext>`: resized in the
   browser to at most 2000px on the long side and encoded as WebP (JPEG in
@@ -268,6 +268,17 @@ Published at `/<slug>/`.
   underneath it. Images with no description have no caption.
 - On the site, clicking an image (or pressing Enter on it) opens it full size
   in a lightbox, with its caption. Images that are links keep their link.
+
+### Videos
+
+- A node whose whole text is a YouTube address (`https://youtu.be/ID`,
+  `https://www.youtube.com/watch?v=ID`, `/shorts/ID`, `/live/ID`, `/embed/ID`;
+  `www.`/`m.` optional; optionally in `<angle brackets>`) shows the video.
+  A start time (`t=90`, `t=1m30s` or `start=90`) is kept.
+- On the site it's a 16:9 player from `youtube-nocookie.com` (no cookies until
+  played), lazy-loaded, the full width of the column. In RSS it's the video's
+  thumbnail linking to YouTube. A YouTube address within other text is just
+  text.
 
 ## 7. Errors and warnings
 

@@ -188,3 +188,13 @@ test("rendered Markdown shows when not editing, raw text when editing", async ({
   await page.locator(".rendered", { hasText: "see" }).click({ position: { x: 5, y: 5 } });
   await expect(editing(page)).toHaveValue("see [the site](https://example.com)");
 });
+
+test("a YouTube address on its own line shows the video's thumbnail", async ({ page }) => {
+  await newEntry(page);
+  await page.keyboard.type("https://youtu.be/C-TY_XSMboY");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".rendered .video-thumb img")).toHaveAttribute("src", "https://i.ytimg.com/vi/C-TY_XSMboY/hqdefault.jpg");
+  // Click it to edit the address again.
+  await page.locator(".rendered .video-thumb").click();
+  await expect(editing(page)).toHaveValue("https://youtu.be/C-TY_XSMboY");
+});

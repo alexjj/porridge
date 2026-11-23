@@ -31,6 +31,7 @@ golden files for the renderer tests.
 | §4 `isDraft` on an entry | 18th November 21:05 |
 | §4 Quote entry with a source (no title) | 2nd November |
 | §4 Quote as a nested body line, no source | "Starting porridge" — "Inline HTML is allowed" |
+| §6 YouTube address on its own line → video (RSS: linked thumbnail); mid-sentence stays text | "Starting porridge" — "Inline HTML is allowed" |
 | §4 `list="bullets"` on a titled entry | 17th November 07:30 |
 | §4 `isComment` on a body node and a list item | "Starting porridge" |
 | §4 Titled entry with all children removed | 31st October |

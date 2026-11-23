@@ -66,7 +66,8 @@ export class Workspace {
   defaultSiteBase = $state("/");
   /** Where `/images/…` loads from in the editor (the repo, once connected). */
   imageBase = $state("/");
-  md = $derived(createInlineRenderer(this.siteBase, this.imageBase));
+  // Videos show as thumbnails in the outline: a player would get in the way of editing.
+  md = $derived(createInlineRenderer(this.siteBase, this.imageBase, "thumbnail"));
   /** Called after any content change. */
   onChange: (() => void) | undefined;
   /** Images added in this browser (path → object URL), shown before and just after upload. */

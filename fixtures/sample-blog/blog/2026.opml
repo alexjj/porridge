@@ -25,6 +25,8 @@
           <outline text="Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;https://example.com&gt;.">
             <outline text="A line under a line, without list=&quot;bullets&quot;, is just another paragraph."/>
             <outline text="&gt;A quote inside a post, with no source."/>
+            <outline text="https://youtu.be/C-TY_XSMboY?t=1m30s"/>
+            <outline text="A YouTube address mid-sentence, https://www.youtube.com/watch?v=6NzAn238PPE, stays text."/>
           </outline>
         </outline>
         <outline text="A one-paragraph post with no children, so no title. It still gets an anchor and a # permalink." created="Wed, 18 Nov 2026 09:12:03 GMT"/>

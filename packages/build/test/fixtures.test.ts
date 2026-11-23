@@ -146,6 +146,15 @@ describe("rendered sample blog", async () => {
     expect(file("rss.xml")).toContain(`&lt;img src=&quot;https://example.github.io/my-blog/images/2026/11/porridge.jpg&quot;`);
   });
 
+  it("embeds a YouTube video on its own line, and links its thumbnail in RSS", () => {
+    const day = file("2026/11/18/index.html");
+    expect(day).toContain(`<p><span class="video"><iframe src="https://www.youtube-nocookie.com/embed/C-TY_XSMboY?start=90"`);
+    expect(day).toContain(`<p>A YouTube address mid-sentence, https://www.youtube.com/watch?v=6NzAn238PPE, stays text.</p>`);
+    expect(file("rss.xml")).toContain(
+      `&lt;a href=&quot;https://www.youtube.com/watch?v=C-TY_XSMboY&amp;amp;t=90s&quot;&gt;&lt;img src=&quot;https://i.ytimg.com/vi/C-TY_XSMboY/hqdefault.jpg&quot;`,
+    );
+  });
+
   it("renders quotes with their source", () => {
     expect(file("2026/11/02/index.html")).toContain(
       `<article class="entry" id="a120000">\n<blockquote class="quote">\n<p><a class="permalink" href="/my-blog/2026/11/02/#a120000"`,

@@ -1,6 +1,13 @@
 // Inline Markdown for node text.
 
 import MarkdownIt from "markdown-it";
+import { parseVideo, videoEmbed, videoLink, videoThumbnail } from "./video.js";
+
+/**
+ * How a line that's just a YouTube address shows: the player (site), a
+ * linked thumbnail (RSS), or a thumbnail (editor).
+ */
+export type VideoStyle = "embed" | "link" | "thumbnail";
 
 export interface InlineRenderer {
   /** Render a node's text to inline HTML. */
@@ -15,7 +22,8 @@ export interface InlineRenderer {
  * for RSS. Images can use a different prefix (the editor loads them from the
  * repo).
  */
-export function createInlineRenderer(urlPrefix: string, imagePrefix = urlPrefix): InlineRenderer {
+export function createInlineRenderer(urlPrefix: string, imagePrefix = urlPrefix, video: VideoStyle = "embed"): InlineRenderer {
+  const showVideo = { embed: videoEmbed, link: videoLink, thumbnail: videoThumbnail }[video];
   const md = new MarkdownIt({ html: true, linkify: false, typographer: false });
   const rewriteWith = (prefix: string) => (url: string) =>
     url.startsWith("/") && !url.startsWith("//") ? prefix + url.slice(1) : url;
@@ -47,7 +55,10 @@ export function createInlineRenderer(urlPrefix: string, imagePrefix = urlPrefix)
   });
 
   return {
-    html: (text) => md.renderInline(text),
+    html: (text) => {
+      const v = parseVideo(text);
+      return v ? showVideo(v) : md.renderInline(text);
+    },
     plain: (text) => {
       const [inline] = md.parseInline(text, {});
       let out = "";

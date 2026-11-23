@@ -57,6 +57,11 @@ export async function renderPreview(
     const html = page.content
       .replace(/<link rel="stylesheet"[^>]*>/, `<style>${STYLESHEET}\na { pointer-events: none; }</style>`)
       .replace(/<header class="site-header">[\s\S]*?<\/header>/, "")
+      // The preview is sandboxed, so a video player couldn't run: show its thumbnail.
+      .replace(
+        /<span class="video"><iframe src="https:\/\/www\.youtube-nocookie\.com\/embed\/([\w-]{11})[^"]*"[^>]*><\/iframe><\/span>/g,
+        (_m, id: string) => `<span class="video"><img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="YouTube video"></span>`,
+      )
       // Images live in the browser (not uploaded yet) or in the repo, not at the preview's address.
       .replace(/src="\/(images\/[^"]+)"/g, (m, path: string) =>
         localImages[path] ? `src="${localImages[path]}"` : `src="${imageBase}${path}"`,
