@@ -103,9 +103,17 @@ any other value means false.
 | `porridge:homeDays` | `10` | Number of days shown in full on the home page |
 | `porridge:rssItems` | `25` | Number of entries in the feed |
 | `porridge:language` | `en` | `<html lang>` and RSS language |
+| `porridge:theme` | `porridge` | The site's colours: `porridge`, `solarized`, `nord`, `gruvbox`, `catppuccin`, `rose-pine`, or `custom`. Each has a light and a dark version (chosen by the reader's device). An unknown name is a warning and uses the default |
+| `porridge:colors` | the default's | With `custom`: light colours as `name: value` pairs separated by `;`, e.g. `bg: #fffaf0; link: #8a4b1f`. Names: `bg`, `text`, `muted`, `rule`, `link`, `link-hover`. Values are hex, a CSS colour name, or `rgb()`/`hsl()`/`oklch()`/`oklab()`/`lab()`/`lch()`. Any not given use the default theme's; an unknown name or a value that isn't a colour is a warning and is ignored |
+| `porridge:darkColors` | the default's | The same, for dark mode |
 
 The body contains only `include` nodes, one per year, **newest first**. Their
 `text` is the year. The editor maintains this list.
+
+A theme other than the default adds a `:root` block (and a
+`prefers-color-scheme: dark` one) after the stylesheet, setting the six colour
+variables. The stylesheet's `?v=` fingerprint is of the whole file, so a
+change of colours reaches readers straight away.
 
 ## 4. Year files — `blog/YYYY.opml`
 

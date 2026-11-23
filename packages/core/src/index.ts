@@ -2,6 +2,7 @@ export * from "./opml.js";
 export * from "./dates.js";
 export * from "./markdown.js";
 export * from "./video.js";
+export * from "./palettes.js";
 export * from "./site.js";
 export * from "./render.js";
 export { SCRIPT, STYLESHEET } from "./theme.js";

@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildSite, loadSite, PorridgeError, type Site } from "@porridge/core";
+import { buildSite, loadSite, PorridgeError, THEMES, type Site } from "@porridge/core";
 import { buildToDirectory, nodeSource } from "../src/index.js";
 
 const repo = join(import.meta.dirname, "../../..");
@@ -28,6 +28,7 @@ describe("sample blog", () => {
       homeDays: 10,
       rssItems: 25,
       language: "en-gb",
+      theme: { name: "porridge", light: THEMES[0]!.light, dark: THEMES[0]!.dark },
     });
   });
 

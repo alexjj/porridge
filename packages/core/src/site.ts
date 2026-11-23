@@ -14,6 +14,7 @@ import {
   type Outline,
 } from "./opml.js";
 import { isValidDay, isValidMonth, isValidTimezone, parseRfc822, zonedTimeCode } from "./dates.js";
+import { DEFAULT_THEME, parsePalette, themeByName, type Palette } from "./palettes.js";
 
 /** Where content comes from: the filesystem in the builder, GitHub in the editor. */
 export interface ContentSource {
@@ -52,6 +53,8 @@ export interface Settings {
   homeDays: number;
   rssItems: number;
   language: string;
+  /** The site's colours: a preset, or "custom" ones from porridge:colors / porridge:darkColors. */
+  theme: { name: string; light: Palette; dark: Palette };
 }
 
 export interface Entry {
@@ -93,6 +96,25 @@ export interface Site {
 
 export const RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive", "search", "pagefind"];
 const SLUG = /^[a-z][a-z0-9-]*$/;
+
+/** The site's colours from porridge:theme (a preset name, or "custom"). */
+function readTheme(blog: OpmlDoc, warn: (message: string) => void): Settings["theme"] {
+  const fallback = themeByName(DEFAULT_THEME)!;
+  const name = headValue(blog, "porridge:theme") || DEFAULT_THEME;
+  if (name !== "custom") {
+    const preset = themeByName(name);
+    if (preset) return { name, light: preset.light, dark: preset.dark };
+    warn(`Unknown colour theme "${name}", using the default.`);
+    return { name: DEFAULT_THEME, light: fallback.light, dark: fallback.dark };
+  }
+  // Custom: any colour not given falls back to the default theme's.
+  const read = (setting: string, base: Palette): Palette => {
+    const { palette, problems } = parsePalette(headValue(blog, setting) ?? "");
+    for (const p of problems) warn(`${setting}: ${p}; using the default for it.`);
+    return { ...base, ...palette };
+  };
+  return { name, light: read("porridge:colors", fallback.light), dark: read("porridge:darkColors", fallback.dark) };
+}
 
 /** The template's placeholder address, which means "not set yet". */
 export function isPlaceholderUrl(url: string): boolean {
@@ -234,6 +256,7 @@ function readSettings(
     homeDays: positiveInt("homeDays", 10),
     rssItems: positiveInt("rssItems", 25),
     language: headValue(blog, "porridge:language") || "en",
+    theme: readTheme(blog, (m) => warn(file, m)),
   };
 }
 

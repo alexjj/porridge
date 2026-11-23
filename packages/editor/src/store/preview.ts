@@ -1,7 +1,7 @@
 // Live preview: renders the page being edited with the same code as the
 // published site.
 
-import { loadSite, PorridgeError, renderSite, STYLESHEET, type ContentSource } from "@porridge/core";
+import { loadSite, PorridgeError, renderSite, siteStylesheet, STYLESHEET, type ContentSource } from "@porridge/core";
 import { dayOf } from "../model/calendar.js";
 import { isYearFile, type EFile } from "../model/tree.js";
 
@@ -55,7 +55,7 @@ export async function renderPreview(
       return { html: message("This page isn't published (it may be a draft or have an invalid name)."), label: "", warnings: [] };
     }
     const html = page.content
-      .replace(/<link rel="stylesheet"[^>]*>/, `<style>${STYLESHEET}\na { pointer-events: none; }</style>`)
+      .replace(/<link rel="stylesheet"[^>]*>/, `<style>${siteStylesheet(site)}\na { pointer-events: none; }</style>`)
       .replace(/<header class="site-header">[\s\S]*?<\/header>/, "")
       // The preview is sandboxed, so a video player couldn't run: show its thumbnail.
       .replace(

@@ -327,6 +327,10 @@ Deferred:
 - [x] The site address is optional: blogs built by the Action fall back to
       the repository's Pages address (`actions/configure-pages`), so the
       template has no placeholder and its own Pages site renders properly.
+- [x] Site colours in Blog settings: the default, five presets (Solarized,
+      Nord, Gruvbox, Catppuccin, Rosé Pine; each light and dark, text and
+      links at least 4.5:1 contrast) or custom colours
+      (`porridge:theme`, `porridge:colors`, `porridge:darkColors`).
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.

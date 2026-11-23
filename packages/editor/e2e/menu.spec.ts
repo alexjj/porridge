@@ -222,3 +222,34 @@ test("Children as bullets is set from the menu and shows in the preview", async 
   await expect(hello.locator(":scope > .row .tag")).toHaveCount(0);
   await expect(frame.locator("article.entry ul")).toHaveCount(0);
 });
+
+test("the site's colours are chosen in Blog settings and show in the preview", async ({ page }) => {
+  await page.getByRole("tab", { name: "Preview" }).click();
+  const body = page.frameLocator(".preview iframe").locator("body");
+  const bg = () => body.evaluate((b) => getComputedStyle(b).backgroundColor);
+  await expect.poll(bg).toBe("rgb(251, 250, 246)");
+
+  await menu(page, "Blog settings…");
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  await expect(dialog.getByRole("radio", { name: /Porridge/ })).toBeChecked();
+  await dialog.getByText("Nord", { exact: true }).click();
+  await expect(dialog.getByRole("radio", { name: /Nord/ })).toBeChecked();
+  await expect.poll(bg).toBe("rgb(236, 239, 244)");
+
+  // Custom starts from the colours showing now.
+  await dialog.getByText("Custom", { exact: true }).click();
+  const light = dialog.getByLabel("Background, light, as text");
+  await expect(light).toHaveValue("#eceff4");
+  await expect(dialog.getByLabel("Background, dark, as text")).toHaveValue("#2e3440");
+  await light.fill("#ff0000");
+  await light.press("Enter");
+  await expect.poll(bg).toBe("rgb(255, 0, 0)");
+  // Anything that isn't a colour is refused.
+  await light.fill("red; } body { display: none");
+  await light.press("Enter");
+  await expect(light).toHaveValue("#ff0000");
+
+  // Back to the default.
+  await dialog.getByText("Porridge", { exact: true }).click();
+  await expect.poll(bg).toBe("rgb(251, 250, 246)");
+});

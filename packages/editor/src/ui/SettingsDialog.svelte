@@ -1,5 +1,6 @@
 <script lang="ts">
   import Modal from "./Modal.svelte";
+  import { COLOR_TOKENS, DEFAULT_THEME, formatPalette, isSafeColor, parsePalette, THEMES, themeByName, type ColorToken, type Palette } from "@porridge/core";
   import { pagesUrl, parseRepo, type Connection } from "../github/api.js";
   import { fileHead } from "../model/tree.js";
   import type { Remote } from "../store/remote.svelte.js";
@@ -33,6 +34,47 @@
     if (v.includes("YOUR-USERNAME") || v.includes("YOUR-REPO")) return "Replace the placeholder with your blog's GitHub Pages address.";
     return "";
   });
+
+  // ---- Colours ---------------------------------------------------------------
+
+  const COLOR_LABELS: Record<ColorToken, string> = {
+    bg: "Background",
+    text: "Text",
+    muted: "Quiet text",
+    rule: "Lines",
+    link: "Links",
+    "link-hover": "Links (pointed at)",
+  };
+  const defaultTheme = themeByName(DEFAULT_THEME)!;
+  const themeName = $derived(value("porridge:theme") || DEFAULT_THEME);
+  const custom = $derived(themeName === "custom");
+  const palette = (setting: string, base: Palette): Palette => ({ ...base, ...parsePalette(value(setting)).palette });
+  const customLight = $derived(palette("porridge:colors", defaultTheme.light));
+  const customDark = $derived(palette("porridge:darkColors", defaultTheme.dark));
+
+  function chooseTheme(name: string) {
+    if (name === "custom") {
+      // Start from the colours showing now, unless custom ones were set before.
+      const from = themeByName(themeName) ?? defaultTheme;
+      if (!value("porridge:colors")) ws.setHead("blog.opml", "porridge:colors", formatPalette(from.light));
+      if (!value("porridge:darkColors")) ws.setHead("blog.opml", "porridge:darkColors", formatPalette(from.dark));
+    }
+    ws.setHead("blog.opml", "porridge:theme", name === DEFAULT_THEME ? "" : name);
+  }
+
+  function setColor(mode: "light" | "dark", token: ColorToken, color: string) {
+    const setting = mode === "light" ? "porridge:colors" : "porridge:darkColors";
+    const current = mode === "light" ? customLight : customDark;
+    ws.setHead("blog.opml", setting, formatPalette({ ...current, [token]: color.trim() }));
+  }
+
+  /** `<input type="color">` only takes #rrggbb. */
+  function hex6(color: string): string {
+    const c = color.trim().toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(c)) return c;
+    if (/^#[0-9a-f]{3}$/.test(c)) return "#" + [...c.slice(1)].map((d) => d + d).join("");
+    return "#000000";
+  }
 
   // ---- GitHub ---------------------------------------------------------------
 
@@ -119,6 +161,66 @@
           <label>Entries in the feed <input type="number" min="1" value={value("porridge:rssItems")} oninput={set("porridge:rssItems")} placeholder="25" /></label>
         </div>
         <label>Language <input value={value("porridge:language")} oninput={set("porridge:language")} placeholder="en" /></label>
+        <fieldset class="colours">
+          <legend>Colours</legend>
+          <span class="field-hint">Each has a light and a dark version; readers see the one that matches their device.</span>
+          <div class="theme-grid">
+            {#each THEMES as t (t.name)}
+              <label class="theme-card" class:chosen={themeName === t.name}>
+                <input type="radio" name="theme" value={t.name} checked={themeName === t.name} onchange={() => chooseTheme(t.name)} />
+                <span class="theme-sample" aria-hidden="true">
+                  {#each [t.light, t.dark] as p, i (i)}
+                    <span class="theme-half" style:background={p.bg} style:color={p.text} style:border-color={p.rule}>
+                      Aa <span style:color={p.link}>link</span> <span style:color={p.muted}>·</span>
+                    </span>
+                  {/each}
+                </span>
+                <span class="theme-name">{t.label}</span>
+                <span class="theme-desc">{t.description}</span>
+              </label>
+            {/each}
+            <label class="theme-card" class:chosen={custom}>
+              <input type="radio" name="theme" value="custom" checked={custom} onchange={() => chooseTheme("custom")} />
+              <span class="theme-sample" aria-hidden="true">
+                {#each [customLight, customDark] as p, i (i)}
+                  <span class="theme-half" style:background={p.bg} style:color={p.text} style:border-color={p.rule}>
+                    Aa <span style:color={p.link}>link</span> <span style:color={p.muted}>·</span>
+                  </span>
+                {/each}
+              </span>
+              <span class="theme-name">Custom</span>
+              <span class="theme-desc">Your own colours</span>
+            </label>
+          </div>
+          {#if custom}
+            <div class="colour-table" role="group" aria-label="Custom colours">
+              <span></span><span class="colour-head">Light</span><span class="colour-head">Dark</span>
+              {#each COLOR_TOKENS as token (token)}
+                <span class="colour-label">{COLOR_LABELS[token]}</span>
+                {#each [["light", customLight], ["dark", customDark]] as const as [mode, p] (mode)}
+                  <span class="colour-pick">
+                    <input
+                      type="color"
+                      value={hex6(p[token])}
+                      oninput={(e) => setColor(mode, token, e.currentTarget.value)}
+                      aria-label="{COLOR_LABELS[token]}, {mode}"
+                    />
+                    <input
+                      class="colour-text"
+                      value={p[token]}
+                      onchange={(e) => {
+                        if (isSafeColor(e.currentTarget.value)) setColor(mode, token, e.currentTarget.value);
+                        else e.currentTarget.value = p[token];
+                      }}
+                      spellcheck="false"
+                      aria-label="{COLOR_LABELS[token]}, {mode}, as text"
+                    />
+                  </span>
+                {/each}
+              {/each}
+            </div>
+          {/if}
+        </fieldset>
         <p class="field-hint">Changes are kept as you type. Save or Publish to put them on GitHub.</p>
       </div>
     {:else}

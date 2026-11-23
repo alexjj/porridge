@@ -7543,6 +7543,87 @@ function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix, video = "embed
   };
 }
 
+// packages/core/src/palettes.ts
+var COLOR_TOKENS = ["bg", "text", "muted", "rule", "link", "link-hover"];
+var DEFAULT_THEME = "porridge";
+var THEMES = [
+  {
+    name: "porridge",
+    label: "Porridge",
+    description: "Warm paper and cinnamon (the default)",
+    light: { bg: "#fbfaf6", text: "#24221e", muted: "#7a756c", rule: "#e6e1d6", link: "#8a4b1f", "link-hover": "#5e3110" },
+    dark: { bg: "#1c1b18", text: "#e9e5dc", muted: "#9b958a", rule: "#34322d", link: "#e0a46e", "link-hover": "#f3c79c" }
+  },
+  {
+    // https://ethanschoonover.com/solarized/
+    name: "solarized",
+    label: "Solarized",
+    description: "Classic cream and teal",
+    light: { bg: "#fdf6e3", text: "#073642", muted: "#586e75", rule: "#eee8d5", link: "#b05000", "link-hover": "#073642" },
+    dark: { bg: "#002b36", text: "#eee8d5", muted: "#93a1a1", rule: "#073642", link: "#2aa198", "link-hover": "#b58900" }
+  },
+  {
+    // https://www.nordtheme.com/docs/colors-and-palettes
+    name: "nord",
+    label: "Nord",
+    description: "Cool Arctic blues",
+    light: { bg: "#eceff4", text: "#2e3440", muted: "#4c566a", rule: "#d8dee9", link: "#4c6a91", "link-hover": "#2e3440" },
+    dark: { bg: "#2e3440", text: "#eceff4", muted: "#a7b1c2", rule: "#434c5e", link: "#88c0d0", "link-hover": "#8fbcbb" }
+  },
+  {
+    // https://github.com/morhetz/gruvbox
+    name: "gruvbox",
+    label: "Gruvbox",
+    description: "Warm and retro",
+    light: { bg: "#fbf1c7", text: "#3c3836", muted: "#665c54", rule: "#ebdbb2", link: "#af3a03", "link-hover": "#9d0006" },
+    dark: { bg: "#282828", text: "#ebdbb2", muted: "#a89984", rule: "#3c3836", link: "#fe8019", "link-hover": "#fabd2f" }
+  },
+  {
+    // https://catppuccin.com/palette (Latte and Mocha)
+    name: "catppuccin",
+    label: "Catppuccin",
+    description: "Soft pastels",
+    light: { bg: "#eff1f5", text: "#4c4f69", muted: "#5c5f77", rule: "#ccd0da", link: "#8839ef", "link-hover": "#4c4f69" },
+    dark: { bg: "#1e1e2e", text: "#cdd6f4", muted: "#a6adc8", rule: "#313244", link: "#cba6f7", "link-hover": "#f5c2e7" }
+  },
+  {
+    // https://rosepinetheme.com/palette (Dawn and Main)
+    name: "rose-pine",
+    label: "Ros\xE9 Pine",
+    description: "Muted rose and pine",
+    light: { bg: "#faf4ed", text: "#575279", muted: "#6e6a86", rule: "#dfdad9", link: "#286983", "link-hover": "#575279" },
+    dark: { bg: "#191724", text: "#e0def4", muted: "#908caa", rule: "#403d52", link: "#ebbcba", "link-hover": "#f6c177" }
+  }
+];
+var themeByName = (name) => THEMES.find((t) => t.name === name);
+function isSafeColor(value) {
+  return /^(#[0-9a-f]{3,8}|[a-z]+|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([0-9a-z.,%\s/+-]*\))$/i.test(value.trim());
+}
+function parsePalette(value) {
+  const palette = {};
+  const problems = [];
+  for (const part of value.split(";")) {
+    if (!part.trim()) continue;
+    const [rawKey, ...rest] = part.split(":");
+    const key = rawKey.trim();
+    const color = rest.join(":").trim();
+    if (!COLOR_TOKENS.includes(key)) problems.push(`unknown colour "${rawKey.trim()}"`);
+    else if (!isSafeColor(color)) problems.push(`"${color}" isn't a colour`);
+    else palette[key] = color;
+  }
+  return { palette, problems };
+}
+function paletteCss(light, dark) {
+  const vars = (p) => COLOR_TOKENS.map((k) => `--${k}: ${p[k]};`).join(" ");
+  return `
+/* Colours chosen in Blog settings */
+:root { ${vars(light)} }
+@media (prefers-color-scheme: dark) {
+  :root { ${vars(dark)} }
+}
+`;
+}
+
 // packages/core/src/site.ts
 var PorridgeError = class extends Error {
   constructor(message, file, line) {
@@ -7556,6 +7637,22 @@ var PorridgeError = class extends Error {
 };
 var RESERVED_SLUGS = ["images", "rss", "index", "assets", "archive", "search", "pagefind"];
 var SLUG = /^[a-z][a-z0-9-]*$/;
+function readTheme(blog, warn) {
+  const fallback = themeByName(DEFAULT_THEME);
+  const name = headValue(blog, "porridge:theme") || DEFAULT_THEME;
+  if (name !== "custom") {
+    const preset = themeByName(name);
+    if (preset) return { name, light: preset.light, dark: preset.dark };
+    warn(`Unknown colour theme "${name}", using the default.`);
+    return { name: DEFAULT_THEME, light: fallback.light, dark: fallback.dark };
+  }
+  const read = (setting, base) => {
+    const { palette, problems } = parsePalette(headValue(blog, setting) ?? "");
+    for (const p of problems) warn(`${setting}: ${p}; using the default for it.`);
+    return { ...base, ...palette };
+  };
+  return { name, light: read("porridge:colors", fallback.light), dark: read("porridge:darkColors", fallback.dark) };
+}
 function isPlaceholderUrl(url) {
   return /YOUR-USERNAME|YOUR-REPO/.test(url);
 }
@@ -7657,7 +7754,8 @@ function readSettings(blog, warn, baseUrlOverride, fallbackBaseUrl) {
     timezone,
     homeDays: positiveInt("homeDays", 10),
     rssItems: positiveInt("rssItems", 25),
-    language: headValue(blog, "porridge:language") || "en"
+    language: headValue(blog, "porridge:language") || "en",
+    theme: readTheme(blog, (m) => warn(file, m))
   };
 }
 function loadYear(doc, file, timezone, daysByDate, warn) {
@@ -7954,15 +8052,20 @@ function fingerprint(text3) {
   }
   return (h >>> 0).toString(16).padStart(8, "0");
 }
-var STYLE_VERSION = fingerprint(STYLESHEET);
 var SCRIPT_VERSION = fingerprint(SCRIPT);
+function siteStylesheet(site) {
+  const t = site.settings.theme;
+  return t.name === DEFAULT_THEME ? STYLESHEET : STYLESHEET + paletteCss(t.light, t.dark);
+}
 function renderSite(site) {
+  const css = siteStylesheet(site);
   const ctx = {
     site,
     md: createInlineRenderer(site.settings.basePath),
     // RSS: feed readers drop video players, so videos are linked thumbnails.
     mdAbs: createInlineRenderer(site.settings.baseUrl, site.settings.baseUrl, "link"),
-    base: site.settings.basePath
+    base: site.settings.basePath,
+    styleVersion: fingerprint(css)
   };
   const files = [];
   const add = (path, content) => files.push({ path, content });
@@ -7977,7 +8080,7 @@ function renderSite(site) {
   for (const page of site.pages) add(`${page.slug}/index.html`, renderPage(ctx, page));
   add("rss.xml", renderRss(ctx));
   add("404.html", render404(ctx));
-  add("style.css", STYLESHEET);
+  add("style.css", css);
   add("porridge.js", SCRIPT);
   return files;
 }
@@ -8243,7 +8346,7 @@ function layout(ctx, opts) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
-<link rel="stylesheet" href="${ctx.base}style.css?v=${STYLE_VERSION}">
+<link rel="stylesheet" href="${ctx.base}style.css?v=${ctx.styleVersion}">
 <script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">

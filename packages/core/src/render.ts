@@ -6,6 +6,7 @@ import { createInlineRenderer, type InlineRenderer } from "./markdown.js";
 import { attr, publishedChildren, type Outline } from "./opml.js";
 import type { Day, Entry, Page, Site } from "./site.js";
 import { SCRIPT, STYLESHEET } from "./theme.js";
+import { DEFAULT_THEME, paletteCss } from "./palettes.js";
 
 /** Short fingerprint of a file's contents (FNV-1a), so browsers fetch a changed file straight away. */
 function fingerprint(text: string): string {
@@ -19,7 +20,6 @@ function fingerprint(text: string): string {
 
 // GitHub Pages lets browsers cache files for a while; a new ?v= on every
 // change means pages never show with an old stylesheet or script.
-const STYLE_VERSION = fingerprint(STYLESHEET);
 const SCRIPT_VERSION = fingerprint(SCRIPT);
 
 export interface OutputFile {
@@ -36,15 +36,25 @@ interface Ctx {
   mdAbs: InlineRenderer;
   /** Prefix for links within the site. */
   base: string;
+  /** Fingerprint of this site's stylesheet (its colours included). */
+  styleVersion: string;
+}
+
+/** The stylesheet: the theme, plus the blog's colours if they aren't the default. */
+export function siteStylesheet(site: Site): string {
+  const t = site.settings.theme;
+  return t.name === DEFAULT_THEME ? STYLESHEET : STYLESHEET + paletteCss(t.light, t.dark);
 }
 
 export function renderSite(site: Site): OutputFile[] {
+  const css = siteStylesheet(site);
   const ctx: Ctx = {
     site,
     md: createInlineRenderer(site.settings.basePath),
     // RSS: feed readers drop video players, so videos are linked thumbnails.
     mdAbs: createInlineRenderer(site.settings.baseUrl, site.settings.baseUrl, "link"),
     base: site.settings.basePath,
+    styleVersion: fingerprint(css),
   };
   const files: OutputFile[] = [];
   const add = (path: string, content: string) => files.push({ path, content });
@@ -63,7 +73,7 @@ export function renderSite(site: Site): OutputFile[] {
   for (const page of site.pages) add(`${page.slug}/index.html`, renderPage(ctx, page));
   add("rss.xml", renderRss(ctx));
   add("404.html", render404(ctx));
-  add("style.css", STYLESHEET);
+  add("style.css", css);
   add("porridge.js", SCRIPT);
   return files;
 }
@@ -415,7 +425,7 @@ function layout(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
-<link rel="stylesheet" href="${ctx.base}style.css?v=${STYLE_VERSION}">
+<link rel="stylesheet" href="${ctx.base}style.css?v=${ctx.styleVersion}">
 <script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
 <meta name="generator" content="porridge">
