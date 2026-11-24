@@ -231,7 +231,7 @@
       {#if remote.conn}
         <p class="connected">Connected to <strong>{remote.repoName}</strong> ({remote.conn.branch}).</p>
       {:else}
-        <p>Connect a GitHub repository made from the porridge template. The editor reads and writes it directly from this browser.</p>
+        <p>Connect a GitHub repository made from the Porridge template. The editor reads and writes it directly from this browser.</p>
       {/if}
       <label>Repository <input bind:value={repo} placeholder="you/your-blog" autocomplete="off" spellcheck="false" disabled={!!remote.conn} /></label>
       <div class="row-2">

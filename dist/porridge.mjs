@@ -7857,7 +7857,7 @@ function describe(node) {
 }
 
 // packages/core/src/theme.ts
-var SCRIPT = `// Made by porridge: images open full size when clicked.
+var SCRIPT = `// Made by Porridge: images open full size when clicked.
 (function () {
   var box;
   function open(img) {
@@ -8313,7 +8313,7 @@ function renderRss(ctx) {
     `    <description>${escXml(settings.description)}</description>`,
     `    <language>${escXml(settings.language)}</language>`,
     `    <atom:link href="${escXml(settings.baseUrl)}rss.xml" rel="self" type="application/rss+xml"/>`,
-    `    <generator>porridge</generator>`,
+    `    <generator>Porridge</generator>`,
     ...entries[0] ? [`    <lastBuildDate>${pubDate(entries[0])}</lastBuildDate>`] : [],
     ...items,
     `  </channel>`,
@@ -8349,7 +8349,7 @@ function layout(ctx, opts) {
 <link rel="stylesheet" href="${ctx.base}style.css?v=${ctx.styleVersion}">
 <script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
-<meta name="generator" content="porridge">
+<meta name="generator" content="Porridge">
 ${opts.head ? `${opts.head}
 ` : ""}</head>
 <body>
@@ -8366,7 +8366,7 @@ ${s.description ? `<p class="site-description">${esc(s.description)}</p>
 ${opts.body}
 </main>
 <footer class="site-footer">
-<p>${owner}<a href="${ctx.base}rss.xml">RSS</a> \xB7 Made with <a href="https://github.com/alexjj/porridge">porridge</a></p>
+<p>${owner}<a href="${ctx.base}rss.xml">RSS</a> \xB7 Made with <a href="https://github.com/alexjj/porridge">Porridge</a></p>
 </footer>
 </body>
 </html>
@@ -8442,7 +8442,7 @@ async function exists(path) {
 // packages/build/src/cli.ts
 var USAGE = `Usage: porridge build [content-dir] [output-dir] [--base-url URL] [--fallback-base-url URL]
 
-Builds a porridge blog into a static site.
+Builds a Porridge blog into a static site.
 
   content-dir      folder containing blog.opml (default: .)
   output-dir       where to write the site; replaced on each build (default: _site)

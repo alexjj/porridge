@@ -1,5 +1,5 @@
-name: porridge build
-description: Build a porridge blog (OPML in a git repo) into a static site.
+name: Porridge build
+description: Build a Porridge blog (OPML in a git repo) into a static site.
 branding:
   icon: book-open
   color: orange

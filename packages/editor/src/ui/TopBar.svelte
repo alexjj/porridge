@@ -75,7 +75,7 @@
   <button class="icon only-narrow" aria-label="Files" onclick={ontogglesidebar}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" /></svg>
   </button>
-  <span class="brand">porridge</span>
+  <span class="brand">Porridge</span>
   <span class="status" class:error={status.tone === "error"} class:good={status.tone === "good"} role="status" title={remote.error || ws.error}>
     {#if status.href}<a href={status.href} target="_blank" rel="noopener">{status.text}</a>{:else}{status.text}{/if}
   </span>

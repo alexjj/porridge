@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const STARTER_TAIL = `    Hello, world
-      This is the first post on a new porridge blog.
+      This is the first post on a new Porridge blog.
       Edit or delete it, then write your own.`;
 
 test("New entry starts a line at the top of today", async ({ page }) => {
@@ -58,13 +58,13 @@ test("Alt-Shift-arrows move a line among its siblings", async ({ page }) => {
   await page.getByText("Edit or delete it").click();
   await page.keyboard.press("Alt+Shift+ArrowUp");
   expect(await outline(page)).toContain(
-    "      Edit or delete it, then write your own.|\n      This is the first post on a new porridge blog.",
+    "      Edit or delete it, then write your own.|\n      This is the first post on a new Porridge blog.",
   );
   // Already first: stays put.
   await page.keyboard.press("Alt+Shift+ArrowUp");
   await page.keyboard.press("Alt+Shift+ArrowDown");
   expect(await outline(page)).toContain(
-    "      This is the first post on a new porridge blog.\n      Edit or delete it, then write your own.|",
+    "      This is the first post on a new Porridge blog.\n      Edit or delete it, then write your own.|",
   );
 });
 
@@ -142,7 +142,7 @@ test("collapse, expand and zoom", async ({ page }) => {
   await page.keyboard.press("Control+]");
   await expect(page.locator(".doc-title")).toHaveText("Hello, world");
   await expect(page.locator(".crumbs")).toHaveText(/2026\s*›\s*November 2026\s*›\s*18th November/);
-  expect(await outline(page)).toBe("This is the first post on a new porridge blog.\nEdit or delete it, then write your own.");
+  expect(await outline(page)).toBe("This is the first post on a new Porridge blog.\nEdit or delete it, then write your own.");
 
   await page.getByText("This is the first post").click();
   await page.keyboard.press("Control+[");

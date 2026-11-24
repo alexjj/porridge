@@ -1,11 +1,11 @@
 # CLAUDE.md
 
-Notes for anyone (human or Claude) working on porridge. Read this first, then
+Notes for anyone (human or Claude) working on Porridge. Read this first, then
 `docs/format.md` (the file format, the source of truth for what the builder
 and editor must agree on) and `docs/PLAN.md` (what's built, what's next, and
 decisions already made).
 
-## What porridge is
+## What Porridge is
 
 An outliner for writing a daily blog, in the spirit of Drummer and Dynalist.
 

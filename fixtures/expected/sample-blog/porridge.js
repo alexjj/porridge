@@ -1,4 +1,4 @@
-// Made by porridge: images open full size when clicked.
+// Made by Porridge: images open full size when clicked.
 (function () {
   var box;
   function open(img) {

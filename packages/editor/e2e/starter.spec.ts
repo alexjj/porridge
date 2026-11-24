@@ -7,7 +7,7 @@ import { openEditor, openFile } from "./helpers.js";
 
 test("a first visit shows the example blog, images included", async ({ page }) => {
   await openEditor(page);
-  await expect(page.locator(".rendered", { hasText: /^Welcome to porridge$/ })).toBeVisible();
+  await expect(page.locator(".rendered", { hasText: /^Welcome to Porridge$/ })).toBeVisible();
   await expect(page.locator(".node.month > .row .label")).toHaveText(["November 2026", "October 2026"]);
 
   // The images are bundled with the editor, so they load before any repo is connected.
@@ -17,7 +17,7 @@ test("a first visit shows the example blog, images included", async ({ page }) =
   await expect(page.locator(".rendered .caption").first()).toHaveText("A bowl of porridge with a spoonful of cinnamon");
 
   // …and in the preview.
-  await page.locator(".rendered", { hasText: /^Welcome to porridge$/ }).click();
+  await page.locator(".rendered", { hasText: /^Welcome to Porridge$/ }).click();
   await page.getByRole("tab", { name: "Preview" }).click();
   const previewImg = page.frameLocator(".preview iframe").locator("img").first();
   await expect.poll(() => previewImg.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth)).toBeGreaterThan(0);

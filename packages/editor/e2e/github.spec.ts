@@ -194,7 +194,7 @@ test("connecting to a repository without a blog uploads this one", async ({ page
   await connected(page);
   expect(fake.paths()).toEqual(["README.md", "blog.opml", "blog/2026.opml", "pages/about.opml"]);
   expect(fake.read("blog/2026.opml")).toContain("Written before connecting");
-  expect(fake.lastMessage()).toBe("Add blog from porridge [skip ci]");
+  expect(fake.lastMessage()).toBe("Add blog from Porridge [skip ci]");
 });
 
 test("disconnecting keeps the blog in the browser", async ({ page }) => {

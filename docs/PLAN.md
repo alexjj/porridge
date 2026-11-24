@@ -41,7 +41,7 @@ build things in. The file format itself is specified in [format.md](format.md).
 ## 3. Architecture
 
 ```
-porridge (this repo — the app)              my-blog (content repo, one per user)
+Porridge (this repo — the app)              my-blog (content repo, one per user)
 ├─ packages/core    OPML ⇄ tree model,      ├─ blog.opml          settings + year includes
 │                   calendar logic,          ├─ blog/2026.opml     posts for 2026
 │                   Markdown, HTML render    ├─ blog/2025.opml
@@ -61,7 +61,7 @@ output can't drift apart.
 
 - OPML parse / serialize, preserving unknown attributes and head elements
   (round-trip safe: load → save with no edits keeps every element, attribute
-  and their order; a file porridge has saved once comes back byte-identical).
+  and their order; a file Porridge has saved once comes back byte-identical).
 - Tree model with operations: insert, delete, split, merge, indent, outdent,
   move up/down, all expressed as reversible operations (powers undo/redo).
 - Calendar helpers: find or create year file / month / day for a given date in
@@ -108,7 +108,7 @@ Static single-page app: TypeScript + Vite + Svelte 5. No backend.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ porridge          ● unsaved    [Save] [Publish]   ⚙          │  thin top bar
+│ Porridge          ● unsaved    [Save] [Publish]   ⚙          │  thin top bar
 ├────────────┬──────────────────────────────────┬──────────────┤
 │ blog       │ ▾ November 2026                  │ Syntax help  │
 │ ▸ 2026     │   ▾ 18th November                │ **bold**     │

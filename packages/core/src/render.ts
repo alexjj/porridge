@@ -369,7 +369,7 @@ function renderRss(ctx: Ctx): string {
     `    <description>${escXml(settings.description)}</description>`,
     `    <language>${escXml(settings.language)}</language>`,
     `    <atom:link href="${escXml(settings.baseUrl)}rss.xml" rel="self" type="application/rss+xml"/>`,
-    `    <generator>porridge</generator>`,
+    `    <generator>Porridge</generator>`,
     ...(entries[0] ? [`    <lastBuildDate>${pubDate(entries[0])}</lastBuildDate>`] : []),
     ...items,
     `  </channel>`,
@@ -428,7 +428,7 @@ function layout(
 <link rel="stylesheet" href="${ctx.base}style.css?v=${ctx.styleVersion}">
 <script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">
-<meta name="generator" content="porridge">
+<meta name="generator" content="Porridge">
 ${opts.head ? `${opts.head}\n` : ""}</head>
 <body>
 <header class="site-header">
@@ -443,7 +443,7 @@ ${s.description ? `<p class="site-description">${esc(s.description)}</p>\n` : ""
 ${opts.body}
 </main>
 <footer class="site-footer">
-<p>${owner}<a href="${ctx.base}rss.xml">RSS</a> · Made with <a href="https://github.com/alexjj/porridge">porridge</a></p>
+<p>${owner}<a href="${ctx.base}rss.xml">RSS</a> · Made with <a href="https://github.com/alexjj/porridge">Porridge</a></p>
 </footer>
 </body>
 </html>

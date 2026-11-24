@@ -4,7 +4,7 @@ import { buildToDirectory } from "./index.js";
 
 const USAGE = `Usage: porridge build [content-dir] [output-dir] [--base-url URL] [--fallback-base-url URL]
 
-Builds a porridge blog into a static site.
+Builds a Porridge blog into a static site.
 
   content-dir      folder containing blog.opml (default: .)
   output-dir       where to write the site; replaced on each build (default: _site)

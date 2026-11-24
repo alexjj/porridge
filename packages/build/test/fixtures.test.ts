@@ -197,7 +197,7 @@ describe("rendered sample blog", async () => {
     expect(about).toContain("<h2>Elsewhere</h2>");
     expect(about).toContain("<h3>Social</h3>");
     expect(about).toContain("<h4>Projects</h4>");
-    expect(about).toContain(`<li><a href="https://github.com/alexjj/porridge">porridge</a>\n<ul>\n<li>nested item</li>`);
+    expect(about).toContain(`<li><a href="https://github.com/alexjj/porridge">Porridge</a>\n<ul>\n<li>nested item</li>`);
   });
 
   it("writes RSS items newest first, titles only for titled entries", () => {

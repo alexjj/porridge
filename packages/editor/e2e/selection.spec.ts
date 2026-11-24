@@ -31,7 +31,7 @@ test.describe("zoomed-in title", () => {
     await page.keyboard.press("Enter");
     await page.keyboard.type("A new first line");
     expect(await outline(page)).toBe(
-      "A new first line|\nThis is the first post on a new porridge blog.\nEdit or delete it, then write your own.",
+      "A new first line|\nThis is the first post on a new Porridge blog.\nEdit or delete it, then write your own.",
     );
 
     // ↑ from the first line goes back to the title; Tab does nothing there.
@@ -120,13 +120,13 @@ test.describe("selecting several lines", () => {
     await page.keyboard.press("Home");
     await page.keyboard.press("Shift+ArrowUp"); // from a child of "Hello, world"…
     await expect(selected(page)).toHaveText([
-      "This is the first post on a new porridge blog.",
+      "This is the first post on a new Porridge blog.",
       "Edit or delete it, then write your own.",
     ]);
     await page.keyboard.press("Shift+ArrowUp"); // …up to "Hello, world" itself: the whole post
     await expect(selected(page)).toHaveText([
       "Hello, world",
-      "This is the first post on a new porridge blog.",
+      "This is the first post on a new Porridge blog.",
       "Edit or delete it, then write your own.",
     ]);
   });
@@ -167,13 +167,13 @@ test.describe("copying selected lines", () => {
     await page.keyboard.press("Control+c");
     await expect(page.locator(".toast")).toHaveText("Copied 1 line");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      "- Hello, world\n  - This is the first post on a new [porridge](https://github.com/alexjj/porridge) blog.\n  - Edit or delete it, then write your own.\n",
+      "- Hello, world\n  - This is the first post on a new [Porridge](https://github.com/alexjj/porridge) blog.\n  - Edit or delete it, then write your own.\n",
     );
     const html = await page.evaluate(async () => {
       const [item] = await navigator.clipboard.read();
       return (await item!.getType("text/html")).text();
     });
-    expect(html).toContain(`<ul><li>Hello, world<ul><li>This is the first post on a new <a href="https://github.com/alexjj/porridge">porridge</a> blog.</li>`);
+    expect(html).toContain(`<ul><li>Hello, world<ul><li>This is the first post on a new <a href="https://github.com/alexjj/porridge">Porridge</a> blog.</li>`);
     // Copying leaves the outline alone.
     expect(await outline(page)).toContain("    Hello, world\n      This is the first post");
   });
@@ -188,10 +188,10 @@ test.describe("copying selected lines", () => {
     expect(await outline(page)).toBe(`November 2026
   18th November
     Hello, world
-      This is the first post on a new porridge blog.
+      This is the first post on a new Porridge blog.
       Edit or delete it, then write your own.|
     Hello, world
-      This is the first post on a new porridge blog.
+      This is the first post on a new Porridge blog.
       Edit or delete it, then write your own.`);
   });
 

@@ -6,7 +6,7 @@
     <description>Notes, mostly daily.</description>
     <language>en-gb</language>
     <atom:link href="https://example.github.io/my-blog/rss.xml" rel="self" type="application/rss+xml"/>
-    <generator>porridge</generator>
+    <generator>Porridge</generator>
     <lastBuildDate>Wed, 18 Nov 2026 17:40:10 GMT</lastBuildDate>
     <item>
       <title>Starting porridge</title>

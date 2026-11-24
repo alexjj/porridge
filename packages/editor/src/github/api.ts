@@ -190,7 +190,7 @@ function describe(status: number, detail: string): string {
     case 404:
       return "Not found on GitHub. Check the repository, branch and workflow names, and that the token can access the repository.";
     case 409:
-      return "The repository is empty. Create it from the porridge template first.";
+      return "The repository is empty. Create it from the Porridge template first.";
     default:
       return `GitHub error ${status}${detail ? `: ${detail}` : ""}.`;
   }

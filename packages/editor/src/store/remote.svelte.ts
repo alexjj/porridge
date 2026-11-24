@@ -130,7 +130,7 @@ export class Remote {
     } else {
       const head = await gh.head();
       const uploads = { ...(await this.ws.starterImageUploads()), ...(await this.ws.imageUploads()) };
-      const r = await push(gh, { commit: head, files: {} }, this.ws.texts(), () => "Add blog from porridge [skip ci]", false, uploads);
+      const r = await push(gh, { commit: head, files: {} }, this.ws.texts(), () => "Add blog from Porridge [skip ci]", false, uploads);
       this.base = r.base;
       await this.ws.imagesSaved(Object.keys(uploads));
     }

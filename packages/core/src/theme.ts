@@ -2,7 +2,7 @@
 // one small script (images open in a lightbox).
 
 /** Images in posts and pages open full size in a lightbox. Plain ES5, no dependencies. */
-export const SCRIPT = `// Made by porridge: images open full size when clicked.
+export const SCRIPT = `// Made by Porridge: images open full size when clicked.
 (function () {
   var box;
   function open(img) {
