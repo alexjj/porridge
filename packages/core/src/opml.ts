@@ -199,6 +199,16 @@ export function headValue(doc: OpmlDoc, name: string): string | undefined {
   return el?.text;
 }
 
+/** Every head element with this name (see `headValue` for names). */
+export function headElements(doc: OpmlDoc, name: string): XmlElement[] {
+  let names = [name];
+  if (name.startsWith("porridge:")) {
+    const local = name.slice("porridge:".length);
+    names = prefixesFor(doc, PORRIDGE_NS).map((p) => `${p}:${local}`);
+  }
+  return doc.head.filter((e) => names.includes(e.name));
+}
+
 export function attr(o: Outline, name: string): string | undefined {
   return o.attrs.get(name);
 }

@@ -80,7 +80,7 @@ describe("sample blog", () => {
   it("loads pages and builds the navigation", async () => {
     const site = await sample();
     expect(site.pages.map((p) => p.slug)).toEqual(["about", "books", "now"]);
-    expect(site.nav.map((p) => p.navLabel)).toEqual(["About", "Now"]);
+    expect(site.nav.map((i) => i.label)).toEqual(["About", "Source", "Now", "Archive"]);
   });
 
   it("warns about exactly the problems in the fixture", async () => {

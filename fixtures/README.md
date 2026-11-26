@@ -42,6 +42,7 @@ golden files for the renderer tests.
 | §4 Calendar node without `date` (warning) | `blog/2025.opml` — "Some day in December" |
 | §4 Non-calendar node at month level (warning) | `blog/2025.opml` — last node |
 | §5 Page in nav with `navOrder` | `pages/about.opml` |
+| §3 Outside link in the nav (`porridge:navLink`, `navOrder` between two pages) | `blog.opml` — "Source" |
 | §5 `list="bullets"` on a page section | `pages/books.opml` |
 | §5 Quote on a page (not a heading) | `pages/about.opml` |
 | §5 `navLabel` override | `pages/now.opml` |

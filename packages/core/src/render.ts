@@ -407,10 +407,12 @@ function layout(
 ): string {
   const s = ctx.site.settings;
   const title = opts.title ? `${opts.title} – ${s.title}` : s.title;
-  const navLinks: { key: string; href: string; label: string }[] = [
-    ...ctx.site.nav.map((p) => ({ key: p.slug, href: `${ctx.base}${p.slug}/`, label: p.navLabel })),
-    { key: "archive", href: `${ctx.base}archive/`, label: "Archive" },
-  ];
+  const navLinks = ctx.site.nav.map((item) => {
+    if (item.kind === "page") return { key: item.page.slug, href: `${ctx.base}${item.page.slug}/`, label: item.label };
+    if (item.kind === "archive") return { key: "archive", href: `${ctx.base}archive/`, label: item.label };
+    // Outside links; a path on this site ("/now/") gets the site's base path.
+    return { key: "", href: esc(item.url.startsWith("/") ? ctx.base + item.url.slice(1) : item.url), label: item.label };
+  });
   const current = (key: string) => (key === opts.current ? ` aria-current="page"` : "");
   const nav = [
     ...navLinks.map((l) => `<a href="${l.href}"${current(l.key)}>${esc(l.label)}</a>`),

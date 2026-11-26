@@ -116,20 +116,26 @@ export function* walk(nodes: ENode[]): Generator<ENode> {
 // Head settings
 
 /**
+ * The element name to write for a head setting: `porridge:x` uses whichever
+ * prefix the file binds to the Porridge namespace (declaring it if needed).
+ */
+export function headName(file: EFile, name: string): string {
+  if (!name.startsWith("porridge:")) return name;
+  const local = name.slice("porridge:".length);
+  let prefix = Object.entries(file.rootAttrs).find(([k, v]) => k.startsWith("xmlns:") && v === PORRIDGE_NS)?.[0].slice(6);
+  if (!prefix) {
+    prefix = file.rootAttrs["xmlns:porridge"] === undefined ? "porridge" : "porridgens";
+    file.rootAttrs[`xmlns:${prefix}`] = PORRIDGE_NS;
+  }
+  return `${prefix}:${local}`;
+}
+
+/**
  * Set a head element (`title`, or a Porridge setting like `porridge:inNav`).
  * An empty value removes it. Declares the Porridge namespace if needed.
  */
 export function setHead(file: EFile, name: string, value: string) {
-  let qname = name;
-  if (name.startsWith("porridge:")) {
-    const local = name.slice("porridge:".length);
-    let prefix = Object.entries(file.rootAttrs).find(([k, v]) => k.startsWith("xmlns:") && v === PORRIDGE_NS)?.[0].slice(6);
-    if (!prefix) {
-      prefix = file.rootAttrs["xmlns:porridge"] === undefined ? "porridge" : "porridgens";
-      file.rootAttrs[`xmlns:${prefix}`] = PORRIDGE_NS;
-    }
-    qname = `${prefix}:${local}`;
-  }
+  const qname = headName(file, name);
   const i = file.head.findIndex((e) => e.name === qname);
   if (value === "") {
     if (i >= 0) file.head.splice(i, 1);

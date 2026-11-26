@@ -341,3 +341,20 @@ textarea.text { scroll-margin-bottom: 80px; }
 .colour-pick { display: flex; gap: 6px; align-items: center; min-width: 0; }
 .form .colour-pick input[type="color"] { flex: none; width: 34px; height: 30px; padding: 2px; border-radius: 6px; cursor: pointer; }
 .form .colour-pick .colour-text { min-width: 0; padding: 5px 7px; font: 13px ui-monospace, monospace; }
+
+/* Blog settings: navigation */
+.nav-settings { border: 0; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.nav-settings legend { padding: 0; margin-bottom: 4px; font-size: 14px; font-weight: 500; }
+.nav-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: 8px; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; min-height: 44px; }
+.nav-item + .nav-item { border-top: 1px solid var(--rule); }
+.nav-name { font-size: 14px; font-weight: 500; }
+.nav-kind { font-size: 12px; color: var(--muted); }
+.nav-link-fields { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 6px; min-width: 0; }
+.form .nav-link-fields input { padding: 5px 8px; font-size: 14px; }
+.nav-link-fields .field-problem { grid-column: 1 / -1; }
+.nav-buttons { margin-left: auto; display: flex; gap: 2px; flex: none; }
+.nav-buttons .icon-button { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+.nav-buttons .icon-button:hover:not(:disabled) { background: var(--hover); color: var(--text); }
+.nav-buttons .icon-button:disabled { opacity: 0.3; cursor: default; }
+@media (max-width: 520px) { .nav-link-fields { grid-template-columns: 1fr; } }

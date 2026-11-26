@@ -253,3 +253,35 @@ test("the site's colours are chosen in Blog settings and show in the preview", a
   await dialog.getByText("Porridge", { exact: true }).click();
   await expect.poll(bg).toBe("rgb(251, 250, 246)");
 });
+
+test("outside links are added to the navigation in Blog settings and can be moved", async ({ page }) => {
+  await menu(page, "Blog settings…");
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  const items = dialog.locator(".nav-item");
+  await expect(items).toHaveCount(2);
+  await expect(items.nth(0)).toContainText("About");
+  await expect(items.nth(1)).toContainText("Archive");
+
+  await dialog.getByRole("button", { name: "Add a link" }).click();
+  await expect(dialog.getByLabel("Link 2 label")).toBeFocused();
+  await page.keyboard.type("My photos");
+  await dialog.getByLabel("Link 2 address").fill("photos.example");
+  await expect(dialog.locator(".nav-item .field-problem")).toHaveText(/^Not a web address/);
+  await dialog.getByLabel("Link 2 address").fill("https://photos.example/");
+  await expect(dialog.locator(".nav-item .field-problem")).toHaveCount(0);
+  await expect(dialog.getByLabel("Link 2 label")).toHaveValue("My photos");
+
+  // To the top, then the archive above it.
+  await dialog.getByRole("button", { name: "Move My photos up" }).click();
+  await expect(dialog.getByLabel("Link 1 label")).toHaveValue("My photos");
+  await dialog.getByRole("button", { name: "Move Archive up" }).click();
+  await dialog.getByRole("button", { name: "Move Archive up" }).click();
+  await expect(items.nth(0)).toContainText("Archive");
+  await expect(dialog.getByLabel("Link 2 label")).toHaveValue("My photos");
+  await expect(items.nth(2)).toContainText("About");
+  await expect(dialog.getByRole("button", { name: "Move Archive up" })).toBeDisabled();
+
+  await dialog.getByRole("button", { name: "Remove My photos" }).click();
+  await expect(items).toHaveCount(2);
+  await expect(items.nth(0)).toContainText("Archive");
+});

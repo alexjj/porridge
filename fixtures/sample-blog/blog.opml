@@ -9,6 +9,7 @@
     <porridge:homeDays>10</porridge:homeDays>
     <porridge:rssItems>25</porridge:rssItems>
     <porridge:language>en-gb</porridge:language>
+    <porridge:navLink url="https://github.com/alexjj/porridge" navOrder="1.5">Source</porridge:navLink>
   </head>
   <body>
     <outline text="2026" type="include" url="blog/2026.opml"/>

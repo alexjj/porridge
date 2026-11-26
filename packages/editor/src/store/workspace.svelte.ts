@@ -5,6 +5,7 @@ import { flushSync } from "svelte";
 import { SvelteSet } from "svelte/reactivity";
 import { createInlineRenderer, isPlaceholderUrl, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
 import { imagePath } from "../model/images.js";
+import { readNav, writeNav, type NavEntry } from "../model/nav.js";
 import { outlineToHtml, outlineToText } from "../model/clipboard.js";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
 import { ancestors, block, locate, neighbour, type Block, type Focus, type Tree } from "../model/ops.js";
@@ -486,6 +487,50 @@ export class Workspace {
     if (!file) return;
     setHead(file, name, value.trim());
     this.markDirty([path]);
+  }
+
+  // ---- The site's navigation (Blog settings) ---------------------------------
+
+  /** Pages in the navigation, outside links and the archive, in order. */
+  navEntries(): NavEntry[] {
+    return readNav(this.files);
+  }
+
+  private writeNav(entries: NavEntry[]) {
+    this.markDirty(writeNav(this.files, entries));
+  }
+
+  /** Move the entry at `index` up (-1) or down (1). */
+  moveNav(index: number, delta: -1 | 1) {
+    const entries = this.navEntries();
+    const to = index + delta;
+    if (to < 0 || to >= entries.length) return;
+    [entries[index], entries[to]] = [entries[to]!, entries[index]!];
+    this.writeNav(entries);
+  }
+
+  /** Add an empty outside link before the archive (if it's last). Returns its index. */
+  addNavLink(): number {
+    const entries = this.navEntries();
+    const at = entries.at(-1)?.kind === "archive" ? entries.length - 1 : entries.length;
+    entries.splice(at, 0, { kind: "link", label: "", url: "", order: 0 });
+    this.writeNav(entries);
+    return at;
+  }
+
+  updateNavLink(index: number, change: { label?: string; url?: string }) {
+    const entries = this.navEntries();
+    const e = entries[index];
+    if (e?.kind !== "link") return;
+    entries[index] = { ...e, ...change };
+    this.writeNav(entries);
+  }
+
+  removeNavLink(index: number) {
+    const entries = this.navEntries();
+    if (entries[index]?.kind !== "link") return;
+    entries.splice(index, 1);
+    this.writeNav(entries);
   }
 
   /** Create a page and open it. Returns its path. */

@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { flushSync } from "svelte";
   import Modal from "./Modal.svelte";
+  import { linkProblem } from "../model/nav.js";
   import { COLOR_TOKENS, DEFAULT_THEME, formatPalette, isSafeColor, parsePalette, THEMES, themeByName, type ColorToken, type Palette } from "@porridge/core";
   import { pagesUrl, parseRepo, type Connection } from "../github/api.js";
   import { fileHead } from "../model/tree.js";
@@ -34,6 +36,16 @@
     if (v.includes("YOUR-USERNAME") || v.includes("YOUR-REPO")) return "Replace the placeholder with your blog's GitHub Pages address.";
     return "";
   });
+
+  // ---- Navigation -------------------------------------------------------------
+
+  const nav = $derived((ws.version, ws.navEntries()));
+
+  function addLink() {
+    const i = ws.addNavLink();
+    flushSync();
+    document.getElementById(`nav-label-${i}`)?.focus();
+  }
 
   // ---- Colours ---------------------------------------------------------------
 
@@ -161,6 +173,49 @@
           <label>Entries in the feed <input type="number" min="1" value={value("porridge:rssItems")} oninput={set("porridge:rssItems")} placeholder="25" /></label>
         </div>
         <label>Language <input value={value("porridge:language")} oninput={set("porridge:language")} placeholder="en" /></label>
+        <fieldset class="nav-settings">
+          <legend>Navigation</legend>
+          <span class="field-hint">Shown at the top of every page, in this order, with search last. Add a page to it in the page's settings.</span>
+          <ol class="nav-list">
+            {#each nav as item, i (i)}
+              <li class="nav-item">
+                {#if item.kind === "link"}
+                  <span class="nav-link-fields">
+                    <input
+                      id="nav-label-{i}"
+                      value={item.label}
+                      oninput={(e) => ws.updateNavLink(i, { label: e.currentTarget.value })}
+                      placeholder="Label"
+                      aria-label="Link {i + 1} label"
+                    />
+                    <input
+                      type="url"
+                      value={item.url}
+                      oninput={(e) => ws.updateNavLink(i, { url: e.currentTarget.value })}
+                      placeholder="https://…"
+                      aria-label="Link {i + 1} address"
+                      spellcheck="false"
+                    />
+                    {#if (item.label || item.url) && linkProblem(item.label, item.url)}
+                      <span class="field-problem">{linkProblem(item.label, item.url)}</span>
+                    {/if}
+                  </span>
+                {:else}
+                  <span class="nav-name">{item.label}</span>
+                  <span class="nav-kind">{item.kind === "page" ? "Page" : "Every post, by month"}</span>
+                {/if}
+                <span class="nav-buttons">
+                  <button class="icon-button" onclick={() => ws.moveNav(i, -1)} disabled={i === 0} aria-label="Move {item.label || 'link'} up" title="Move up">↑</button>
+                  <button class="icon-button" onclick={() => ws.moveNav(i, 1)} disabled={i === nav.length - 1} aria-label="Move {item.label || 'link'} down" title="Move down">↓</button>
+                  {#if item.kind === "link"}
+                    <button class="icon-button" onclick={() => ws.removeNavLink(i)} aria-label="Remove {item.label || 'link'}" title="Remove">×</button>
+                  {/if}
+                </span>
+              </li>
+            {/each}
+          </ol>
+          <div><button class="secondary" onclick={addLink}>Add a link</button></div>
+        </fieldset>
         <fieldset class="colours">
           <legend>Colours</legend>
           <span class="field-hint">Each has a light and a dark version; readers see the one that matches their device.</span>

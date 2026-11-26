@@ -4,6 +4,7 @@
 
 import {
   attr,
+  headElements,
   headValue,
   isPublished,
   isTrue,
@@ -83,14 +84,20 @@ export interface Page {
   body: Outline[];
 }
 
+/** A link in the site's navigation: a page, an outside link, or the archive. */
+export type NavItem =
+  | { kind: "page"; label: string; order: number; page: Page }
+  | { kind: "link"; label: string; order: number; url: string }
+  | { kind: "archive"; label: string; order: number };
+
 export interface Site {
   settings: Settings;
   /** Published days, newest first. */
   days: Day[];
   /** Published pages, by slug. */
   pages: Page[];
-  /** Pages shown in the navigation, in order. */
-  nav: Page[];
+  /** The navigation, in order (the search link always comes last). */
+  nav: NavItem[];
   warnings: Warning[];
 }
 
@@ -164,9 +171,7 @@ export async function loadSite(source: ContentSource, options: LoadOptions = {})
 
   const days = [...daysByDate.values()].sort((a, b) => (a.date < b.date ? 1 : -1));
   const pages = await loadPages(source, warn);
-  const nav = pages
-    .filter((p) => p.inNav)
-    .sort((a, b) => a.navOrder - b.navOrder || a.navLabel.localeCompare(b.navLabel));
+  const nav = navItems(blog, blogFile, pages, warn);
 
   return { settings, days, pages, nav, warnings };
 }
@@ -337,6 +342,45 @@ function loadEntries(
     entries.push({ date, anchor, text: attr(node, "text") ?? "", body, created, node });
   });
   return entries;
+}
+
+/** Links are http(s), mailto, or a path on this site ("/now/"). */
+export function navUrlProblem(url: string): string | undefined {
+  if (!url) return "it has no address";
+  if (/^\/(?!\/)/.test(url) || /^mailto:\S+$/i.test(url)) return undefined;
+  try {
+    const u = new URL(url);
+    if (u.protocol === "http:" || u.protocol === "https:") return undefined;
+  } catch {
+    // fall through
+  }
+  return `"${url}" isn't a web address (start it with https:// or /)`;
+}
+
+function navItems(blog: OpmlDoc, file: string, pages: Page[], warn: (file: string, message: string) => void): NavItem[] {
+  const order = (raw: string | undefined, setting: string, fallback: number) => {
+    if (raw === undefined || raw === "") return fallback;
+    if (Number.isFinite(Number(raw))) return Number(raw);
+    warn(file, `${setting} "${raw}" isn't a number, using ${fallback}.`);
+    return fallback;
+  };
+  const items: NavItem[] = pages.filter((p) => p.inNav).map((p) => ({ kind: "page", label: p.navLabel, order: p.navOrder, page: p }));
+  for (const el of headElements(blog, "porridge:navLink")) {
+    const label = el.text.trim();
+    const url = (el.attrs.get("url") ?? "").trim();
+    const problem = !label ? "it has no label" : navUrlProblem(url);
+    if (problem) {
+      warn(file, `Skipped navigation link${label ? ` "${label}"` : ""}: ${problem}.`);
+      continue;
+    }
+    items.push({ kind: "link", label, url, order: order(el.attrs.get("navOrder"), `navOrder of "${label}"`, 100) });
+  }
+  // Pages and links in order (then by label); the archive comes after them unless placed.
+  items.sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+  const archive = order(headValue(blog, "porridge:archiveNavOrder"), "porridge:archiveNavOrder", Infinity);
+  const at = items.findIndex((i) => i.order > archive);
+  items.splice(at < 0 ? items.length : at, 0, { kind: "archive", label: "Archive", order: archive });
+  return items;
 }
 
 async function loadPages(source: ContentSource, warn: (file: string, message: string) => void): Promise<Page[]> {

@@ -2264,6 +2264,14 @@ function headValue(doc, name) {
   const el = doc.head.find((e) => names.includes(e.name));
   return el?.text;
 }
+function headElements(doc, name) {
+  let names = [name];
+  if (name.startsWith("porridge:")) {
+    const local = name.slice("porridge:".length);
+    names = prefixesFor(doc, PORRIDGE_NS).map((p) => `${p}:${local}`);
+  }
+  return doc.head.filter((e) => names.includes(e.name));
+}
 function attr(o, name) {
   return o.attrs.get(name);
 }
@@ -7679,7 +7687,7 @@ async function loadSite(source, options = {}) {
   }
   const days = [...daysByDate.values()].sort((a, b) => a.date < b.date ? 1 : -1);
   const pages = await loadPages(source, warn);
-  const nav = pages.filter((p) => p.inNav).sort((a, b) => a.navOrder - b.navOrder || a.navLabel.localeCompare(b.navLabel));
+  const nav = navItems(blog, blogFile, pages, warn);
   return { settings, days, pages, nav, warnings };
 }
 async function readOpml(source, path) {
@@ -7816,6 +7824,40 @@ function loadEntries(dayNode, date, file, timezone, warn) {
     entries.push({ date, anchor, text: attr(node, "text") ?? "", body, created, node });
   });
   return entries;
+}
+function navUrlProblem(url) {
+  if (!url) return "it has no address";
+  if (/^\/(?!\/)/.test(url) || /^mailto:\S+$/i.test(url)) return void 0;
+  try {
+    const u = new URL(url);
+    if (u.protocol === "http:" || u.protocol === "https:") return void 0;
+  } catch {
+  }
+  return `"${url}" isn't a web address (start it with https:// or /)`;
+}
+function navItems(blog, file, pages, warn) {
+  const order = (raw, setting, fallback) => {
+    if (raw === void 0 || raw === "") return fallback;
+    if (Number.isFinite(Number(raw))) return Number(raw);
+    warn(file, `${setting} "${raw}" isn't a number, using ${fallback}.`);
+    return fallback;
+  };
+  const items = pages.filter((p) => p.inNav).map((p) => ({ kind: "page", label: p.navLabel, order: p.navOrder, page: p }));
+  for (const el of headElements(blog, "porridge:navLink")) {
+    const label = el.text.trim();
+    const url = (el.attrs.get("url") ?? "").trim();
+    const problem = !label ? "it has no label" : navUrlProblem(url);
+    if (problem) {
+      warn(file, `Skipped navigation link${label ? ` "${label}"` : ""}: ${problem}.`);
+      continue;
+    }
+    items.push({ kind: "link", label, url, order: order(el.attrs.get("navOrder"), `navOrder of "${label}"`, 100) });
+  }
+  items.sort((a, b) => a.order - b.order || a.label.localeCompare(b.label));
+  const archive = order(headValue(blog, "porridge:archiveNavOrder"), "porridge:archiveNavOrder", Infinity);
+  const at = items.findIndex((i) => i.order > archive);
+  items.splice(at < 0 ? items.length : at, 0, { kind: "archive", label: "Archive", order: archive });
+  return items;
 }
 async function loadPages(source, warn) {
   const pages = [];
@@ -8330,10 +8372,11 @@ function pager(newer, older) {
 function layout(ctx, opts) {
   const s = ctx.site.settings;
   const title = opts.title ? `${opts.title} \u2013 ${s.title}` : s.title;
-  const navLinks = [
-    ...ctx.site.nav.map((p) => ({ key: p.slug, href: `${ctx.base}${p.slug}/`, label: p.navLabel })),
-    { key: "archive", href: `${ctx.base}archive/`, label: "Archive" }
-  ];
+  const navLinks = ctx.site.nav.map((item) => {
+    if (item.kind === "page") return { key: item.page.slug, href: `${ctx.base}${item.page.slug}/`, label: item.label };
+    if (item.kind === "archive") return { key: "archive", href: `${ctx.base}archive/`, label: item.label };
+    return { key: "", href: esc(item.url.startsWith("/") ? ctx.base + item.url.slice(1) : item.url), label: item.label };
+  });
   const current = (key) => key === opts.current ? ` aria-current="page"` : "";
   const nav = [
     ...navLinks.map((l) => `<a href="${l.href}"${current(l.key)}>${esc(l.label)}</a>`),

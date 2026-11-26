@@ -331,6 +331,8 @@ Deferred:
       Nord, Gruvbox, Catppuccin, Rosé Pine; each light and dark, text and
       links at least 4.5:1 contrast) or custom colours
       (`porridge:theme`, `porridge:colors`, `porridge:darkColors`).
+- [x] Outside links in the navigation (`porridge:navLink` in `blog.opml`),
+      and one list in Blog settings to order pages, links and Archive.
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.
