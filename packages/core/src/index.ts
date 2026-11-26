@@ -4,6 +4,8 @@ export * from "./markdown.js";
 export * from "./video.js";
 export * from "./palettes.js";
 export * from "./icon.js";
+export * from "./images.js";
+export * from "./microblog.js";
 export * from "./site.js";
 export * from "./render.js";
 export { SCRIPT, STYLESHEET } from "./theme.js";

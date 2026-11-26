@@ -371,7 +371,7 @@ each post's original Markdown in `content_text`), `index.html`, and
 
 Steps:
 - [x] `isUntitled` in the format, builder and editor.
-- [ ] Conversion in `core` (feed items → entries + image jobs), tested
+- [x] Conversion in `core` (feed items → entries + image jobs), tested
       against a real archive's posts.
 - [ ] Zip reading, image and video handling in the editor.
 - [ ] "Import from micro.blog…" dialog: summary, progress, merge, report.
