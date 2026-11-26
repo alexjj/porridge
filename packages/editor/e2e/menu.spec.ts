@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { editing, menu, newEntry, openEditor, outline } from "./helpers.js";
+import { downloadCurrent, editing, menu, newEntry, openEditor, outline } from "./helpers.js";
 
 const PHOTO = join(import.meta.dirname, "photo.jpg");
 
@@ -308,4 +308,29 @@ test("the site icon is picked in Blog settings", async ({ page }) => {
   await dialog.getByRole("button", { name: "Close" }).click();
   await menu(page, "Blog settings…");
   await expect(icons.getByRole("radio", { name: "🦔" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("an OPML file is imported as a page", async ({ page }) => {
+  await page.getByRole("button", { name: "New page" }).click();
+  const dialog = page.getByRole("dialog", { name: "New page" });
+  const input = dialog.getByLabel("Or import an OPML file");
+
+  await input.setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("just text") });
+  await expect(dialog.getByRole("alert")).toHaveText(/^notes\.txt isn't an OPML file/);
+
+  await input.setInputFiles({
+    name: "books.opml",
+    mimeType: "text/xml",
+    buffer: Buffer.from(`<?xml version="1.0"?>
+<opml version="2.0"><head><title>Books I liked</title></head><body>
+  <outline text="Fiction" _note="Mostly novels"><outline text="Middlemarch"/></outline>
+</body></opml>`),
+  });
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Files" }).getByRole("button", { name: "Books I liked", exact: true })).toBeVisible();
+  expect(await outline(page)).toBe("Fiction\n  Mostly novels\n  Middlemarch");
+
+  const { name, text } = await downloadCurrent(page);
+  expect(name).toBe("books-i-liked.opml");
+  expect(text).toContain("<porridge:inNav>true</porridge:inNav>");
 });

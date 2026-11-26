@@ -19,6 +19,35 @@
     ws.newPage(newTitle, newInNav);
   }
 
+  // ---- Import -----------------------------------------------------------------
+
+  let importProblem = $state("");
+
+  async function importFiles(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    const chosen = Array.from(input.files ?? []);
+    input.value = "";
+    if (chosen.length === 0) return;
+    importProblem = "";
+    const texts = await Promise.all(chosen.map(async (f) => ({ name: f.name, text: await f.text() })));
+    const problems: string[] = [];
+    let imported = 0;
+    for (const { name, text } of texts) {
+      try {
+        ws.importPage(text, name, newInNav);
+        imported++;
+      } catch (err) {
+        problems.push((err as Error).message);
+      }
+    }
+    if (imported === 0) {
+      importProblem = problems.join(" ");
+      return;
+    }
+    onclose();
+    if (problems.length) ws.notify(problems.join(" "));
+  }
+
   // ---- Existing page --------------------------------------------------------
 
   // The page's path changes if it's renamed while the dialog is open, so
@@ -54,6 +83,14 @@
       <label class="check"><input type="checkbox" bind:checked={newInNav} /> Show in the site's navigation</label>
       <div class="actions"><button class="primary" type="submit">Create page</button></div>
     </form>
+    <div class="form import-page">
+      <div class="field">
+        <span id="import-label">Or import an OPML file</span>
+        <span class="field-hint">From Porridge, Drummer, Dynalist, Workflowy or any outliner. Each file becomes a page, titled from the file.</span>
+        <input type="file" accept=".opml,.xml,text/xml,text/x-opml" multiple onchange={importFiles} aria-labelledby="import-label" />
+      </div>
+      {#if importProblem}<p class="field-problem" role="alert">{importProblem}</p>{/if}
+    </div>
   </Modal>
 {:else if file}
   <Modal title="Page settings" {onclose}>

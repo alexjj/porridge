@@ -6,6 +6,7 @@ import { SvelteSet } from "svelte/reactivity";
 import { createInlineRenderer, isPlaceholderUrl, parseRfc822, slugProblem, zonedDate, zonedTimeCode } from "@porridge/core";
 import { imagePath } from "../model/images.js";
 import { readNav, writeNav, type NavEntry } from "../model/nav.js";
+import { pageFromOpml } from "../model/importPage.js";
 import { outlineToHtml, outlineToText } from "../model/clipboard.js";
 import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
 import { ancestors, block, locate, neighbour, type Block, type Focus, type Tree } from "../model/ops.js";
@@ -535,11 +536,8 @@ export class Workspace {
 
   /** Create a page and open it. Returns its path. */
   newPage(title: string, inNav: boolean): string {
-    let base = slugify(title || "page");
-    if (slugProblem(base)) base = `page-${base}`;
-    let slug = base;
-    for (let n = 2; this.files[pagePath(slug)]; n++) slug = `${base}-${n}`;
-    const path = pagePath(slug);
+    const path = this.freePagePath(title);
+    const slug = pageSlug(path);
     const before = this.snapshot([path]);
     const file = newFile(path, title.trim() || slug);
     if (inNav) setHead(file, "porridge:inNav", "true");
@@ -549,6 +547,33 @@ export class Workspace {
     this.markDirty([path]);
     this.open(path);
     this.focusNode(this.files[path]!.nodes[0]!.id, 0);
+    return path;
+  }
+
+  /** A page path for this title that isn't taken. */
+  private freePagePath(title: string): string {
+    let base = slugify(title || "page");
+    if (slugProblem(base)) base = `page-${base}`;
+    let slug = base;
+    for (let n = 2; this.files[pagePath(slug)]; n++) slug = `${base}-${n}`;
+    return pagePath(slug);
+  }
+
+  /**
+   * Make a page from an OPML file's outline and open it. Returns its path;
+   * throws an Error with a message for the user if the file can't be read.
+   */
+  importPage(source: string, fileName: string, inNav: boolean): string {
+    const { title, nodes } = pageFromOpml(source, fileName);
+    const path = this.freePagePath(title);
+    const before = this.snapshot([path]);
+    const file = newFile(path, title);
+    if (inNav) setHead(file, "porridge:inNav", "true");
+    file.nodes = nodes;
+    this.files[path] = file;
+    this.record(before, "page");
+    this.markDirty([path]);
+    this.open(path);
     return path;
   }
 

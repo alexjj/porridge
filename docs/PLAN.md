@@ -335,6 +335,9 @@ Deferred:
       and one list in Blog settings to order pages, links and Archive.
 - [x] Site icon: an emoji (🥣 by default) chosen in Blog settings
       (`porridge:icon`), built into `favicon.svg`.
+- [x] Import OPML files as pages (New page dialog). Notes (`_note`, from
+      Dynalist/Workflowy) become lines underneath; Drummer `type="link"`
+      nodes become Markdown links; calendar types are dropped.
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.
@@ -349,4 +352,4 @@ Deferred:
 - Incremental builds (only the changed year/days).
 - Webmentions / comments, micro.blog cross-posting, rssCloud ping.
 - Glossary / macros (Drummer-style).
-- Import from Drummer OPML.
+- Import a Drummer blog's posts into the calendar (single OPML files can already be imported as pages).

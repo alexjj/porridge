@@ -370,3 +370,7 @@ textarea.text { scroll-margin-bottom: 80px; }
 .form .icon-other label { font-size: 13px; font-weight: 400; color: var(--muted); }
 .form .icon-other input { width: 5em; padding: 5px 8px; font-size: 18px; }
 .icon-other .field-problem { flex-basis: 100%; }
+
+/* New page: import an OPML file */
+.import-page { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.form .import-page input[type="file"] { padding: 6px; font-size: 14px; }
