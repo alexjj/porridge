@@ -7,6 +7,7 @@ import { attr, publishedChildren, type Outline } from "./opml.js";
 import type { Day, Entry, Page, Site } from "./site.js";
 import { SCRIPT, STYLESHEET } from "./theme.js";
 import { DEFAULT_THEME, paletteCss } from "./palettes.js";
+import { faviconSvg } from "./icon.js";
 
 /** Short fingerprint of a file's contents (FNV-1a), so browsers fetch a changed file straight away. */
 function fingerprint(text: string): string {
@@ -38,6 +39,8 @@ interface Ctx {
   base: string;
   /** Fingerprint of this site's stylesheet (its colours included). */
   styleVersion: string;
+  /** Fingerprint of the favicon. */
+  iconVersion: string;
 }
 
 /** The stylesheet: the theme, plus the blog's colours if they aren't the default. */
@@ -48,6 +51,7 @@ export function siteStylesheet(site: Site): string {
 
 export function renderSite(site: Site): OutputFile[] {
   const css = siteStylesheet(site);
+  const icon = faviconSvg(site.settings.icon);
   const ctx: Ctx = {
     site,
     md: createInlineRenderer(site.settings.basePath),
@@ -55,6 +59,7 @@ export function renderSite(site: Site): OutputFile[] {
     mdAbs: createInlineRenderer(site.settings.baseUrl, site.settings.baseUrl, "link"),
     base: site.settings.basePath,
     styleVersion: fingerprint(css),
+    iconVersion: fingerprint(icon),
   };
   const files: OutputFile[] = [];
   const add = (path: string, content: string) => files.push({ path, content });
@@ -75,6 +80,7 @@ export function renderSite(site: Site): OutputFile[] {
   add("404.html", render404(ctx));
   add("style.css", css);
   add("porridge.js", SCRIPT);
+  add("favicon.svg", icon);
   return files;
 }
 
@@ -427,6 +433,7 @@ function layout(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
+<link rel="icon" href="${ctx.base}favicon.svg?v=${ctx.iconVersion}" type="image/svg+xml">
 <link rel="stylesheet" href="${ctx.base}style.css?v=${ctx.styleVersion}">
 <script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">

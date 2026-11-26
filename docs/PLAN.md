@@ -333,6 +333,8 @@ Deferred:
       (`porridge:theme`, `porridge:colors`, `porridge:darkColors`).
 - [x] Outside links in the navigation (`porridge:navLink` in `blog.opml`),
       and one list in Blog settings to order pages, links and Archive.
+- [x] Site icon: an emoji (🥣 by default) chosen in Blog settings
+      (`porridge:icon`), built into `favicon.svg`.
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.

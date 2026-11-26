@@ -2,6 +2,7 @@
   import { flushSync } from "svelte";
   import Modal from "./Modal.svelte";
   import { linkProblem } from "../model/nav.js";
+  import { DEFAULT_ICON, ICON_CHOICES, iconProblem } from "@porridge/core";
   import { COLOR_TOKENS, DEFAULT_THEME, formatPalette, isSafeColor, parsePalette, THEMES, themeByName, type ColorToken, type Palette } from "@porridge/core";
   import { pagesUrl, parseRepo, type Connection } from "../github/api.js";
   import { fileHead } from "../model/tree.js";
@@ -36,6 +37,13 @@
     if (v.includes("YOUR-USERNAME") || v.includes("YOUR-REPO")) return "Replace the placeholder with your blog's GitHub Pages address.";
     return "";
   });
+
+  // ---- Site icon --------------------------------------------------------------
+
+  const icon = $derived(value("porridge:icon").trim() || DEFAULT_ICON);
+  const setIcon = (emoji: string) => ws.setHead("blog.opml", "porridge:icon", emoji === DEFAULT_ICON ? "" : emoji);
+  let otherIcon = $state("");
+  const otherProblem = $derived(otherIcon.trim() && iconProblem(otherIcon) ? "Just one emoji." : "");
 
   // ---- Navigation -------------------------------------------------------------
 
@@ -173,6 +181,35 @@
           <label>Entries in the feed <input type="number" min="1" value={value("porridge:rssItems")} oninput={set("porridge:rssItems")} placeholder="25" /></label>
         </div>
         <label>Language <input value={value("porridge:language")} oninput={set("porridge:language")} placeholder="en" /></label>
+        <fieldset class="icon-settings">
+          <legend>Site icon</legend>
+          <span class="field-hint">Shown in the browser tab and bookmarks.</span>
+          <div class="icon-grid" role="radiogroup" aria-label="Site icon">
+            {#each ICON_CHOICES.includes(icon) ? ICON_CHOICES : [...ICON_CHOICES, icon] as emoji (emoji)}
+              <button
+                type="button"
+                role="radio"
+                class="icon-choice"
+                aria-checked={icon === emoji}
+                aria-label={emoji}
+                onclick={() => setIcon(emoji)}>{emoji}</button
+              >
+            {/each}
+          </div>
+          <div class="icon-other">
+            <label for="icon-other">Or any other emoji</label>
+            <input
+              id="icon-other"
+              bind:value={otherIcon}
+              placeholder="🦔"
+              onkeydown={(e) => {
+                if (e.key === "Enter" && otherIcon.trim() && !otherProblem) setIcon(otherIcon.trim());
+              }}
+            />
+            <button class="secondary" type="button" disabled={!otherIcon.trim() || !!otherProblem} onclick={() => setIcon(otherIcon.trim())}>Use it</button>
+            {#if otherProblem}<span class="field-problem">{otherProblem}</span>{/if}
+          </div>
+        </fieldset>
         <fieldset class="nav-settings">
           <legend>Navigation</legend>
           <span class="field-hint">Shown at the top of every page, in this order, with search last. Add a page to it in the page's settings.</span>

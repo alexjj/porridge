@@ -29,6 +29,7 @@ describe("sample blog", () => {
       rssItems: 25,
       language: "en-gb",
       theme: { name: "porridge", light: THEMES[0]!.light, dark: THEMES[0]!.dark },
+      icon: "🥣",
     });
   });
 

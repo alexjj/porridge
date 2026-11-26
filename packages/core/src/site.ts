@@ -15,6 +15,7 @@ import {
   type Outline,
 } from "./opml.js";
 import { isValidDay, isValidMonth, isValidTimezone, parseRfc822, zonedTimeCode } from "./dates.js";
+import { DEFAULT_ICON, iconProblem } from "./icon.js";
 import { DEFAULT_THEME, parsePalette, themeByName, type Palette } from "./palettes.js";
 
 /** Where content comes from: the filesystem in the builder, GitHub in the editor. */
@@ -56,6 +57,8 @@ export interface Settings {
   language: string;
   /** The site's colours: a preset, or "custom" ones from porridge:colors / porridge:darkColors. */
   theme: { name: string; light: Palette; dark: Palette };
+  /** The site's icon: one emoji. */
+  icon: string;
 }
 
 export interface Entry {
@@ -121,6 +124,14 @@ function readTheme(blog: OpmlDoc, warn: (message: string) => void): Settings["th
     return { ...base, ...palette };
   };
   return { name, light: read("porridge:colors", fallback.light), dark: read("porridge:darkColors", fallback.dark) };
+}
+
+function readIcon(raw: string | undefined, warn: (message: string) => void): string {
+  if (raw === undefined || raw.trim() === "") return DEFAULT_ICON;
+  const problem = iconProblem(raw);
+  if (!problem) return raw.trim();
+  warn(`porridge:icon: ${problem}; using ${DEFAULT_ICON}.`);
+  return DEFAULT_ICON;
 }
 
 /** The template's placeholder address, which means "not set yet". */
@@ -262,6 +273,7 @@ function readSettings(
     rssItems: positiveInt("rssItems", 25),
     language: headValue(blog, "porridge:language") || "en",
     theme: readTheme(blog, (m) => warn(file, m)),
+    icon: readIcon(headValue(blog, "porridge:icon"), (m) => warn(file, m)),
   };
 }
 

@@ -285,3 +285,27 @@ test("outside links are added to the navigation in Blog settings and can be move
   await expect(items).toHaveCount(2);
   await expect(items.nth(0)).toContainText("Archive");
 });
+
+test("the site icon is picked in Blog settings", async ({ page }) => {
+  await menu(page, "Blog settings…");
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  const icons = dialog.getByRole("radiogroup", { name: "Site icon" });
+  await expect(icons.getByRole("radio", { name: "🥣" })).toHaveAttribute("aria-checked", "true");
+  await icons.getByRole("radio", { name: "🦉" }).click();
+  await expect(icons.getByRole("radio", { name: "🦉" })).toHaveAttribute("aria-checked", "true");
+  await expect(icons.getByRole("radio", { name: "🥣" })).toHaveAttribute("aria-checked", "false");
+
+  const other = dialog.getByLabel("Or any other emoji");
+  await other.fill("🦔🦔");
+  await expect(dialog.getByText("Just one emoji.")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Use it" })).toBeDisabled();
+  await other.fill("🦔");
+  await other.press("Enter");
+  // A choice that isn't in the list joins the end of it.
+  await expect(icons.getByRole("radio", { name: "🦔" })).toHaveAttribute("aria-checked", "true");
+
+  // Still chosen when the settings are opened again.
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await menu(page, "Blog settings…");
+  await expect(icons.getByRole("radio", { name: "🦔" })).toHaveAttribute("aria-checked", "true");
+});

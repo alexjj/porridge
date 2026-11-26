@@ -22,6 +22,7 @@ exports[`sample blog > matches the expected output 1`] = `
   "about/index.html",
   "archive/index.html",
   "books/index.html",
+  "favicon.svg",
   "index.html",
   "now/index.html",
   "porridge.js",

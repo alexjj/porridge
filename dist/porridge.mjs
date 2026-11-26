@@ -7632,6 +7632,21 @@ function paletteCss(light, dark) {
 `;
 }
 
+// packages/core/src/icon.ts
+var DEFAULT_ICON = "\u{1F963}";
+function iconProblem(value) {
+  const v = value.trim();
+  if (!v) return "it's empty";
+  const graphemes = [...new Intl.Segmenter(void 0, { granularity: "grapheme" }).segment(v)];
+  if (graphemes.length !== 1) return `"${v}" isn't a single emoji`;
+  return void 0;
+}
+function faviconSvg(icon) {
+  const text3 = icon.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-size="88">${text3}</text></svg>
+`;
+}
+
 // packages/core/src/site.ts
 var PorridgeError = class extends Error {
   constructor(message, file, line) {
@@ -7660,6 +7675,13 @@ function readTheme(blog, warn) {
     return { ...base, ...palette };
   };
   return { name, light: read("porridge:colors", fallback.light), dark: read("porridge:darkColors", fallback.dark) };
+}
+function readIcon(raw, warn) {
+  if (raw === void 0 || raw.trim() === "") return DEFAULT_ICON;
+  const problem = iconProblem(raw);
+  if (!problem) return raw.trim();
+  warn(`porridge:icon: ${problem}; using ${DEFAULT_ICON}.`);
+  return DEFAULT_ICON;
 }
 function isPlaceholderUrl(url) {
   return /YOUR-USERNAME|YOUR-REPO/.test(url);
@@ -7763,7 +7785,8 @@ function readSettings(blog, warn, baseUrlOverride, fallbackBaseUrl) {
     homeDays: positiveInt("homeDays", 10),
     rssItems: positiveInt("rssItems", 25),
     language: headValue(blog, "porridge:language") || "en",
-    theme: readTheme(blog, (m) => warn(file, m))
+    theme: readTheme(blog, (m) => warn(file, m)),
+    icon: readIcon(headValue(blog, "porridge:icon"), (m) => warn(file, m))
   };
 }
 function loadYear(doc, file, timezone, daysByDate, warn) {
@@ -8101,13 +8124,15 @@ function siteStylesheet(site) {
 }
 function renderSite(site) {
   const css = siteStylesheet(site);
+  const icon = faviconSvg(site.settings.icon);
   const ctx = {
     site,
     md: createInlineRenderer(site.settings.basePath),
     // RSS: feed readers drop video players, so videos are linked thumbnails.
     mdAbs: createInlineRenderer(site.settings.baseUrl, site.settings.baseUrl, "link"),
     base: site.settings.basePath,
-    styleVersion: fingerprint(css)
+    styleVersion: fingerprint(css),
+    iconVersion: fingerprint(icon)
   };
   const files = [];
   const add = (path, content) => files.push({ path, content });
@@ -8124,6 +8149,7 @@ function renderSite(site) {
   add("404.html", render404(ctx));
   add("style.css", css);
   add("porridge.js", SCRIPT);
+  add("favicon.svg", icon);
   return files;
 }
 var dayPath = (date) => `${date.replace(/-/g, "/")}/`;
@@ -8389,6 +8415,7 @@ function layout(ctx, opts) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
+<link rel="icon" href="${ctx.base}favicon.svg?v=${ctx.iconVersion}" type="image/svg+xml">
 <link rel="stylesheet" href="${ctx.base}style.css?v=${ctx.styleVersion}">
 <script src="${ctx.base}porridge.js?v=${SCRIPT_VERSION}" defer></script>
 <link rel="alternate" type="application/rss+xml" title="${esc(s.title)}" href="${s.baseUrl}rss.xml">

@@ -106,6 +106,7 @@ any other value means false.
 | `porridge:theme` | `porridge` | The site's colours: `porridge`, `solarized`, `nord`, `gruvbox`, `catppuccin`, `rose-pine`, or `custom`. Each has a light and a dark version (chosen by the reader's device). An unknown name is a warning and uses the default |
 | `porridge:colors` | the default's | With `custom`: light colours as `name: value` pairs separated by `;`, e.g. `bg: #fffaf0; link: #8a4b1f`. Names: `bg`, `text`, `muted`, `rule`, `link`, `link-hover`. Values are hex, a CSS colour name, or `rgb()`/`hsl()`/`oklch()`/`oklab()`/`lab()`/`lch()`. Any not given use the default theme's; an unknown name or a value that isn't a colour is a warning and is ignored |
 | `porridge:darkColors` | the default's | The same, for dark mode |
+| `porridge:icon` | `🥣` | The site's icon (favicon): one emoji, drawn into `favicon.svg`. More than one is a warning and uses the default |
 | `porridge:navLink` | none | An outside link in the navigation; repeat for each. Text is the label; `url` is `https://…`, `http://…`, `mailto:…` or a path on this site (`/now/`, given the site's base path); `navOrder` places it among the pages (default `100`). A link without a label or a web address is a warning and is skipped |
 | `porridge:archiveNavOrder` | after everything | Where "Archive" goes in the navigation, as a `navOrder` |
 
