@@ -9,12 +9,14 @@
     ontogglesidebar,
     ontogglepanel,
     onsettings,
+    onimport,
   }: {
     ws: Workspace;
     remote: Remote;
     ontogglesidebar: () => void;
     ontogglepanel: () => void;
     onsettings: (tab: "blog" | "github") => void;
+    onimport: () => void;
   } = $props();
 
   let menuOpen = $state(false);
@@ -136,6 +138,7 @@
         <hr />
         <button role="menuitem" onclick={() => choose(() => ws.downloadCurrent())}>Download this file</button>
         <button role="menuitem" onclick={() => choose(() => ws.downloadAll())}>Download all (.zip)</button>
+        <button role="menuitem" onclick={() => choose(onimport)}>Import from micro.blog…</button>
         {#if !remote.conn}
           <button role="menuitem" onclick={() => choose(() => folderInput?.click())}>Open a blog folder…</button>
           <hr />

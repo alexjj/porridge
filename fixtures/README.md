@@ -27,6 +27,7 @@ golden files for the renderer tests.
 | §4 Entry without children (untitled, `#` permalink) | `blog/2026.opml` — 18th November 09:12 |
 | §4 Entry with children (titled) | `blog/2026.opml` — "Starting porridge" |
 | §4 Entry with children and `isUntitled` (no title, first paragraph) | `blog/2026.opml` — 17th November, 12:15 |
+| §4 A line that is only block HTML (`<pre>`) is not wrapped in `<p>` | "Starting porridge" |
 | §4 Body node with children → paragraph + nested paragraphs | "Starting porridge" — "Inline HTML is allowed" |
 | §4 Body node with `list="bullets"` → paragraph + nested list | "Starting porridge" — ingredients |
 | §4 `isDraft` on an entry | 18th November 21:05 |

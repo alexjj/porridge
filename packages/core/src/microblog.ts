@@ -39,6 +39,8 @@ export interface MediaJob {
   /** Path in the blog, e.g. `images/2025/09/abc-12075859.webp`. Images may end up in another format: see `retarget`. */
   target: string;
   kind: "image" | "video";
+  /** The address a post first used for it (to fall back to if it's not in the archive). */
+  url: string;
 }
 
 export interface MicroblogImport {
@@ -51,6 +53,7 @@ export interface MicroblogImport {
 /** Convert a parsed feed.json. Posts come back oldest first. */
 export function convertMicroblog(feed: unknown, timezone: string): MicroblogImport {
   const items = (feed as { items?: unknown })?.items;
+  const home = String((feed as { home_page_url?: unknown })?.home_page_url ?? "https://micro.blog/");
   if (!Array.isArray(items)) throw new Error("This isn't a micro.blog archive: its feed.json has no posts.");
   const media = new Map<string, MediaJob>();
   const posts: ImportedPost[] = [];
@@ -63,7 +66,7 @@ export function convertMicroblog(feed: unknown, timezone: string): MicroblogImpo
       continue;
     }
     const date = zonedDate(created, timezone);
-    const ctx: Ctx = { date, time: zonedTimeCode(created, timezone), notes: [], media };
+    const ctx: Ctx = { home, date, time: zonedTimeCode(created, timezone), notes: [], media };
     const blocks = toBlocks(raw.content_text ?? "", ctx);
     const title = (raw.title ?? "").trim();
 
@@ -96,17 +99,29 @@ export function convertMicroblog(feed: unknown, timezone: string): MicroblogImpo
 
 /** After choosing another format for an image, point its posts at the new path. */
 export function retarget(result: MicroblogImport, from: string, to: string) {
+  replaceInPosts(result, `/${from}`, `/${to}`);
+  for (const m of result.media) if (m.target === from) m.target = to;
+}
+
+/** A file that isn't in the archive: its posts keep the address they had. */
+export function unlinkMedia(result: MicroblogImport, job: MediaJob) {
+  replaceInPosts(result, `/${job.target}`, job.url);
+  result.media = result.media.filter((m) => m !== job);
+}
+
+function replaceInPosts(result: MicroblogImport, find: string, replace: string) {
   const fix = (l: ImportLine) => {
-    l.text = l.text.split(`/${from}`).join(`/${to}`);
+    l.text = l.text.split(find).join(replace);
     l.children?.forEach(fix);
   };
   for (const p of result.posts) fix(p.line);
-  for (const m of result.media) if (m.target === from) m.target = to;
 }
 
 // ---------------------------------------------------------------------------
 
 interface Ctx {
+  /** The micro.blog site's address, for uploads referred to relatively. */
+  home: string;
   date: string;
   time: string;
   notes: string[];
@@ -139,7 +154,13 @@ function mediaUrl(ctx: Ctx, url: string, kind: MediaJob["kind"]): string {
     const taken = new Set([...ctx.media.values()].map((j) => j.target));
     let target = first;
     for (let n = 2; taken.has(target); n++) target = first.replace(/\.\w+$/, `-${n}.${ext}`);
-    job = { source, target, kind };
+    let absolute = url;
+    try {
+      absolute = new URL(url, ctx.home).href;
+    } catch {
+      // keep it as written
+    }
+    job = { source, target, kind, url: absolute };
     ctx.media.set(source, job);
   }
   return `/${job.target}`;

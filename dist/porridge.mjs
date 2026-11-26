@@ -7529,6 +7529,8 @@ function createInlineRenderer(urlPrefix, imagePrefix = urlPrefix, video = "embed
         } else if (child.type === "image") {
           const src = child.attrGet("src");
           if (src) child.attrSet("src", rewriteImage(String(src)));
+        } else if (child.type === "html_inline") {
+          child.content = child.content.replace(/\b(src|poster)="(\/[^"]*)"/g, (_m, a, u) => `${a}="${rewriteImage(u)}"`).replace(/\bhref="(\/[^"]*)"/g, (_m, u) => `href="${rewrite(u)}"`);
         }
       }
     }
@@ -8066,6 +8068,12 @@ ul { padding-left: 1.4rem; margin: 0 0 0.85rem; }
 li { margin: 0.15rem 0; }
 li > ul { margin: 0.15rem 0 0; }
 code { font-size: 0.88em; background: var(--rule); padding: 0.1em 0.3em; border-radius: 3px; }
+pre { margin: 0 0 0.85rem; padding: 0.75rem 0.9rem; overflow-x: auto; background: var(--rule); border-radius: 6px; font-size: 0.85rem; line-height: 1.5; }
+pre code { padding: 0; background: none; border-radius: 0; font-size: inherit; }
+video { display: block; width: 100%; height: auto; margin: 0.5rem 0 0.85rem; border-radius: 6px; background: #000; }
+table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 0.85rem; font-size: 0.95em; }
+th, td { padding: 0.3rem 1rem 0.3rem 0; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+th { font-family: var(--sans); font-size: 0.9em; }
 mark { background: #f6e3a1; color: inherit; padding: 0 0.15em; }
 @media (prefers-color-scheme: dark) { mark { background: #6b5718; } }
 
@@ -8298,7 +8306,7 @@ function renderEntry(md, entry, href) {
       const withHash = html.replace(caption, (c) => `<span class="caption-line">${hash}${c}</span>`);
       out.push(`<p>${withHash}</p>`);
     } else {
-      out.push(`<p>${hash}${html}</p>`);
+      out.push(para(html, hash));
     }
     if (entry.body) out.push(...renderBody(md, entry.node, entry.body));
   } else {
@@ -8311,6 +8319,10 @@ function renderEntry(md, entry, href) {
   out.push(`</article>`);
   return out.join("\n");
 }
+function para(html, prefix = "") {
+  return BLOCK_HTML.test(html) ? `${prefix}${html}` : `<p>${prefix}${html}</p>`;
+}
+var BLOCK_HTML = /^<(pre|table|video|div|figure|ul|ol|h[1-6]|hr|details)\b[^>]*>[\s\S]*<\/\1>$/i;
 var bulleted = (node) => attr(node, "list") === "bullets";
 function renderBody(md, node, body) {
   if (body.length === 0) return [];
@@ -8324,7 +8336,7 @@ function renderBlocks(md, nodes) {
       out.push(renderQuote(md, text2(node), kids));
       continue;
     }
-    out.push(`<p>${md.html(text2(node))}</p>`);
+    out.push(para(md.html(text2(node))));
     if (kids.length) out.push(...bulleted(node) ? [renderList(md, kids)] : renderBlocks(md, kids));
   }
   return out;
@@ -8346,7 +8358,7 @@ function renderPageNodes(md, nodes, depth) {
     if (isQuote(text2(node))) {
       out.push(renderQuote(md, text2(node), kids));
     } else if (kids.length === 0) {
-      out.push(`<p>${md.html(text2(node))}</p>`);
+      out.push(para(md.html(text2(node))));
     } else {
       const h = `h${depth + 1}`;
       const inner = bulleted(node) ? [renderList(md, kids)] : renderPageNodes(md, kids, depth + 1);
@@ -8363,7 +8375,7 @@ function renderRss(ctx) {
   const items = entries.map((e) => {
     const link2 = permalink(ctx, e, true);
     const titled = e.body !== null && !e.untitled && !isQuote(e.text);
-    const html = isQuote(e.text) ? renderQuote(ctx.mdAbs, e.text, e.body ?? []) : titled ? renderBody(ctx.mdAbs, e.node, e.body).join("\n") : [`<p>${ctx.mdAbs.html(e.text)}</p>`, ...e.body ? renderBody(ctx.mdAbs, e.node, e.body) : []].join("\n");
+    const html = isQuote(e.text) ? renderQuote(ctx.mdAbs, e.text, e.body ?? []) : titled ? renderBody(ctx.mdAbs, e.node, e.body).join("\n") : [para(ctx.mdAbs.html(e.text)), ...e.body ? renderBody(ctx.mdAbs, e.node, e.body) : []].join("\n");
     return [
       `    <item>`,
       ...titled ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : [],

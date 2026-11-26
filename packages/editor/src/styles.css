@@ -374,3 +374,12 @@ textarea.text { scroll-margin-bottom: 80px; }
 /* New page: import an OPML file */
 .import-page { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
 .form .import-page input[type="file"] { padding: 6px; font-size: 14px; }
+
+/* Import from micro.blog */
+.import-mb p { margin: 0; }
+.import-mb code { font-size: 0.9em; }
+.import-facts, .import-check { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.import-check li { display: flex; flex-direction: column; }
+.import-mb progress { width: 100%; height: 10px; accent-color: var(--accent); }
+.import-mb details { font-size: 14px; }
+button.link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 0.15em; }

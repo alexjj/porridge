@@ -17,7 +17,8 @@ export interface InlineRenderer {
 }
 
 /**
- * Root-relative URLs (`/images/x.jpg`) in links and images are rewritten to
+ * Root-relative URLs (`/images/x.jpg`) in links and images (and in `src`,
+ * `poster` and `href` in inline HTML) are rewritten to
  * start with `urlPrefix`: the site's base path for pages, its full base URL
  * for RSS. Images can use a different prefix (the editor loads them from the
  * repo).
@@ -49,6 +50,11 @@ export function createInlineRenderer(urlPrefix: string, imagePrefix = urlPrefix,
         } else if (child.type === "image") {
           const src = child.attrGet("src");
           if (src) child.attrSet("src", rewriteImage(String(src)));
+        } else if (child.type === "html_inline") {
+          // HTML such as <video src="/images/…">: media like images, links like links.
+          child.content = child.content
+            .replace(/\b(src|poster)="(\/[^"]*)"/g, (_m, a: string, u: string) => `${a}="${rewriteImage(u)}"`)
+            .replace(/\bhref="(\/[^"]*)"/g, (_m, u: string) => `href="${rewrite(u)}"`);
         }
       }
     }

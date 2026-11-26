@@ -105,6 +105,12 @@ ul { padding-left: 1.4rem; margin: 0 0 0.85rem; }
 li { margin: 0.15rem 0; }
 li > ul { margin: 0.15rem 0 0; }
 code { font-size: 0.88em; background: var(--rule); padding: 0.1em 0.3em; border-radius: 3px; }
+pre { margin: 0 0 0.85rem; padding: 0.75rem 0.9rem; overflow-x: auto; background: var(--rule); border-radius: 6px; font-size: 0.85rem; line-height: 1.5; }
+pre code { padding: 0; background: none; border-radius: 0; font-size: inherit; }
+video { display: block; width: 100%; height: auto; margin: 0.5rem 0 0.85rem; border-radius: 6px; background: #000; }
+table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 0 0 0.85rem; font-size: 0.95em; }
+th, td { padding: 0.3rem 1rem 0.3rem 0; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+th { font-family: var(--sans); font-size: 0.9em; }
 mark { background: #f6e3a1; color: inherit; padding: 0 0.15em; }
 @media (prefers-color-scheme: dark) { mark { background: #6b5718; } }
 

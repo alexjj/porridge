@@ -54,10 +54,20 @@ export interface NewEntry {
  * top is reused instead of stacking up blanks.
  */
 export function addEntry(files: Record<string, EFile>, now: Date): NewEntry {
+  const tz = blogTimezone(files);
+  const { path, day: d, changed } = ensureDay(files, zonedDate(now, tz));
+  const top = d.children[0];
+  if (top && kind(top) === "node" && top.text === "" && top.children.length === 0) {
+    return { path, id: top.id, changed };
+  }
+  d.children.unshift(newNode("", { created: uniqueCreated(d, now, tz) }));
+  return { path, id: d.children[0]!.id, changed };
+}
+
+/** The day node for `date` (`YYYY-MM-DD`), making its year file, include and month if needed. */
+export function ensureDay(files: Record<string, EFile>, date: string): { path: string; day: ENode; changed: string[] } {
   const blog = files["blog.opml"];
   if (!blog) throw new Error("There's no blog.opml in this workspace.");
-  const tz = blogTimezone(files);
-  const date = zonedDate(now, tz);
   const year = date.slice(0, 4);
   const month = date.slice(0, 7);
   const path = `blog/${year}.opml`;
@@ -79,13 +89,59 @@ export function addEntry(files: Record<string, EFile>, now: Date): NewEntry {
   const d =
     m.children.find((n) => kind(n) === "day" && n.attrs.date === date) ??
     insertNewestFirst(m.children, newNode(dayLabel(date), { type: "calendarDay", date }), byDate("day"));
+  return { path, day: d, changed: [...changed] };
+}
 
-  const top = d.children[0];
-  if (top && kind(top) === "node" && top.text === "" && top.children.length === 0) {
-    return { path, id: top.id, changed: [...changed] };
+/** An imported post: the day it goes on, and its line (attrs include `created`). */
+export interface ImportedEntry {
+  date: string;
+  line: { text: string; attrs?: Record<string, string>; children?: ImportedEntry["line"][] };
+}
+
+/** `importedFrom` addresses of every entry already in the blog. */
+export function importedAddresses(files: Record<string, EFile>): Set<string> {
+  const out = new Set<string>();
+  for (const f of Object.values(files)) {
+    if (!isYearFile(f.path)) continue;
+    for (const m of f.nodes) for (const d of m.children) for (const e of d.children) if (e.attrs.importedFrom) out.add(e.attrs.importedFrom);
   }
-  d.children.unshift(newNode("", { created: uniqueCreated(d, now, tz) }));
-  return { path, id: d.children[0]!.id, changed: [...changed] };
+  return out;
+}
+
+/**
+ * Put imported posts on their days (newest first by `created`), skipping any
+ * already imported. Returns the files changed and how many were added.
+ */
+export function insertImported(files: Record<string, EFile>, posts: ImportedEntry[]): { changed: string[]; added: number } {
+  const seen = importedAddresses(files);
+  const tz = blogTimezone(files);
+  const changed = new Set<string>();
+  let added = 0;
+  const time = (n: ENode) => (n.attrs.created ? (parseRfc822(n.attrs.created)?.getTime() ?? 0) : 0);
+  for (const post of posts) {
+    const from = post.line.attrs?.importedFrom;
+    if (from && seen.has(from)) continue;
+    if (from) seen.add(from);
+    const { path, day, changed: c } = ensureDay(files, post.date);
+    c.forEach((p) => changed.add(p));
+    const node = toNode(post.line);
+    // Two posts at the same second would share an anchor: move this one on a second.
+    const created = node.attrs.created ? parseRfc822(node.attrs.created) : undefined;
+    if (created) node.attrs.created = uniqueCreated(day, created, tz);
+    const t = time(node);
+    const i = day.children.findIndex((n) => kind(n) === "node" && time(n) < t);
+    if (i < 0) day.children.push(node);
+    else day.children.splice(i, 0, node);
+    changed.add(path);
+    added++;
+  }
+  return { changed: [...changed], added };
+}
+
+function toNode(line: ImportedEntry["line"]): ENode {
+  const node = newNode(line.text, line.attrs ?? {});
+  node.children = (line.children ?? []).map(toNode);
+  return node;
 }
 
 /**

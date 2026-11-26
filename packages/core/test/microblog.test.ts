@@ -164,3 +164,23 @@ describe("micro.blog posts", () => {
     expect(uploadSource("https://example.com/photo.jpg")).toBeUndefined();
   });
 });
+
+describe("HTML with root-relative addresses", () => {
+  it("rewrites src, poster and href like Markdown links and images", () => {
+    const md = createInlineRenderer("/blog/", "https://raw.example/");
+    expect(md.html(`<video controls src="/images/2025/09/a.mp4" poster="/images/p.webp"></video> <a href="/about/">x</a> <a href="//cdn.example/y">y</a>`)).toBe(
+      `<video controls src="https://raw.example/images/2025/09/a.mp4" poster="https://raw.example/images/p.webp"></video> <a href="/blog/about/">x</a> <a href="//cdn.example/y">y</a>`,
+    );
+  });
+});
+
+describe("files missing from the archive", () => {
+  it("keep the address the post had, made absolute", async () => {
+    const { convertMicroblog: c, unlinkMedia } = await import("../src/index.js");
+    const r = c({ home_page_url: "https://blog.example/", items: [item(`<img src="uploads/2025/gone.jpg">\n\nText.`)] }, "UTC");
+    expect(r.media[0]!.url).toBe("https://blog.example/uploads/2025/gone.jpg");
+    unlinkMedia(r, r.media[0]!);
+    expect(r.posts[0]!.line.text).toBe("![](https://blog.example/uploads/2025/gone.jpg)");
+    expect(r.media).toEqual([]);
+  });
+});

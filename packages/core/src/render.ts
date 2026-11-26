@@ -267,7 +267,7 @@ function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
       const withHash = html.replace(caption, (c) => `<span class="caption-line">${hash}${c}</span>`);
       out.push(`<p>${withHash}</p>`);
     } else {
-      out.push(`<p>${hash}${html}</p>`);
+      out.push(para(html, hash));
     }
     // "No title": the lines under it are the rest of the post.
     if (entry.body) out.push(...renderBody(md, entry.node, entry.body));
@@ -284,6 +284,16 @@ function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
   out.push(`</article>`);
   return out.join("\n");
 }
+
+/**
+ * A line as a paragraph. A line that's a block of HTML on its own (a code
+ * block, a table, a video) isn't wrapped: browsers would split the <p> around
+ * it and leave empty paragraphs.
+ */
+function para(html: string, prefix = ""): string {
+  return BLOCK_HTML.test(html) ? `${prefix}${html}` : `<p>${prefix}${html}</p>`;
+}
+const BLOCK_HTML = /^<(pre|table|video|div|figure|ul|ol|h[1-6]|hr|details)\b[^>]*>[\s\S]*<\/\1>$/i;
 
 /** Body nodes: paragraphs, with children becoming a nested list. */
 /** `list="bullets"` on a line: its children render as a bulleted list. */
@@ -307,7 +317,7 @@ function renderBlocks(md: InlineRenderer, nodes: Outline[]): string[] {
       out.push(renderQuote(md, text(node), kids));
       continue;
     }
-    out.push(`<p>${md.html(text(node))}</p>`);
+    out.push(para(md.html(text(node))));
     if (kids.length) out.push(...(bulleted(node) ? [renderList(md, kids)] : renderBlocks(md, kids)));
   }
   return out;
@@ -330,7 +340,7 @@ function renderPageNodes(md: InlineRenderer, nodes: Outline[], depth: number): s
     if (isQuote(text(node))) {
       out.push(renderQuote(md, text(node), kids));
     } else if (kids.length === 0) {
-      out.push(`<p>${md.html(text(node))}</p>`);
+      out.push(para(md.html(text(node))));
     } else {
       const h = `h${depth + 1}`;
       const inner = bulleted(node) ? [renderList(md, kids)] : renderPageNodes(md, kids, depth + 1);
@@ -357,7 +367,7 @@ function renderRss(ctx: Ctx): string {
       ? renderQuote(ctx.mdAbs, e.text, e.body ?? [])
       : titled
         ? renderBody(ctx.mdAbs, e.node, e.body!).join("\n")
-        : [`<p>${ctx.mdAbs.html(e.text)}</p>`, ...(e.body ? renderBody(ctx.mdAbs, e.node, e.body) : [])].join("\n");
+        : [para(ctx.mdAbs.html(e.text)), ...(e.body ? renderBody(ctx.mdAbs, e.node, e.body) : [])].join("\n");
     return [
       `    <item>`,
       ...(titled ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : []),

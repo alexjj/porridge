@@ -25,6 +25,8 @@
 &lt;/li&gt;
 &lt;li&gt;Golden syrup&lt;/li&gt;
 &lt;/ul&gt;
+&lt;pre&gt;&lt;code&gt;A line that's only a block of HTML
+  isn't wrapped in a paragraph.&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Inline HTML is allowed: &lt;mark&gt;highlighted&lt;/mark&gt;, and so are autolinks like &lt;a href=&quot;https://example.com&quot;&gt;https://example.com&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;A line under a line, without list=&amp;quot;bullets&amp;quot;, is just another paragraph.&lt;/p&gt;
 &lt;blockquote class=&quot;quote&quot;&gt;

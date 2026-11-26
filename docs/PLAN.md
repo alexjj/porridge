@@ -373,9 +373,11 @@ Steps:
 - [x] `isUntitled` in the format, builder and editor.
 - [x] Conversion in `core` (feed items → entries + image jobs), tested
       against a real archive's posts.
-- [ ] Zip reading, image and video handling in the editor.
-- [ ] "Import from micro.blog…" dialog: summary, progress, merge, report.
-- [ ] Docs; a dry run on a copy of a blog.
+- [x] Zip reading, image and video handling in the editor.
+- [x] "Import from micro.blog…" dialog: summary, progress, merge, report.
+- [x] Docs; a dry run with a real archive's feed.json (and stand-in images):
+      90 posts, 197 files, builds with no warnings from the import.
+- [ ] Import a real archive into a real blog (by hand, then Save and Publish).
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.

@@ -72,6 +72,7 @@ describe("sample blog", () => {
       "This entry has child",
       "![A bowl of porridge",
       "A body node with lis",
+      "<pre><code>A line th",
       "Inline HTML is allow",
     ]);
     // Titled entry whose only child is a comment: heading with no body.

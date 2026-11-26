@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import { downloadCurrent, editing, menu, newEntry, openEditor, outline } from "./helpers.js";
+import { downloadCurrent, editing, menu, newEntry, openEditor, openFile, outline } from "./helpers.js";
 
 const PHOTO = join(import.meta.dirname, "photo.jpg");
 
@@ -356,4 +356,42 @@ test("No title makes a post's line its first paragraph", async ({ page }) => {
   await openMenu(page, "Hello, world");
   await lineMenu(page).getByRole("menuitemcheckbox", { name: "Use as title" }).click();
   await expect(hello.locator(":scope > .row .tag")).toHaveCount(0);
+});
+
+test("a micro.blog archive is imported into the calendar, once", async ({ page }) => {
+  const BAR = join(import.meta.dirname, "../test/fixtures/sample.bar");
+  await menu(page, "Import from micro.blog…");
+  const dialog = page.getByRole("dialog", { name: "Import from micro.blog" });
+  await dialog.getByLabel("Blog Archive (.bar)").setInputFiles(BAR);
+  await expect(dialog).toContainText("2 posts from 2025, with 1 photo.");
+  await dialog.getByRole("button", { name: "Import 2 posts" }).click();
+  await expect(dialog.getByRole("status")).toContainText("Imported 2 posts.");
+  await dialog.getByRole("button", { name: "Done" }).click();
+
+  await openFile(page, "2025");
+  expect(await outline(page)).toBe(
+    [
+      "September 2025",
+      "  13th September",
+      "    Short one.",
+      "  12th September",
+      "    A walk",
+      "      Up the hill.",
+      "      ", // the photo
+    ].join("\n"),
+  );
+  // The photo shows from the browser until it's saved.
+  const img = page.locator(".node .rendered img").first();
+  await expect(img).toHaveAttribute("src", /^blob:/);
+  await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth)).toBeGreaterThan(0);
+
+  // Again: nothing new.
+  await menu(page, "Import from micro.blog…");
+  await dialog.getByLabel("Blog Archive (.bar)").setInputFiles(BAR);
+  await expect(dialog).toContainText("There's nothing new to import: 2 posts in this archive are already in your blog.");
+  await dialog.getByRole("button", { name: "Close" }).click();
+
+  // One undo takes the import back out.
+  await page.keyboard.press("Control+z");
+  await expect(page.getByText("Short one.")).toHaveCount(0);
 });

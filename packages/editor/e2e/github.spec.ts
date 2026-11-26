@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { connect, connected, fakeGitHub, status, templateFiles } from "./github-helpers.js";
 import { menu, newEntry, openEditor, openFile, outline } from "./helpers.js";
@@ -223,4 +224,24 @@ test("View site opens the blog in a new tab", async ({ page }) => {
   await page.getByRole("dialog", { name: "Settings" }).getByLabel("Site address").fill("https://blog.example/");
   await page.getByRole("dialog", { name: "Settings" }).getByRole("button", { name: "Close" }).click();
   await expect(view).toHaveAttribute("href", "https://blog.example/");
+});
+
+test("an imported micro.blog archive is saved in one commit, photos included", async ({ page }) => {
+  const fake = await fakeGitHub(page);
+  await connected(page);
+  const commitsBefore = fake.commitCount();
+  await menu(page, "Import from micro.blog…");
+  const dialog = page.getByRole("dialog", { name: "Import from micro.blog" });
+  await dialog.getByLabel("Blog Archive (.bar)").setInputFiles(join(import.meta.dirname, "../test/fixtures/sample.bar"));
+  await dialog.getByRole("button", { name: "Import 2 posts" }).click();
+  await dialog.getByRole("button", { name: "Done" }).click();
+
+  await page.keyboard.press("Control+s");
+  await expect(status(page)).toHaveText("Saved to GitHub");
+  expect(fake.commitCount()).toBe(commitsBefore + 1);
+  const photo = fake.paths().find((p) => p.startsWith("images/2025/09/hill-12075859."));
+  expect(photo).toMatch(/\.(webp|png)$/);
+  expect(fake.read("blog/2025.opml")).toContain(`<outline text="![](/${photo})"/>`);
+  expect(fake.read("blog/2025.opml")).toContain(`importedFrom="https://blog.example/2025/09/12/a/"`);
+  expect(fake.read("blog.opml")).toContain(`<outline text="2025" type="include" url="blog/2025.opml"/>`);
 });

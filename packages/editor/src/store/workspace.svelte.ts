@@ -8,7 +8,7 @@ import { imagePath } from "../model/images.js";
 import { readNav, writeNav, type NavEntry } from "../model/nav.js";
 import { pageFromOpml } from "../model/importPage.js";
 import { outlineToHtml, outlineToText } from "../model/clipboard.js";
-import { addEntry, blogTimezone, ensureEntryTimes } from "../model/calendar.js";
+import { addEntry, blogTimezone, ensureEntryTimes, importedAddresses, insertImported, type ImportedEntry } from "../model/calendar.js";
 import { ancestors, block, locate, neighbour, type Block, type Focus, type Tree } from "../model/ops.js";
 import {
   slugify,
@@ -786,9 +786,12 @@ export class Workspace {
     return out;
   }
 
-  /** Pending images, base64 encoded, for uploading. */
+  /** Pending images, base64 encoded, for uploading. Ones nothing uses any more (an undone import, say) are dropped. */
   async imageUploads(): Promise<Record<string, string>> {
     const out: Record<string, string> = {};
+    const all = Object.values(this.texts()).join("\n");
+    const unused = this.pendingImages.filter((p) => !all.includes(`/${p}`));
+    if (unused.length) await this.imagesSaved(unused);
     for (const p of this.pendingImages) {
       const blob = await kv.get<Blob>(IMAGE_PREFIX + p);
       if (blob) out[p] = await toBase64(blob);
@@ -814,6 +817,42 @@ export class Workspace {
 
   // -------------------------------------------------------------------------
   // Import and export
+
+  /** Open the year file with the post imported from `url`, and put the caret in it. */
+  revealImported(url: string) {
+    for (const f of Object.values(this.files)) {
+      const hit = [...walk(f.nodes)].find((n) => n.attrs.importedFrom === url);
+      if (!hit) continue;
+      this.open(f.path);
+      this.zoomTo(null);
+      this.focusNode(hit.id, 0);
+      return;
+    }
+  }
+
+  /** `importedFrom` addresses already in the blog. */
+  importedAddresses(): Set<string> {
+    return importedAddresses(this.files);
+  }
+
+  /**
+   * Add imported posts to their days, and keep their images and videos in the
+   * browser until the next save. One undo step. Returns how many were added.
+   */
+  async importPosts(posts: ImportedEntry[], media: { path: string; blob: Blob }[]): Promise<number> {
+    await kv.setMany(media.map((m) => [IMAGE_PREFIX + m.path, m.blob]));
+    for (const m of media) this.localImages[m.path] = URL.createObjectURL(m.blob);
+    this.pendingImages = [...new Set([...this.pendingImages, ...media.map((m) => m.path)])];
+
+    const years = new Set(posts.map((p) => `blog/${p.date.slice(0, 4)}.opml`));
+    const before = this.snapshot(["blog.opml", ...years]);
+    const { changed, added } = insertImported(this.files, posts);
+    if (added) {
+      this.record(before, "import");
+      this.markDirty(changed);
+    }
+    return added;
+  }
 
   downloadCurrent() {
     const file = this.file;

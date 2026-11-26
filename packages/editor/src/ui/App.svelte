@@ -7,6 +7,7 @@
   import PageDialog from "./PageDialog.svelte";
   import RightPanel from "./RightPanel.svelte";
   import SettingsDialog from "./SettingsDialog.svelte";
+  import MicroblogDialog from "./MicroblogDialog.svelte";
   import Sidebar from "./Sidebar.svelte";
   import TopBar from "./TopBar.svelte";
   import { startInsert, type Range } from "../store/commands.js";
@@ -21,6 +22,7 @@
   let sidebarOpen = $state(false);
   let panelOpen = $state(false);
   let settingsTab: "blog" | "github" | null = $state(null);
+  let importing = $state(false);
   /** Page whose settings are open; "" for a new page; null for none. */
   let pageDialog: string | null = $state(null);
 
@@ -113,6 +115,7 @@
     ontogglesidebar={() => (sidebarOpen = !sidebarOpen)}
     ontogglepanel={() => (panelOpen = !panelOpen)}
     onsettings={(tab) => (settingsTab = tab)}
+    onimport={() => (importing = true)}
   />
   <div class="columns">
     <Sidebar {ws} {remote} onnavigate={() => (sidebarOpen = false)} onnewpage={() => (pageDialog = "")} />
@@ -128,6 +131,9 @@
   <button class="scrim" aria-label="Close" tabindex="-1" onclick={() => { sidebarOpen = false; panelOpen = false; }}></button>
 </div>
 
+{#if importing}
+  <MicroblogDialog {ws} onclose={() => (importing = false)} />
+{/if}
 {#if settingsTab}
   <SettingsDialog {ws} {remote} tab={settingsTab} onclose={() => (settingsTab = null)} />
 {/if}

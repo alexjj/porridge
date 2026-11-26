@@ -57,6 +57,8 @@ images/2026/11/…     uploaded images
 | `isComment` | `true` | Kept in the file, never rendered (with its children) |
 | `list` | `bullets` | The node's children render as a bulleted list instead of paragraphs (see below) |
 | `isUntitled` | `true` | On an entry with children: its text is the first paragraph, not a title (see below) |
+| `importedFrom` | URL | On an imported entry: its address where it came from (micro.blog). Used to skip it on a second import; not rendered |
+| `category` | text | On an imported entry: its micro.blog tags, comma-separated. Kept, not rendered (yet) |
 
 Boolean attributes are true only when the value is exactly `true`; absent or
 any other value means false.
@@ -182,6 +184,9 @@ change of colours reaches readers straight away.
 - **Has children and `isUntitled="true"` →** no title: `text` is the first
   paragraph (with the `#` in the margin, as for a one-paragraph entry) and the
   children are the rest of the body, rendered as below.
+- A line that is only a block of HTML (`<pre>`, `<table>`, `<video>`,
+  `<div>`, `<figure>`, a list or a heading, opened and closed) isn't wrapped
+  in `<p>`.
 - Body children render as paragraphs. A body node that itself has children
   renders as a paragraph followed by its children, also as paragraphs
   (recursively), unless it has `list="bullets"`: then its children are a
@@ -288,8 +293,12 @@ Published at `/<slug>/`.
 - The builder rewrites root-relative URLs (those starting with a single `/`)
   in Markdown links and images against `porridge:baseUrl`, so a site served
   from a sub-path such as `https://example.github.io/my-blog/` works. Pages
-  use the base URL's path (`/my-blog/images/…`); RSS uses the full URL. URLs
-  in inline HTML are left as written.
+  use the base URL's path (`/my-blog/images/…`); RSS uses the full URL. In
+  inline HTML, root-relative `src`, `poster` and `href` attributes are
+  rewritten the same way (so `<video controls src="/images/2025/09/a.mp4">`
+  works); other URLs in HTML are left as written.
+- Videos (from an import) live under `images/` too and are shown with a
+  `<video>` line.
 - Everything under `images/` is copied to the site verbatim.
 - An image's description (`![this text](…)`) is shown as a caption, centred
   underneath it. Images with no description have no caption.
