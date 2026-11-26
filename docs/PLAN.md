@@ -338,6 +338,44 @@ Deferred:
 - [x] Import OPML files as pages (New page dialog). Notes (`_note`, from
       Dynalist/Workflowy) become lines underneath; Drummer `type="link"`
       nodes become Markdown links; calendar types are dropped.
+- [x] "No title" (`isUntitled="true"`) on a post: its line is the first
+      paragraph and the lines under it are the rest (line menu).
+
+### micro.blog importer
+Imports a micro.blog **Blog Archive (`.bar`)** in the browser: no API, no
+micro.blog token, no CORS. A `.bar` is a zip of `feed.json` (JSON Feed, with
+each post's original Markdown in `content_text`), `index.html`, and
+`uploads/YYYY/` (originals plus `-m`/`-s` thumbnails). Decisions:
+
+- Read the zip in the browser from its central directory, unzipping only
+  `feed.json` and the images posts use (`DecompressionStream`, no library), so
+  a 400 MB archive never sits in memory.
+- Posts: `date_published` → `created` (the moment is kept; the day and
+  anchor follow the blog's timezone). Title → titled entry; no title and one
+  paragraph → one line; no title and more → `isUntitled`.
+- Images, in every form (`![](https://<domain>/uploads/…)`, the old
+  `<user>.micro.blog` host, relative `<img src="uploads/…">` in `<figure>`,
+  and collections of `eu.uploads.micro.blog/<id>/YYYY/x-m.jpg`), map to the
+  original in `uploads/YYYY/x.jpg` (never the `-m`/`-s` thumbnails), become
+  their own line `![alt](/images/YYYY/MM/x.webp)` (caption from `figcaption`
+  or alt) and go through the usual resize-to-WebP. Videos (mp4) are copied as
+  they are, with a `<video>` line.
+- `{{< yt id >}}` and YouTube embeds → a YouTube address line. Line breaks in
+  a paragraph → `<br>`. Headings in a post → bold lines. Lists → bulleted
+  children. Code blocks, tables, footnotes, other shortcodes: kept as near as
+  possible and listed in a "needs a look" report.
+- Tags → `category` attribute; old URL → `importedFrom` (skips duplicates on
+  a second import, and allows a redirect list later).
+- Imported posts merge into existing days; images wait in the browser until
+  Save, so the import is one commit and one undo.
+
+Steps:
+- [x] `isUntitled` in the format, builder and editor.
+- [ ] Conversion in `core` (feed items → entries + image jobs), tested
+      against a real archive's posts.
+- [ ] Zip reading, image and video handling in the editor.
+- [ ] "Import from micro.blog…" dialog: summary, progress, merge, report.
+- [ ] Docs; a dry run on a copy of a blog.
 
 ### M6 — Opening it up
 - [ ] GitHub App + Cloudflare Worker sign-in, repo picker.

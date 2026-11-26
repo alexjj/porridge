@@ -46,6 +46,14 @@
       <description>&lt;p&gt;Two entries in a day, newest first. This one has &lt;code&gt;inline code&lt;/code&gt; and a &lt;a href=&quot;https://example.github.io/my-blog/2026/11/02/&quot;&gt;link to an earlier day&lt;/a&gt;.&lt;/p&gt;</description>
     </item>
     <item>
+      <link>https://example.github.io/my-blog/2026/11/17/#a121500</link>
+      <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/17/#a121500</guid>
+      <pubDate>Tue, 17 Nov 2026 12:15:00 GMT</pubDate>
+      <description>&lt;p&gt;No title: with isUntitled, this line is the first paragraph and the lines under it are the rest of the post.&lt;/p&gt;
+&lt;p&gt;So a post can have several paragraphs without a heading.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&quot;figure&quot;&gt;&lt;img src=&quot;https://example.github.io/my-blog/images/2026/11/porridge.jpg&quot; alt=&quot;A bowl of porridge&quot;&gt;&lt;span class=&quot;caption&quot; aria-hidden=&quot;true&quot;&gt;A bowl of porridge&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
       <title>Morning. A titled entry with list=&quot;bullets&quot; has a bulleted body.</title>
       <link>https://example.github.io/my-blog/2026/11/17/#a073000</link>
       <guid isPermaLink="true">https://example.github.io/my-blog/2026/11/17/#a073000</guid>

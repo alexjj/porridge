@@ -69,6 +69,8 @@ export interface Entry {
   text: string;
   /** Published children, or null for an untitled single-paragraph entry. */
   body: Outline[] | null;
+  /** `isUntitled="true"`: `text` is the first paragraph, not a title. */
+  untitled: boolean;
   created?: Date;
   node: Outline;
 }
@@ -351,7 +353,7 @@ function loadEntries(
 
     if (!isPublished(node)) return;
     const body = node.children.length > 0 ? publishedChildren(node) : null;
-    entries.push({ date, anchor, text: attr(node, "text") ?? "", body, created, node });
+    entries.push({ date, anchor, text: attr(node, "text") ?? "", body, untitled: isTrue(attr(node, "isUntitled")), created, node });
   });
   return entries;
 }

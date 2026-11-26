@@ -56,6 +56,7 @@ images/2026/11/…     uploaded images
 | `isDraft` | `true` | Kept in the file, skipped by the builder (with its children) |
 | `isComment` | `true` | Kept in the file, never rendered (with its children) |
 | `list` | `bullets` | The node's children render as a bulleted list instead of paragraphs (see below) |
+| `isUntitled` | `true` | On an entry with children: its text is the first paragraph, not a title (see below) |
 
 Boolean attributes are true only when the value is exactly `true`; absent or
 any other value means false.
@@ -178,6 +179,9 @@ change of colours reaches readers straight away.
 - **Has children →** `text` is the entry's **title**, rendered as a heading
   that links to the entry's permalink, with the same `#` in the margin; the
   children are its body.
+- **Has children and `isUntitled="true"` →** no title: `text` is the first
+  paragraph (with the `#` in the margin, as for a one-paragraph entry) and the
+  children are the rest of the body, rendered as below.
 - Body children render as paragraphs. A body node that itself has children
   renders as a paragraph followed by its children, also as paragraphs
   (recursively), unless it has `list="bullets"`: then its children are a
@@ -214,7 +218,7 @@ change of colours reaches readers straight away.
 ### RSS
 
 - One `<item>` per published entry, newest first, up to `porridge:rssItems`.
-- Titled entries have a `<title>`; untitled entries and quotes have none
+- Titled entries have a `<title>`; untitled entries (`isUntitled` included) and quotes have none
   (valid RSS 2.0).
 - `<description>` is the entry's rendered HTML.
 - `<link>` and `<guid isPermaLink="true">` are the permalink.

@@ -334,3 +334,26 @@ test("an OPML file is imported as a page", async ({ page }) => {
   expect(name).toBe("books-i-liked.opml");
   expect(text).toContain("<porridge:inNav>true</porridge:inNav>");
 });
+
+test("No title makes a post's line its first paragraph", async ({ page }) => {
+  await page.getByRole("tab", { name: "Preview" }).click();
+  const frame = page.frameLocator(".preview iframe");
+  await page.getByText("This is the first post").click({ position: { x: 5, y: 5 } });
+  await expect(frame.locator("article.entry h3.entry-title", { hasText: "Hello, world" })).toBeVisible();
+
+  await openMenu(page, "Hello, world");
+  await lineMenu(page).getByRole("menuitemcheckbox", { name: "No title (first paragraph)" }).click();
+  const hello = page.locator(".node", { has: page.locator(":scope > .row", { hasText: "Hello, world" }) });
+  await expect(hello.locator(":scope > .row .tag")).toHaveText("No title");
+  await expect(frame.locator("article.entry h3.entry-title", { hasText: "Hello, world" })).toHaveCount(0);
+  await expect(frame.locator("article.entry > p").first()).toContainText("Hello, world");
+
+  // Only posts have it: not their paragraphs.
+  await openMenu(page, "This is the first post");
+  await expect(lineMenu(page).getByRole("menuitemcheckbox", { name: /No title/ })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await openMenu(page, "Hello, world");
+  await lineMenu(page).getByRole("menuitemcheckbox", { name: "Use as title" }).click();
+  await expect(hello.locator(":scope > .row .tag")).toHaveCount(0);
+});

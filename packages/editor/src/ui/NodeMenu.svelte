@@ -7,7 +7,11 @@
   let { ws, sheet }: { ws: Workspace; sheet: boolean } = $props();
 
   const menu = $derived(ws.menu!);
-  const node = $derived(ws.file ? locate(ws.file.nodes, menu.id)?.node : undefined);
+  const loc = $derived(ws.file ? locate(ws.file.nodes, menu.id) : null);
+  const node = $derived(loc?.node);
+  // A post: a line directly under a day.
+  const isPost = $derived(!!loc?.parent && kind(loc.parent) === "day");
+  const isUntitled = $derived(node?.attrs.isUntitled === "true");
   const locked = $derived(node ? isLocked(node) : true);
   const link = $derived(node ? ws.permalink(node.id) : null);
   const isDraft = $derived(node?.attrs.isDraft === "true");
@@ -105,6 +109,11 @@
       <button role="menuitemcheckbox" aria-checked={isBullets} onclick={run((n) => ws.setAttr(n.id, "list", n.attrs.list === "bullets" ? null : "bullets"))}>
         {isBullets ? "Children as paragraphs" : "Children as bullets"}
       </button>
+      {#if isPost}
+        <button role="menuitemcheckbox" aria-checked={isUntitled} onclick={run((n) => ws.setFlag(n.id, "isUntitled", n.attrs.isUntitled !== "true"))}>
+          {isUntitled ? "Use as title" : "No title (first paragraph)"}
+        </button>
+      {/if}
     {/if}
     {#if node.children.length}
       <button role="menuitem" onclick={run((n) => ws.toggle(n.id))}>{collapsed ? "Expand" : "Collapse"}</button>

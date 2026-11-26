@@ -695,7 +695,7 @@ export class Workspace {
   }
 
   /** Turn a true/false attribute such as isDraft on or off. */
-  setFlag(id: string, name: "isDraft" | "isComment", on: boolean) {
+  setFlag(id: string, name: "isDraft" | "isComment" | "isUntitled", on: boolean) {
     this.setAttr(id, name, on ? "true" : null);
   }
 

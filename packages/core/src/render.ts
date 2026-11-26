@@ -258,7 +258,7 @@ function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
   if (isQuote(entry.text)) {
     // A quote as a post: no title, its children are the source.
     out.push(renderQuote(md, entry.text, entry.body ?? [], hash));
-  } else if (entry.body === null) {
+  } else if (entry.body === null || entry.untitled) {
     const html = md.html(entry.text);
     // A post that starts with a captioned image: the "#" goes just before the
     // caption text, rather than beside the top of the image.
@@ -269,6 +269,8 @@ function renderEntry(md: InlineRenderer, entry: Entry, href: string): string {
     } else {
       out.push(`<p>${hash}${html}</p>`);
     }
+    // "No title": the lines under it are the rest of the post.
+    if (entry.body) out.push(...renderBody(md, entry.node, entry.body));
   } else {
     const title = md.html(entry.text);
     // A title that already contains a link can't be wrapped in another one.
@@ -350,14 +352,15 @@ function renderRss(ctx: Ctx): string {
 
   const items = entries.map((e) => {
     const link = permalink(ctx, e, true);
+    const titled = e.body !== null && !e.untitled && !isQuote(e.text);
     const html = isQuote(e.text)
       ? renderQuote(ctx.mdAbs, e.text, e.body ?? [])
-      : e.body === null
-        ? `<p>${ctx.mdAbs.html(e.text)}</p>`
-        : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
+      : titled
+        ? renderBody(ctx.mdAbs, e.node, e.body!).join("\n")
+        : [`<p>${ctx.mdAbs.html(e.text)}</p>`, ...(e.body ? renderBody(ctx.mdAbs, e.node, e.body) : [])].join("\n");
     return [
       `    <item>`,
-      ...(e.body !== null && !isQuote(e.text) ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : []),
+      ...(titled ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : []),
       `      <link>${escXml(link)}</link>`,
       `      <guid isPermaLink="true">${escXml(link)}</guid>`,
       `      <pubDate>${pubDate(e)}</pubDate>`,

@@ -18,6 +18,7 @@
   const isDraft = $derived(node.attrs.isDraft === "true");
   const isComment = $derived(node.attrs.isComment === "true");
   const isBullets = $derived(node.attrs.list === "bullets");
+  const isUntitled = $derived(node.attrs.isUntitled === "true");
   // A line starting with ">" is a quote; shown without the ">" until edited.
   const isQuoteLine = $derived(nodeKind === "node" && isQuote(node.text));
   const selected = $derived(ws.selectedIds.has(node.id));
@@ -166,6 +167,7 @@
     {/if}
     {#if isDraft}<span class="tag">Draft</span>{/if}
     {#if isBullets}<span class="tag" title="Its children are shown as bullets on the site">Bullets</span>{/if}
+    {#if isUntitled}<span class="tag" title="Shown as the post's first paragraph, not a title">No title</span>{/if}
   </div>
 
   {#if hasKids && !isCollapsed}

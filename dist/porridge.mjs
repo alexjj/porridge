@@ -7844,7 +7844,7 @@ function loadEntries(dayNode, date, file, timezone, warn) {
     }
     if (!isPublished(node)) return;
     const body = node.children.length > 0 ? publishedChildren(node) : null;
-    entries.push({ date, anchor, text: attr(node, "text") ?? "", body, created, node });
+    entries.push({ date, anchor, text: attr(node, "text") ?? "", body, untitled: isTrue(attr(node, "isUntitled")), created, node });
   });
   return entries;
 }
@@ -8291,7 +8291,7 @@ function renderEntry(md, entry, href) {
   const out = [`<article class="entry" id="${entry.anchor}">`];
   if (isQuote(entry.text)) {
     out.push(renderQuote(md, entry.text, entry.body ?? [], hash));
-  } else if (entry.body === null) {
+  } else if (entry.body === null || entry.untitled) {
     const html = md.html(entry.text);
     const caption = /<span class="caption" aria-hidden="true">([^<]*)<\/span>/;
     if (html.startsWith(`<span class="figure">`) && caption.test(html)) {
@@ -8300,6 +8300,7 @@ function renderEntry(md, entry, href) {
     } else {
       out.push(`<p>${hash}${html}</p>`);
     }
+    if (entry.body) out.push(...renderBody(md, entry.node, entry.body));
   } else {
     const title = md.html(entry.text);
     out.push(
@@ -8361,10 +8362,11 @@ function renderRss(ctx) {
   const pubDate = (e) => formatRfc822(e.created ?? zonedMidnight(e.date, settings.timezone));
   const items = entries.map((e) => {
     const link2 = permalink(ctx, e, true);
-    const html = isQuote(e.text) ? renderQuote(ctx.mdAbs, e.text, e.body ?? []) : e.body === null ? `<p>${ctx.mdAbs.html(e.text)}</p>` : renderBody(ctx.mdAbs, e.node, e.body).join("\n");
+    const titled = e.body !== null && !e.untitled && !isQuote(e.text);
+    const html = isQuote(e.text) ? renderQuote(ctx.mdAbs, e.text, e.body ?? []) : titled ? renderBody(ctx.mdAbs, e.node, e.body).join("\n") : [`<p>${ctx.mdAbs.html(e.text)}</p>`, ...e.body ? renderBody(ctx.mdAbs, e.node, e.body) : []].join("\n");
     return [
       `    <item>`,
-      ...e.body !== null && !isQuote(e.text) ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : [],
+      ...titled ? [`      <title>${escXml(ctx.mdAbs.plain(e.text))}</title>`] : [],
       `      <link>${escXml(link2)}</link>`,
       `      <guid isPermaLink="true">${escXml(link2)}</guid>`,
       `      <pubDate>${pubDate(e)}</pubDate>`,

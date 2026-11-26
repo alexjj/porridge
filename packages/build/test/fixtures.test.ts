@@ -204,9 +204,13 @@ describe("rendered sample blog", async () => {
   it("writes RSS items newest first, titles only for titled entries", () => {
     const rss = file("rss.xml");
     const items = rss.split("<item>").slice(1);
-    expect(items).toHaveLength(15);
+    expect(items).toHaveLength(16);
     expect(items[0]).toContain("<title>Starting porridge</title>");
     expect(items[1]).not.toContain("<title>");
+    // "No title": no <title>, and the line and the lines under it are paragraphs.
+    const untitled = items.find((i) => i.includes("No title: with isUntitled"))!;
+    expect(untitled).not.toContain("<title>");
+    expect(untitled).toContain("&lt;p&gt;So a post can have several paragraphs without a heading.&lt;/p&gt;");
     // No created: pubDate is midnight in the blog's timezone (BST in June).
     expect(items.at(-1)).toContain("<pubDate>Sat, 14 Jun 2025 23:00:00 GMT</pubDate>");
   });
