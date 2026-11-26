@@ -176,6 +176,21 @@ export class Remote {
   }
 
   /**
+   * Throw away everything not saved to GitHub: files go back to the last
+   * synced versions and photos waiting to upload are dropped. Can't be undone.
+   */
+  async discard() {
+    if (!this.conn || !this.base || this.busy) return;
+    await this.ws.flush();
+    const updates: Record<string, string | null> = {};
+    for (const p of localChanges(this.base, this.ws.texts())) updates[p] = this.base.files[p]?.text ?? null;
+    this.ws.applyRemote(updates);
+    await this.ws.imagesSaved([...this.ws.pendingImages]);
+    this.conflicts = [];
+    this.refresh();
+  }
+
+  /**
    * Save every change to GitHub in one commit. With `publish`, the commit
    * triggers a build (or, if there's nothing to save, the build workflow is
    * started directly) and the build is followed.

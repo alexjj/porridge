@@ -340,6 +340,12 @@ Deferred:
       nodes become Markdown links; calendar types are dropped.
 - [x] "No title" (`isUntitled="true"`) on a post: its line is the first
       paragraph and the lines under it are the rest (line menu).
+- [x] "Add posts from a download…": posts from a Download all zip that the
+      blog doesn't have (matched by `importedFrom`, or day and `created`) are
+      added with their photos; posts already here, the starter blog's
+      example posts, pages and settings are left alone.
+- [x] "Discard unsaved changes…" (when connected): back to what's on GitHub,
+      pending photos dropped.
 
 ### micro.blog importer
 Imports a micro.blog **Blog Archive (`.bar`)** in the browser: no API, no

@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { connect, connected, fakeGitHub, status, templateFiles } from "./github-helpers.js";
 import { menu, newEntry, openEditor, openFile, outline } from "./helpers.js";
@@ -244,4 +245,67 @@ test("an imported micro.blog archive is saved in one commit, photos included", a
   expect(fake.read("blog/2025.opml")).toContain(`<outline text="![](/${photo})"/>`);
   expect(fake.read("blog/2025.opml")).toContain(`importedFrom="https://blog.example/2025/09/12/a/"`);
   expect(fake.read("blog.opml")).toContain(`<outline text="2025" type="include" url="blog/2025.opml"/>`);
+});
+
+test("Discard unsaved changes goes back to what's on GitHub", async ({ page }) => {
+  const fake = await fakeGitHub(page);
+  await connected(page);
+  const before = await outline(page);
+  await newEntry(page);
+  await page.keyboard.type("Not wanted after all");
+  await page.keyboard.press("Escape");
+  await expect(status(page)).toHaveText("1 unsaved change");
+
+  page.once("dialog", (d) => {
+    expect(d.message()).toBe("Discard 1 unsaved change and go back to what's on GitHub? This can't be undone.");
+    void d.accept();
+  });
+  await menu(page, "Discard unsaved changes…");
+  await expect(status(page)).toHaveText("Saved to GitHub");
+  expect(await outline(page)).toBe(before);
+  expect(fake.commitCount()).toBe(1);
+});
+
+test("posts tried out in another tab are added from its download, then saved", async ({ page, browser }) => {
+  // The "private tab": not connected, import, delete a post, download everything.
+  const other = await browser.newContext();
+  const tab = await other.newPage();
+  await openEditor(tab);
+  await menu(tab, "Import from micro.blog…");
+  const mb = tab.getByRole("dialog", { name: "Import from micro.blog" });
+  await mb.getByLabel("Blog Archive (.bar)").setInputFiles(join(import.meta.dirname, "../test/fixtures/sample.bar"));
+  await mb.getByRole("button", { name: "Import 2 posts" }).click();
+  await mb.getByRole("button", { name: "Done" }).click();
+  await openFile(tab, "2025");
+  await tab.getByText("Short one.").click();
+  await tab.keyboard.press("Control+Shift+Backspace");
+  await expect(tab.getByText("Short one.")).toHaveCount(0);
+  const [download] = await Promise.all([tab.waitForEvent("download"), menu(tab, "Download all (.zip)")]);
+  const zipped = await readFile((await download.path())!);
+  await other.close();
+
+  // The connected tab.
+  const fake = await fakeGitHub(page);
+  await connected(page);
+  await menu(page, "Add posts from a download…");
+  const dialog = page.getByRole("dialog", { name: "Add posts from a download" });
+  await dialog.getByLabel("Porridge download (.zip)").setInputFiles({ name: "blog.zip", mimeType: "application/zip", buffer: zipped });
+  await expect(dialog).toContainText("1 new post from 2025, with 1 photo or video.");
+  await expect(dialog).toContainText("1 example post from the starter blog will be left out.");
+  await dialog.getByRole("button", { name: "Add 1 post" }).click();
+  await expect(dialog.getByRole("status")).toContainText("Added 1 post.");
+  await dialog.getByRole("button", { name: "Done" }).click();
+
+  await page.keyboard.press("Control+s");
+  await expect(status(page)).toHaveText("Saved to GitHub");
+  const year = fake.read("blog/2025.opml");
+  expect(year).toContain(`<outline text="A walk"`);
+  expect(year).not.toContain("Short one.");
+  expect(fake.paths().some((p) => p.startsWith("images/2025/09/hill-12075859."))).toBe(true);
+
+  // Again: nothing new.
+  await menu(page, "Add posts from a download…");
+  await dialog.getByLabel("Porridge download (.zip)").setInputFiles({ name: "blog.zip", mimeType: "application/zip", buffer: zipped });
+  await expect(dialog).toContainText("There are no new posts in this download.");
+  await expect(dialog).toContainText("1 post already in this blog will be left as it is.");
 });

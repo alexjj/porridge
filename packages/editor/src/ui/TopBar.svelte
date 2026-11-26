@@ -10,6 +10,7 @@
     ontogglepanel,
     onsettings,
     onimport,
+    onaddposts,
   }: {
     ws: Workspace;
     remote: Remote;
@@ -17,6 +18,7 @@
     ontogglepanel: () => void;
     onsettings: (tab: "blog" | "github") => void;
     onimport: () => void;
+    onaddposts: () => void;
   } = $props();
 
   let menuOpen = $state(false);
@@ -63,6 +65,12 @@
   function reset() {
     if (!confirm("Replace everything in this browser with the starter blog? Your changes here will be lost.")) return;
     ws.replaceAll(STARTER);
+  }
+
+  function discard() {
+    const n = remote.unsynced.length;
+    if (!confirm(`Discard ${n === 1 ? "1 unsaved change" : `${n} unsaved changes`} and go back to what's on GitHub? This can't be undone.`)) return;
+    void remote.discard();
   }
 
   function choose(fn: () => void) {
@@ -134,11 +142,15 @@
         <button role="menuitem" onclick={() => choose(() => onsettings("github"))}>GitHub…</button>
         {#if remote.conn}
           <button role="menuitem" onclick={() => choose(() => void remote.check())} disabled={!!remote.busy}>Check GitHub for changes</button>
+          {#if unsaved}
+            <button role="menuitem" class="danger" onclick={() => choose(discard)} disabled={!!remote.busy}>Discard unsaved changes…</button>
+          {/if}
         {/if}
         <hr />
         <button role="menuitem" onclick={() => choose(() => ws.downloadCurrent())}>Download this file</button>
         <button role="menuitem" onclick={() => choose(() => ws.downloadAll())}>Download all (.zip)</button>
         <button role="menuitem" onclick={() => choose(onimport)}>Import from micro.blog…</button>
+        <button role="menuitem" onclick={() => choose(onaddposts)}>Add posts from a download…</button>
         {#if !remote.conn}
           <button role="menuitem" onclick={() => choose(() => folderInput?.click())}>Open a blog folder…</button>
           <hr />
